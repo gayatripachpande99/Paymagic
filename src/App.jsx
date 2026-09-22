@@ -19,8 +19,8 @@ function App() {
           </p>
 
           <h2>
-            Making Finance
-            <span> Simple & Accessible</span>
+            Engineering the
+            <span> Future of Finance.</span>
           </h2>
 
           <p>
