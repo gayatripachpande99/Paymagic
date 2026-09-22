@@ -116,7 +116,7 @@ function App() {
         </div>
 
         <p className="copyright">
-          © 2026 PayMagic PVT LTD. All rights reserved.
+          © 2026 PayMagic PVT LTD. All rights reserved by OIT_Stack.
         </p>
 
       </footer>
