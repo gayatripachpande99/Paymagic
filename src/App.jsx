@@ -505,7 +505,7 @@ export default function App() {
         </div>
 
         <div className="footer-bottom">
-          <p>© 2026 PayMagic PVT LTD · OIT_Stack · All Rights Reserved.</p>
+          <p>© 2026 OIT_Stack · All Rights Reserved</p>
           <div className="footer-trust-mini">
             <span>🔒 256-Bit Secured</span>
             <span>🏛️ RBI Compliant</span>
