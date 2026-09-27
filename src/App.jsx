@@ -388,14 +388,14 @@ export default function App() {
         <div className="section-inner">
           <div className="services-header">
             <p className="section-label">EXECUTIVE LEADERSHIP</p>
-            <h2>Guided by Visionary <span className="gradient-text">Co-Founders &amp; Directors</span></h2>
+            <h2>Guided by Visionary <span className="gradient-text">Founders &amp; Directors</span></h2>
             <p className="services-sub">PayMagic PVT LTD is led by experienced technology and business leaders dedicated to corporate integrity and client success.</p>
           </div>
 
           <div className="founders-grid">
             <div className="founder-card">
               <div className="founder-avatar avatar-onkar">OH</div>
-              <div className="founder-badge">CO-FOUNDER &amp; DIRECTOR</div>
+              <div className="founder-badge">FOUNDER &amp; DIRECTOR</div>
               <h3>Onkar Holkar</h3>
               <p className="founder-role">Strategic Planning &amp; Tech Operations</p>
               <p className="founder-bio">Leading technology infrastructure, high-velocity payment architectures, and system resilience for enterprise clients.</p>
@@ -406,7 +406,7 @@ export default function App() {
 
             <div className="founder-card">
               <div className="founder-avatar avatar-bhushan">BG</div>
-              <div className="founder-badge">CO-FOUNDER &amp; DIRECTOR</div>
+              <div className="founder-badge">FOUNDER &amp; DIRECTOR</div>
               <h3>Bhushan Gaikwad</h3>
               <p className="founder-role">Corporate Growth &amp; Client Relations</p>
               <p className="founder-bio">Driving corporate partnership strategy, compliance frameworks, and long-term financial growth initiatives.</p>
@@ -582,7 +582,7 @@ export default function App() {
                     <div className="admin-avatar avatar-onkar">OH</div>
                     <div className="admin-details">
                       <h3>Onkar Holkar</h3>
-                      <span className="admin-tag">Co-Founder &amp; Director</span>
+                      <span className="admin-tag">Founder &amp; Director</span>
                     </div>
                     <span className="role-arrow">→</span>
                   </button>
@@ -590,7 +590,7 @@ export default function App() {
                     <div className="admin-avatar avatar-bhushan">BG</div>
                     <div className="admin-details">
                       <h3>Bhushan Gaikwad</h3>
-                      <span className="admin-tag">Co-Founder &amp; Director</span>
+                      <span className="admin-tag">Founder &amp; Director</span>
                     </div>
                     <span className="role-arrow">→</span>
                   </button>
