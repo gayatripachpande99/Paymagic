@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 
-const STATS = [
-  { value: "₹2.4B+", label: "Transactions Processed" },
-  { value: "99.99%", label: "Uptime SLA" },
-  { value: "50K+", label: "Active Business Users" },
-  { value: "256-bit", label: "Bank-Grade Encryption" },
-];
-
 const SERVICES = [
   {
     icon: (
@@ -241,16 +234,6 @@ export default function App() {
             <button className="secondary-btn" onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}>
               Explore Platform
             </button>
-          </div>
-
-          {/* Live stats strip */}
-          <div className="hero-stats">
-            {STATS.map((s) => (
-              <div className="hero-stat" key={s.label}>
-                <span className="hero-stat-value">{s.value}</span>
-                <span className="hero-stat-label">{s.label}</span>
-              </div>
-            ))}
           </div>
         </div>
 
