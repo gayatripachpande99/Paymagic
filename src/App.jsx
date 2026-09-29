@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import api from "./services/api";
+import EmployeeDashboard from "./components/EmployeeDashboard";
+import AdminDashboard from "./components/AdminDashboard";
 import "./App.css";
 
 const SERVICES = [
@@ -102,6 +105,7 @@ const FAQS = [
 ];
 
 export default function App() {
+  const [appMode, setAppMode] = useState("website"); // "website" | "portal"
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginView, setLoginView] = useState("select-role");
   const [selectedAdmin, setSelectedAdmin] = useState(null);
@@ -136,32 +140,103 @@ export default function App() {
     setPasswordInput("");
   };
 
-  const handleAdminSubmit = (e) => {
+  useEffect(() => {
+    const savedUser = localStorage.getItem("paymagic_user");
+    const savedToken = localStorage.getItem("paymagic_token");
+    if (savedUser && savedToken) {
+      try {
+        setLoggedInUser(JSON.parse(savedUser));
+      } catch (err) {
+        localStorage.removeItem("paymagic_user");
+        localStorage.removeItem("paymagic_token");
+      }
+    }
+  }, []);
+
+  const handleAdminSubmit = async (e) => {
     e.preventDefault();
-    if (!passwordInput.trim()) { setLoginError("Please enter your password."); return; }
-    setLoggedInUser({ name: selectedAdmin, role: "Administrator" });
-    setLoginView("dashboard");
+    if (!passwordInput.trim()) {
+      setLoginError("Please enter your password.");
+      return;
+    }
+
+    try {
+      setLoginError("");
+
+      const data = await api.post("/auth/admin-login", {
+        name: selectedAdmin || "Onkar Holkar",
+        password: passwordInput
+      });
+
+      localStorage.setItem("paymagic_token", data.token);
+      localStorage.setItem("paymagic_user", JSON.stringify(data.user));
+
+      setLoggedInUser(data.user);
+      setShowLoginModal(false);
+      setAppMode("portal");
+    } catch (error) {
+      setLoginError(error.message || "Invalid Administrator password.");
+    }
   };
 
-  const handleEmployeeSubmit = (e) => {
+  const handleEmployeeSubmit = async (e) => {
     e.preventDefault();
     if (!employeeIdInput.trim() || !passwordInput.trim()) {
       setLoginError("Please fill in all fields.");
       return;
     }
-    setLoggedInUser({ name: `Employee (${employeeIdInput})`, role: "Staff Employee" });
-    setLoginView("dashboard");
+
+    try {
+      setLoginError("");
+
+      const data = await api.post("/auth/employee-login", {
+        employeeId: employeeIdInput,
+        password: passwordInput
+      });
+
+      localStorage.setItem("paymagic_token", data.token);
+      localStorage.setItem("paymagic_user", JSON.stringify(data.user));
+
+      setLoggedInUser(data.user);
+      setShowLoginModal(false);
+      setAppMode("portal");
+    } catch (error) {
+      setLoginError(error.message || "Unable to login.");
+    }
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("paymagic_token");
+    localStorage.removeItem("paymagic_user");
     setLoggedInUser(null);
     setLoginView("select-role");
     setShowLoginModal(false);
+    setAppMode("website");
   };
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
   };
+
+  // If user is logged in and portal mode is active, render the rich dashboard
+  if (appMode === "portal" && loggedInUser) {
+    if (loggedInUser.role === "ADMIN" || loggedInUser.role === "HR") {
+      return (
+        <AdminDashboard
+          user={loggedInUser}
+          onLogout={handleLogout}
+          onBackToHome={() => setAppMode("website")}
+        />
+      );
+    }
+    return (
+      <EmployeeDashboard
+        user={loggedInUser}
+        onLogout={handleLogout}
+        onBackToHome={() => setAppMode("website")}
+      />
+    );
+  }
 
   return (
     <div className="website">
@@ -186,7 +261,10 @@ export default function App() {
         {loggedInUser ? (
           <div className="user-badge-nav">
             <div className="user-dot" />
-            <span className="user-name">{loggedInUser.name}</span>
+            <span className="user-name">{loggedInUser.fullName || loggedInUser.name}</span>
+            <button className="portal-launch-btn" onClick={() => setAppMode("portal")}>
+              Open Portal →
+            </button>
             <button className="logout-nav-btn" onClick={handleLogout}>Sign Out</button>
           </div>
         ) : (
@@ -681,7 +759,7 @@ export default function App() {
                   </svg>
                 </div>
                 <p className="portal-badge" style={{marginBottom:"10px"}}>AUTHENTICATED</p>
-                <h2>Welcome, {loggedInUser?.name}!</h2>
+                <h2>Welcome, {loggedInUser?.fullName || loggedInUser?.name}!</h2>
                 <p className="dashboard-sub">You are signed in as <strong>{loggedInUser?.role}</strong>.</p>
                 <div className="dashboard-actions">
                   <button className="primary-btn" onClick={closeLogin}>
