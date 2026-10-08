@@ -230,10 +230,20 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
 
   const statusInfo = getAttendanceStatus();
 
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   return (
     <div className="portal-layout">
+      {/* Mobile Drawer Overlay Backdrop */}
+      {mobileSidebarOpen && (
+        <div
+          className="portal-sidebar-backdrop"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
+
       {/* ── SIDEBAR ── */}
-      <aside className="portal-sidebar">
+      <aside className={`portal-sidebar ${mobileSidebarOpen ? "mobile-drawer-open" : ""}`}>
         <div className="portal-sidebar-brand" onClick={onBackToHome} role="button" tabIndex={0}>
           <div className="brand-icon">
             <img src="/logo.jpg" alt="PayMagic Logo" className="logo-img" />
@@ -258,7 +268,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
         <nav className="portal-nav">
           <button
             className={`portal-nav-item ${activeTab === "dashboard" ? "active" : ""}`}
-            onClick={() => { setActiveTab("dashboard"); setErrorMsg(""); setSuccessMsg(""); }}
+            onClick={() => { setActiveTab("dashboard"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="3" width="7" height="7" rx="1.5" />
@@ -271,7 +281,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "profile" ? "active" : ""}`}
-            onClick={() => { setActiveTab("profile"); setErrorMsg(""); setSuccessMsg(""); }}
+            onClick={() => { setActiveTab("profile"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -282,7 +292,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "attendance" ? "active" : ""}`}
-            onClick={() => { setActiveTab("attendance"); setErrorMsg(""); setSuccessMsg(""); }}
+            onClick={() => { setActiveTab("attendance"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10" />
@@ -293,7 +303,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "leave" ? "active" : ""}`}
-            onClick={() => { setActiveTab("leave"); setErrorMsg(""); setSuccessMsg(""); }}
+            onClick={() => { setActiveTab("leave"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -306,7 +316,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "records" ? "active" : ""}`}
-            onClick={() => { setActiveTab("records"); setErrorMsg(""); setSuccessMsg(""); }}
+            onClick={() => { setActiveTab("records"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -319,7 +329,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "documents" ? "active" : ""}`}
-            onClick={() => { setActiveTab("documents"); setErrorMsg(""); setSuccessMsg(""); }}
+            onClick={() => { setActiveTab("documents"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -330,7 +340,6 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
             </svg>
             <span>Documents &amp; Payslips</span>
           </button>
-
         </nav>
 
         <div className="portal-sidebar-footer">
@@ -356,21 +365,35 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
       <main className="portal-main">
         {/* Top Header */}
         <header className="portal-topbar">
-          <div className="topbar-welcome">
-            <h2>
-              Good Day, <span className="gradient-text">{profile?.fullName?.split(" ")[0] || "Employee"}</span> 👋
-            </h2>
-            <p className="topbar-subtitle">
-              {new Date().toLocaleDateString("en-IN", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-                year: "numeric"
-              })}
-            </p>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button
+              className="portal-mobile-toggle-btn"
+              onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+              aria-label="Toggle Navigation Drawer"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+            <div className="topbar-welcome">
+              <h2>
+                Good Day, <span className="gradient-text">{profile?.fullName?.split(" ")[0] || "Employee"}</span> 👋
+              </h2>
+              <p className="topbar-subtitle">
+                {new Date().toLocaleDateString("en-IN", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric"
+                })}
+              </p>
+            </div>
           </div>
 
           <div className="topbar-right">
+
             <div className="live-status-pill">
               <span className={`status-indicator-dot ${statusInfo.color}`} />
               <span>Status: <strong>{statusInfo.label}</strong></span>

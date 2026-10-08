@@ -347,10 +347,21 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
     new Set(attendanceData.map((d) => d.department).filter(Boolean))
   );
 
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   return (
     <div className="portal-layout">
+      {/* Mobile Drawer Overlay Backdrop */}
+      {mobileSidebarOpen && (
+        <div
+          className="portal-sidebar-backdrop"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
+
+
       {/* ── SIDEBAR ── */}
-      <aside className="portal-sidebar">
+      <aside className={`portal-sidebar ${mobileSidebarOpen ? "mobile-drawer-open" : ""}`}>
         <div className="portal-sidebar-brand" onClick={onBackToHome} role="button" tabIndex={0}>
           <div className="brand-icon">
             <img src="/logo.jpg" alt="PayMagic Logo" className="logo-img" />
@@ -375,7 +386,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
         <nav className="portal-nav">
           <button
             className={`portal-nav-item ${activeTab === "attendance" ? "active" : ""}`}
-            onClick={() => { setActiveTab("attendance"); setErrorMsg(""); }}
+            onClick={() => { setActiveTab("attendance"); setErrorMsg(""); setMobileSidebarOpen(false); }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="3" width="7" height="7" rx="1.5" />
@@ -388,7 +399,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "employees" ? "active" : ""}`}
-            onClick={() => { setActiveTab("employees"); setErrorMsg(""); }}
+            onClick={() => { setActiveTab("employees"); setErrorMsg(""); setMobileSidebarOpen(false); }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -401,7 +412,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "records" ? "active" : ""}`}
-            onClick={() => { setActiveTab("records"); setErrorMsg(""); }}
+            onClick={() => { setActiveTab("records"); setErrorMsg(""); setMobileSidebarOpen(false); }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
@@ -413,7 +424,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "leave-approvals" ? "active" : ""}`}
-            onClick={() => { setActiveTab("leave-approvals"); setErrorMsg(""); }}
+            onClick={() => { setActiveTab("leave-approvals"); setErrorMsg(""); setMobileSidebarOpen(false); }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -424,7 +435,6 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             </svg>
             <span>Leave Approvals</span>
           </button>
-
         </nav>
 
         <div className="portal-sidebar-footer">
@@ -450,14 +460,28 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
       <main className="portal-main">
         {/* Top Header */}
         <header className="portal-topbar">
-          <div className="topbar-welcome">
-            <h2>
-              Admin Command Center · <span className="gradient-text">Staff &amp; Credentials</span>
-            </h2>
-            <p className="topbar-subtitle">
-              Live Employee Operations, Biometric Attendance &amp; Credential Management
-            </p>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button
+              className="portal-mobile-toggle-btn"
+              onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+              aria-label="Toggle Navigation Drawer"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+            <div className="topbar-welcome">
+              <h2>
+                Admin Command Center · <span className="gradient-text">Staff &amp; Credentials</span>
+              </h2>
+              <p className="topbar-subtitle">
+                Live Employee Operations, Biometric Attendance &amp; Credential Management
+              </p>
+            </div>
           </div>
+
 
           <div className="topbar-right">
             {/* Prominent Add Employee Button */}

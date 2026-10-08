@@ -3068,3 +3068,226 @@ footer {
   color: #ffffff;
   transform: translateY(-1px);
 }
+
+/* ==========================================================================
+   COMPREHENSIVE RESPONSIVE DESIGN SYSTEM (ALL SCREENS & MOBILE DRAWER)
+   ========================================================================== */
+
+/* ── Mobile Hamburger & Header Action Buttons ── */
+.mobile-hamburger-btn {
+  display: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobile-hamburger-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.portal-mobile-toggle-btn {
+  display: none;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #60a5fa;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.portal-mobile-toggle-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.portal-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Tablet Breakpoint (< 1024px) ── */
+@media (max-width: 1024px) {
+  .portal-layout {
+    flex-direction: column;
+  }
+
+  .portal-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.6);
+  }
+
+  .portal-sidebar.mobile-drawer-open {
+    transform: translateX(0);
+  }
+
+  .portal-mobile-toggle-btn {
+    display: inline-flex;
+  }
+
+  .portal-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 16px !important;
+  }
+
+  .admin-kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+  }
+
+  .founders-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .savings-comparison-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
+/* ── Mobile Navigation Breakpoint (< 900px) ── */
+@media (max-width: 900px) {
+  .mobile-hamburger-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .desktop-user-badge, .desktop-login-btn {
+    display: none !important;
+  }
+
+  .nav-links {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(4, 13, 44, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(59, 130, 246, 0.25);
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px 24px;
+    gap: 16px;
+    display: none;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  .nav-links.mobile-open {
+    display: flex;
+    animation: slideDown 0.25s ease-out;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .nav-links a {
+    font-size: 15px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .mobile-user-badge, .mobile-login-btn {
+    display: flex !important;
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .mobile-login-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Mobile Phone Breakpoint (< 640px) ── */
+@media (max-width: 640px) {
+  .hero-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hero-buttons button, .hero-buttons a {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .portal-topbar {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+
+  .topbar-right {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .table-header-row, .table-filter-bar {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .search-wrap, .filter-wrap {
+    width: 100% !important;
+  }
+
+  .search-input {
+    width: 100% !important;
+  }
+
+  .login-modal-box {
+    width: 94% !important;
+    padding: 24px 18px !important;
+    margin: 16px !important;
+  }
+
+  .admin-kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .custom-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .custom-table {
+    min-width: 650px;
+  }
+}
