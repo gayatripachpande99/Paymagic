@@ -875,7 +875,8 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
         {activeTab === "records" && (
           <div className="portal-tab-content">
             {/* KPI Summary Header Cards */}
-            <div className="admin-kpi-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", marginBottom: "20px" }}>
+            <div className="admin-kpi-grid" style={{ marginBottom: "20px" }}>
+
               <div className="admin-kpi-card">
                 <div className="kpi-icon-wrap blue-wrap">📑</div>
                 <div className="kpi-data">

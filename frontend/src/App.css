@@ -3291,3 +3291,69 @@ footer {
     min-width: 650px;
   }
 }
+
+/* ── SPECIFIC ADMIN PORTAL RESPONSIVE STYLES ── */
+.admin-workflow-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 960px) {
+  .admin-workflow-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .admin-kpi-card {
+    padding: 14px 16px !important;
+  }
+
+  .kpi-val {
+    font-size: 20px !important;
+  }
+
+  .filter-dropdowns {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .filter-select {
+    width: 100% !important;
+  }
+
+  .topbar-welcome h2 {
+    font-size: 19px !important;
+  }
+
+  .topbar-subtitle {
+    font-size: 12.5px !important;
+  }
+
+  .quick-preset-btn {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 440px) {
+  .admin-kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .portal-main {
+    padding: 12px 10px !important;
+  }
+
+  .portal-table-container {
+    padding: 14px 12px !important;
+  }
+}

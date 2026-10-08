@@ -704,7 +704,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
         {activeTab === "records" && (
           <div className="portal-tab-content">
             {/* KPI Summary Banner */}
-            <div className="admin-kpi-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)", marginBottom: "20px" }}>
+            <div className="admin-kpi-grid records-kpi-grid" style={{ marginBottom: "20px" }}>
               <div className="admin-kpi-card">
                 <div className="kpi-icon-wrap blue-wrap">📁</div>
                 <div className="kpi-data">
@@ -739,7 +739,8 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             </div>
 
             {/* Workflow Step Cards Grid */}
-            <div className="leave-grid" style={{ gridTemplateColumns: "1fr 1fr", marginBottom: "24px" }}>
+            <div className="admin-workflow-grid" style={{ marginBottom: "24px" }}>
+
               {/* Card 1: Step 1 & 2 - File Upload & Records Import */}
               <div className="leave-form-card" style={{ background: "rgba(15, 23, 42, 0.7)", borderColor: "rgba(59, 130, 246, 0.2)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
