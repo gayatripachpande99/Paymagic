@@ -1,16 +1,47 @@
-# React + Vite
+# PayMagic Enterprise Workspace
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+This repository is structured into separate frontend and backend directories:
 
-Currently, two official plugins are available:
+```
+PayMagic/
+├── frontend/    # React + Vite Web Application
+└── backend/     # Node.js + Express REST API Server
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 🚀 Quick Start Guide
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Run Backend Server
+Navigate to the `backend` folder and start the API server:
+```bash
+cd backend
+npm install
+npm run dev
+```
+> Server will start at `http://localhost:5000`
 
-## Expanding the Oxlint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+### 2. Run Frontend Web Application
+In a separate terminal window, navigate to the `frontend` folder and start Vite:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+> App will open at `http://localhost:5173`
+
+---
+
+## 🔑 Pre-Configured Credentials
+
+### Administrator Accounts
+- **Name**: Onkar Holkar / Bhushan Gaikwad
+- **Password**: `Admin@123`
+
+### Employee Accounts
+- **ID**: `PM-EMP-0001` (Rahul Sharma)
+- **ID**: `PM-EMP-0002` (Priya Patel)
+- **ID**: `PM-EMP-0003` (Vikram Singh)
+- **Password**: `Emp@123`
