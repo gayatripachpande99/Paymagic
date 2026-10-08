@@ -490,11 +490,8 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
               className="primary-btn add-emp-btn"
               onClick={() => { setShowAddModal(true); setModalError(""); }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              <span>+ Add New Employee</span>
+              <span>Add New Employee</span>
+
             </button>
 
             <button className="refresh-btn" onClick={loadAdminAttendance} title="Refresh Live Data" disabled={loading}>
@@ -742,10 +739,9 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             {/* Workflow Step Cards Grid */}
             <div className="admin-workflow-grid" style={{ marginBottom: "24px" }}>
 
-              {/* Card 1: Step 1 & 2 - File Upload & Records Import */}
+              {/* Card 1: File Upload & Records Import */}
               <div className="leave-form-card" style={{ background: "rgba(15, 23, 42, 0.7)", borderColor: "rgba(59, 130, 246, 0.2)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                  <span className="portal-badge admin-badge">STEP 1 &amp; 2: DATA IMPORT</span>
+                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: "12px" }}>
                   <span className="user-role-tag admin-tag">ADMIN ACCESS</span>
                 </div>
                 <h3 style={{ color: "white", fontSize: "18px" }}>Upload Records File</h3>
@@ -789,12 +785,9 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                 </div>
               </div>
 
-              {/* Card 2: Step 3 - Range Assignment Tool */}
+              {/* Card 2: Range Assignment Tool */}
               <div className="leave-form-card" style={{ background: "rgba(15, 23, 42, 0.7)", borderColor: "rgba(16, 185, 129, 0.2)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                  <span className="portal-badge" style={{ background: "rgba(16,185,129,0.15)", color: "#34d399", border: "1px solid rgba(16,185,129,0.3)" }}>
-                    STEP 3: RANGE ALLOCATION
-                  </span>
+                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: "12px" }}>
                   <span className="user-role-tag" style={{ background: "rgba(59,130,246,0.15)", color: "#93c5fd" }}>
                     {recordsSummary.assignedRecords || 0} Assigned
                   </span>
@@ -861,30 +854,8 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                       : `Assign Records ${startRangeNum || 1} to ${endRangeNum || 100} → ${selectedAssignEmp}`}
                   </button>
                 </form>
-
-                {/* One Click Range Presets */}
-                <div style={{ marginTop: "16px", paddingTop: "12px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#94a3b8", display: "block", marginBottom: "8px" }}>
-                    QUICK PRESETS (USER SPECIFIED WORKFLOW):
-                  </span>
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                    <button
-                      type="button"
-                      className="quick-preset-btn"
-                      onClick={() => handleQuickPresetAssign("PM-EMP-0001", 1, 100)}
-                    >
-                      🎯 1 to 100 → PM-EMP-0001 (Rahul Sharma)
-                    </button>
-                    <button
-                      type="button"
-                      className="quick-preset-btn"
-                      onClick={() => handleQuickPresetAssign("PM-EMP-0002", 101, 200)}
-                    >
-                      🎯 101 to 200 → PM-EMP-0002 (Priya Patel)
-                    </button>
-                  </div>
-                </div>
               </div>
+
             </div>
 
             {/* Live Database Records Table */}
@@ -1041,7 +1012,8 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                     className="primary-btn add-emp-btn"
                     onClick={() => { setShowAddModal(true); setModalError(""); }}
                   >
-                    + Add New Employee
+                    Add New Employee
+
                   </button>
                 </div>
               </div>
