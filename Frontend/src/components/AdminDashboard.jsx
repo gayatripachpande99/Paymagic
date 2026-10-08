@@ -623,7 +623,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                             <button
                               className="copy-creds-btn"
                               onClick={() => {
-                                const creds = `PayMagic Login Credentials:\nName: ${emp.fullName}\nEmployee ID: ${emp.employeeId}\nPassword: ${emp.password || "Emp@123"}\nLogin URL: http://localhost:5173/`;
+                                const creds = `PayMagic Login Credentials:\nName: ${emp.fullName}\nEmployee ID: ${emp.employeeId}\nPassword: ${emp.password || "Emp@123"}\nLogin URL: https://paymagic-48er.vercel.app/`;
                                 copyToClipboard(creds, emp.id);
                               }}
                             >

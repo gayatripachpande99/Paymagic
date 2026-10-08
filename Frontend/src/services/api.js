@@ -1,6 +1,6 @@
 const API_URL =
   import.meta.env.VITE_API_URL ||
-  "http://localhost:5000/api";
+  "https://paymagic.onrender.com/api";
 
 const apiRequest = async (
   endpoint,
