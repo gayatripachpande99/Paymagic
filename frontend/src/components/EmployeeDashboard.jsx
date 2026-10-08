@@ -30,6 +30,36 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
     }
   ]);
 
+  // Employee Assigned Records State
+  const [myAssignedRecords, setMyAssignedRecords] = useState([]);
+  const [empRecordSearch, setEmpRecordSearch] = useState("");
+
+  const loadEmployeeAssignedRecords = async () => {
+    try {
+      const res = await api.get("/employee/records");
+      if (res && res.success) {
+        setMyAssignedRecords(res.records || []);
+      }
+    } catch (err) {
+      console.error("Failed to load employee assigned records:", err);
+    }
+  };
+
+  const handleToggleRecordStatus = async (recordId, currentStatus) => {
+    const nextStatus = currentStatus === "COMPLETED" ? "PENDING" : "COMPLETED";
+    try {
+      setErrorMsg("");
+      setSuccessMsg("");
+      const res = await api.post(`/employee/records/${recordId}/status`, { recordStatus: nextStatus });
+      if (res && res.success) {
+        setSuccessMsg(`Record ${recordId} updated to ${nextStatus}!`);
+        await loadEmployeeAssignedRecords();
+      }
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to update record status.");
+    }
+  };
+
   // Fetch initial profile, today attendance, and history
   const loadDashboardData = async () => {
     try {
@@ -51,6 +81,8 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
       if (historyRes.status === "fulfilled" && historyRes.value.success) {
         setHistory(historyRes.value.attendance || []);
       }
+
+      await loadEmployeeAssignedRecords();
     } catch (err) {
       console.error("Failed to load dashboard data:", err);
       setErrorMsg("Failed to load dashboard data. Please try again.");
@@ -62,6 +94,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
   useEffect(() => {
     loadDashboardData();
   }, []);
+
 
   // Live timer ticker for active working session
   useEffect(() => {
@@ -272,6 +305,19 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
           </button>
 
           <button
+            className={`portal-nav-item ${activeTab === "records" ? "active" : ""}`}
+            onClick={() => { setActiveTab("records"); setErrorMsg(""); setSuccessMsg(""); }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+            <span>Assigned Records ({myAssignedRecords.length})</span>
+          </button>
+
+          <button
             className={`portal-nav-item ${activeTab === "documents" ? "active" : ""}`}
             onClick={() => { setActiveTab("documents"); setErrorMsg(""); setSuccessMsg(""); }}
           >
@@ -284,6 +330,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
             </svg>
             <span>Documents &amp; Payslips</span>
           </button>
+
         </nav>
 
         <div className="portal-sidebar-footer">
@@ -796,6 +843,143 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
                     </div>
                   ))}
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB: ASSIGNED RECORDS ── */}
+        {activeTab === "records" && (
+          <div className="portal-tab-content">
+            {/* KPI Summary Header Cards */}
+            <div className="admin-kpi-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", marginBottom: "20px" }}>
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap blue-wrap">📑</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Total Assigned Records</span>
+                  <div className="kpi-val">{myAssignedRecords.length}</div>
+                </div>
+              </div>
+
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap green-wrap">✓</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Completed Records</span>
+                  <div className="kpi-val text-green">
+                    {myAssignedRecords.filter((r) => r.recordStatus === "COMPLETED").length}
+                  </div>
+                </div>
+              </div>
+
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap gold-wrap">⏳</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Pending Processing</span>
+                  <div className="kpi-val text-gold">
+                    {myAssignedRecords.filter((r) => r.recordStatus !== "COMPLETED").length}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Records List Table */}
+            <div className="portal-table-container">
+              <div className="table-header-row table-filter-bar">
+                <div>
+                  <h3>My Assigned Work Records</h3>
+                  <p>
+                    Records assigned by Administrator ({user?.employeeId || profile?.employeeId})
+                  </p>
+                </div>
+
+                <div className="search-wrap">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Filter my assigned records..."
+                    value={empRecordSearch}
+                    onChange={(e) => setEmpRecordSearch(e.target.value)}
+                    className="search-input"
+                  />
+                </div>
+              </div>
+
+              <div className="custom-table-wrap">
+                <table className="custom-table">
+                  <thead>
+                    <tr>
+                      <th>Record # &amp; ID</th>
+                      <th>Record Title / Transaction</th>
+                      <th>Customer / Client Name</th>
+                      <th>Amount</th>
+                      <th>Category</th>
+                      <th>Assigned Date</th>
+                      <th>Processing Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {myAssignedRecords
+                      .filter((rec) => {
+                        const q = empRecordSearch.toLowerCase();
+                        return (
+                          String(rec.recordNumber).includes(q) ||
+                          rec.id?.toLowerCase().includes(q) ||
+                          rec.title?.toLowerCase().includes(q) ||
+                          rec.customerName?.toLowerCase().includes(q)
+                        );
+                      })
+                      .map((rec) => (
+                        <tr key={rec.id}>
+                          <td>
+                            <strong className="font-mono text-green">#{rec.recordNumber}</strong>
+                            <span className="font-mono text-muted" style={{ display: "block", fontSize: "11px" }}>
+                              {rec.id}
+                            </span>
+                          </td>
+                          <td>
+                            <strong>{rec.title}</strong>
+                          </td>
+                          <td>{rec.customerName}</td>
+                          <td className="font-mono" style={{ fontWeight: 700, color: "#60a5fa" }}>
+                            {rec.amount}
+                          </td>
+                          <td>
+                            <span className="service-tag" style={{ margin: 0 }}>{rec.category}</span>
+                          </td>
+                          <td>
+                            <span style={{ fontSize: "12px", color: "#cbd5e1" }}>{rec.assignedAt || "Today"}</span>
+                          </td>
+                          <td>
+                            <span
+                              className={`status-pill pill-${rec.recordStatus === "COMPLETED" ? "green" : "gold"}`}
+                            >
+                              {rec.recordStatus || "PENDING"}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              className={rec.recordStatus === "COMPLETED" ? "toggle-pass-btn" : "action-btn-approve"}
+                              style={{ fontSize: "12px", padding: "6px 12px" }}
+                              onClick={() => handleToggleRecordStatus(rec.id, rec.recordStatus)}
+                            >
+                              {rec.recordStatus === "COMPLETED" ? "Undo" : "Mark Completed"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+
+                    {myAssignedRecords.length === 0 && (
+                      <tr>
+                        <td colSpan="8" className="empty-table-cell">
+                          No records have been assigned to your account ({user?.employeeId || "Employee"}) yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

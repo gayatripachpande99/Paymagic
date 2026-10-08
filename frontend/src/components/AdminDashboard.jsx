@@ -56,6 +56,34 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
     }
   ]);
 
+  // Record Management & Allocation State
+  const [recordsData, setRecordsData] = useState([]);
+  const [recordsSummary, setRecordsSummary] = useState({
+    totalRecords: 0,
+    assignedRecords: 0,
+    unassignedRecords: 0,
+    breakdown: {}
+  });
+  const [selectedAssignEmp, setSelectedAssignEmp] = useState("PM-EMP-0001");
+  const [startRangeNum, setStartRangeNum] = useState("1");
+  const [endRangeNum, setEndRangeNum] = useState("100");
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [recordSearchTerm, setRecordSearchTerm] = useState("");
+  const [recordFilterEmp, setRecordFilterEmp] = useState("ALL");
+  const [fileUploadLoading, setFileUploadLoading] = useState(false);
+
+  const loadAdminRecords = async () => {
+    try {
+      const res = await api.get("/admin/records");
+      if (res && res.success) {
+        setRecordsData(res.records || []);
+        setRecordsSummary(res.summary || {});
+      }
+    } catch (err) {
+      console.error("Admin records fetch error:", err);
+    }
+  };
+
   const loadAdminAttendance = async () => {
     try {
       setLoading(true);
@@ -74,6 +102,8 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
       if (empRes.status === "fulfilled" && empRes.value.success) {
         setEmployeesList(empRes.value.employees || []);
       }
+
+      await loadAdminRecords();
     } catch (err) {
       console.error("Admin data fetch error:", err);
       setErrorMsg(err.message || "Failed to load admin data.");
@@ -85,6 +115,137 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
   useEffect(() => {
     loadAdminAttendance();
   }, []);
+
+  const handleAssignRangeSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedAssignEmp || !startRangeNum || !endRangeNum) {
+      setErrorMsg("Please select an employee and enter valid start and end record numbers.");
+      return;
+    }
+
+    try {
+      setAssignLoading(true);
+      setErrorMsg("");
+      setSuccessMsg("");
+
+      const res = await api.post("/admin/records/assign", {
+        employeeId: selectedAssignEmp,
+        startRecordNum: parseInt(startRangeNum, 10),
+        endRecordNum: parseInt(endRangeNum, 10)
+      });
+
+      if (res.success) {
+        setSuccessMsg(res.message);
+        await loadAdminRecords();
+      }
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to assign records range.");
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
+  const handleQuickPresetAssign = async (empId, startNum, endNum) => {
+    setSelectedAssignEmp(empId);
+    setStartRangeNum(String(startNum));
+    setEndRangeNum(String(endNum));
+
+    try {
+      setAssignLoading(true);
+      setErrorMsg("");
+      setSuccessMsg("");
+
+      const res = await api.post("/admin/records/assign", {
+        employeeId: empId,
+        startRecordNum: startNum,
+        endRecordNum: endNum
+      });
+
+      if (res.success) {
+        setSuccessMsg(res.message);
+        await loadAdminRecords();
+      }
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to assign preset range.");
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
+  const handleFileUploadInput = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setFileUploadLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const content = event.target.result;
+        let parsedRecords = [];
+
+        if (file.name.endsWith(".json")) {
+          parsedRecords = JSON.parse(content);
+        } else {
+          // Parse CSV or Text lines
+          const lines = content.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+          parsedRecords = lines.map((line, idx) => {
+            const cols = line.split(",");
+            return {
+              title: cols[0] || `Uploaded Item #${idx + 1}`,
+              customerName: cols[1] || `Customer #${idx + 1}`,
+              amount: cols[2] || `₹${(2000 + idx * 100).toLocaleString("en-IN")}`,
+              category: cols[3] || "Uploaded File Batch"
+            };
+          });
+        }
+
+        if (parsedRecords.length === 0) {
+          setErrorMsg("File contains no valid record entries.");
+          return;
+        }
+
+        const res = await api.post("/admin/records/upload", { records: parsedRecords });
+        if (res.success) {
+          setSuccessMsg(`File '${file.name}' uploaded successfully! ${res.message}`);
+          await loadAdminRecords();
+        }
+      } catch (err) {
+        setErrorMsg("Failed to upload/parse file: " + err.message);
+      } finally {
+        setFileUploadLoading(false);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleGenerateDefaultBatch = async () => {
+    try {
+      setFileUploadLoading(true);
+      setErrorMsg("");
+      setSuccessMsg("");
+
+      const defaultRecords = Array.from({ length: 200 }, (_, i) => ({
+        title: `Payment Settlement Transaction #${1000 + i + 1}`,
+        customerName: `Client ${String.fromCharCode(65 + ((i + 1) % 26))}${i + 1}`,
+        amount: `₹${(2500 + (i + 1) * 175).toLocaleString("en-IN")}`,
+        category: (i + 1) % 3 === 0 ? "Vendor Settlement" : (i + 1) % 2 === 0 ? "Corporate Payroll" : "Merchant Payout"
+      }));
+
+      const res = await api.post("/admin/records/upload", { records: defaultRecords, mode: "replace" });
+      if (res.success) {
+        setSuccessMsg("Generated and stored 200 standard records in database successfully!");
+        await loadAdminRecords();
+      }
+    } catch (err) {
+      setErrorMsg("Failed to generate default batch: " + err.message);
+    } finally {
+      setFileUploadLoading(false);
+    }
+  };
+
 
   const togglePasswordVisibility = (empId) => {
     setVisiblePasswords((prev) => ({
@@ -239,6 +400,18 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
           </button>
 
           <button
+            className={`portal-nav-item ${activeTab === "records" ? "active" : ""}`}
+            onClick={() => { setActiveTab("records"); setErrorMsg(""); }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+              <line x1="12" y1="11" x2="12" y2="17" />
+              <line x1="9" y1="14" x2="15" y2="14" />
+            </svg>
+            <span>Record Upload &amp; Allocation</span>
+          </button>
+
+          <button
             className={`portal-nav-item ${activeTab === "leave-approvals" ? "active" : ""}`}
             onClick={() => { setActiveTab("leave-approvals"); setErrorMsg(""); }}
           >
@@ -251,6 +424,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             </svg>
             <span>Leave Approvals</span>
           </button>
+
         </nav>
 
         <div className="portal-sidebar-footer">
@@ -492,6 +666,323 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                       <tr>
                         <td colSpan="7" className="empty-table-cell">
                           No matching records found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB: RECORD UPLOAD & RANGE ALLOCATION ── */}
+        {activeTab === "records" && (
+          <div className="portal-tab-content">
+            {/* KPI Summary Banner */}
+            <div className="admin-kpi-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)", marginBottom: "20px" }}>
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap blue-wrap">📁</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Total Stored Records</span>
+                  <div className="kpi-val">{recordsSummary.totalRecords || recordsData.length}</div>
+                </div>
+              </div>
+
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap green-wrap">⚡</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Assigned Records</span>
+                  <div className="kpi-val text-green">{recordsSummary.assignedRecords || 0}</div>
+                </div>
+              </div>
+
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap gold-wrap">⏳</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Unassigned Records</span>
+                  <div className="kpi-val text-gold">{recordsSummary.unassignedRecords || 0}</div>
+                </div>
+              </div>
+
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap purple-wrap">👥</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Staff Accounts</span>
+                  <div className="kpi-val text-purple">{employeesList.filter((e) => e.role === "EMPLOYEE").length}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Workflow Step Cards Grid */}
+            <div className="leave-grid" style={{ gridTemplateColumns: "1fr 1fr", marginBottom: "24px" }}>
+              {/* Card 1: Step 1 & 2 - File Upload & Records Import */}
+              <div className="leave-form-card" style={{ background: "rgba(15, 23, 42, 0.7)", borderColor: "rgba(59, 130, 246, 0.2)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                  <span className="portal-badge admin-badge">STEP 1 &amp; 2: DATA IMPORT</span>
+                  <span className="user-role-tag admin-tag">ADMIN ACCESS</span>
+                </div>
+                <h3 style={{ color: "white", fontSize: "18px" }}>Upload Records File</h3>
+                <p className="side-card-sub" style={{ fontSize: "13px" }}>
+                  Upload CSV, JSON, or text file containing batch data records to store in database.
+                </p>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "16px" }}>
+                  <div className="file-upload-dropzone">
+                    <input
+                      type="file"
+                      accept=".csv, .json, .txt"
+                      onChange={handleFileUploadInput}
+                      id="record-file-input"
+                      style={{ display: "none" }}
+                    />
+                    <label htmlFor="record-file-input" className="file-drop-label">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      <div>
+                        <strong>{fileUploadLoading ? "Uploading & Storing Records..." : "Click to Upload File (.CSV / .JSON / .TXT)"}</strong>
+                        <p style={{ fontSize: "11.5px", color: "#94a3b8", marginTop: "2px" }}>Automated sequential index numbering &amp; record ID generation</p>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      style={{ width: "100%", justifyContent: "center", fontSize: "13px", padding: "10px 14px" }}
+                      onClick={handleGenerateDefaultBatch}
+                      disabled={fileUploadLoading}
+                    >
+                      ⚡ Load Standard 200 Records Batch
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Step 3 - Range Assignment Tool */}
+              <div className="leave-form-card" style={{ background: "rgba(15, 23, 42, 0.7)", borderColor: "rgba(16, 185, 129, 0.2)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                  <span className="portal-badge" style={{ background: "rgba(16,185,129,0.15)", color: "#34d399", border: "1px solid rgba(16,185,129,0.3)" }}>
+                    STEP 3: RANGE ALLOCATION
+                  </span>
+                  <span className="user-role-tag" style={{ background: "rgba(59,130,246,0.15)", color: "#93c5fd" }}>
+                    {recordsSummary.assignedRecords || 0} Assigned
+                  </span>
+                </div>
+                <h3 style={{ color: "white", fontSize: "18px" }}>Assign Record Ranges to Employee</h3>
+                <p className="side-card-sub" style={{ fontSize: "13px" }}>
+                  Specify start and end record numbers to assign in bulk to any employee account.
+                </p>
+
+                <form onSubmit={handleAssignRangeSubmit} className="leave-form" style={{ marginTop: "16px" }}>
+                  <div className="form-group">
+                    <label>Select Target Employee Account *</label>
+                    <select
+                      value={selectedAssignEmp}
+                      onChange={(e) => setSelectedAssignEmp(e.target.value)}
+                      className="custom-select"
+                      required
+                    >
+                      {employeesList
+                        .filter((u) => u.role === "EMPLOYEE")
+                        .map((emp) => (
+                          <option key={emp.id} value={emp.employeeId}>
+                            {emp.fullName} ({emp.employeeId}) — {emp.department}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>From Record #</label>
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="1"
+                        value={startRangeNum}
+                        onChange={(e) => setStartRangeNum(e.target.value)}
+                        className="custom-input font-mono"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>To Record #</label>
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="100"
+                        value={endRangeNum}
+                        onChange={(e) => setEndRangeNum(e.target.value)}
+                        className="custom-input font-mono"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="primary-btn"
+                    style={{ width: "100%", justifyContent: "center" }}
+                    disabled={assignLoading}
+                  >
+                    {assignLoading
+                      ? "Assigning Range..."
+                      : `Assign Records ${startRangeNum || 1} to ${endRangeNum || 100} → ${selectedAssignEmp}`}
+                  </button>
+                </form>
+
+                {/* One Click Range Presets */}
+                <div style={{ marginTop: "16px", paddingTop: "12px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#94a3b8", display: "block", marginBottom: "8px" }}>
+                    QUICK PRESETS (USER SPECIFIED WORKFLOW):
+                  </span>
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      className="quick-preset-btn"
+                      onClick={() => handleQuickPresetAssign("PM-EMP-0001", 1, 100)}
+                    >
+                      🎯 1 to 100 → PM-EMP-0001 (Rahul Sharma)
+                    </button>
+                    <button
+                      type="button"
+                      className="quick-preset-btn"
+                      onClick={() => handleQuickPresetAssign("PM-EMP-0002", 101, 200)}
+                    >
+                      🎯 101 to 200 → PM-EMP-0002 (Priya Patel)
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Database Records Table */}
+            <div className="portal-table-container">
+              <div className="table-header-row table-filter-bar">
+                <div>
+                  <h3>Stored Records Master Database ({recordsData.length})</h3>
+                  <p>Real-time dataset stored in backend database, showing range assignment &amp; status</p>
+                </div>
+
+                <div className="search-wrap">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search by record #, ID, customer name..."
+                    value={recordSearchTerm}
+                    onChange={(e) => setRecordSearchTerm(e.target.value)}
+                    className="search-input"
+                  />
+                </div>
+
+                <div className="filter-dropdowns">
+                  <select
+                    value={recordFilterEmp}
+                    onChange={(e) => setRecordFilterEmp(e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="ALL">All Employees</option>
+                    <option value="PM-EMP-0001">PM-EMP-0001 (Rahul Sharma)</option>
+                    <option value="PM-EMP-0002">PM-EMP-0002 (Priya Patel)</option>
+                    <option value="UNASSIGNED">Unassigned Records Only</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="custom-table-wrap">
+                <table className="custom-table">
+                  <thead>
+                    <tr>
+                      <th>Record # &amp; ID</th>
+                      <th>Record Title / Transaction</th>
+                      <th>Customer / Client</th>
+                      <th>Amount</th>
+                      <th>Category</th>
+                      <th>Assigned Employee</th>
+                      <th>Assigned By &amp; Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recordsData
+                      .filter((rec) => {
+                        const searchLower = recordSearchTerm.toLowerCase();
+                        const matchesSearch =
+                          String(rec.recordNumber).includes(searchLower) ||
+                          rec.id?.toLowerCase().includes(searchLower) ||
+                          rec.title?.toLowerCase().includes(searchLower) ||
+                          rec.customerName?.toLowerCase().includes(searchLower) ||
+                          rec.assignedTo?.toLowerCase().includes(searchLower) ||
+                          rec.assignedToName?.toLowerCase().includes(searchLower);
+
+                        const matchesEmp =
+                          recordFilterEmp === "ALL"
+                            ? true
+                            : recordFilterEmp === "UNASSIGNED"
+                            ? !rec.assignedTo
+                            : rec.assignedTo === recordFilterEmp;
+
+                        return matchesSearch && matchesEmp;
+                      })
+                      .slice(0, 100)
+                      .map((rec) => (
+                        <tr key={rec.id}>
+                          <td>
+                            <strong className="font-mono text-green">#{rec.recordNumber}</strong>
+                            <span className="font-mono text-muted" style={{ display: "block", fontSize: "11px" }}>
+                              {rec.id}
+                            </span>
+                          </td>
+                          <td>
+                            <strong>{rec.title}</strong>
+                          </td>
+                          <td>{rec.customerName}</td>
+                          <td className="font-mono" style={{ fontWeight: 700, color: "#60a5fa" }}>
+                            {rec.amount}
+                          </td>
+                          <td>
+                            <span className="service-tag" style={{ margin: 0 }}>{rec.category}</span>
+                          </td>
+                          <td>
+                            {rec.assignedTo ? (
+                              <div>
+                                <strong style={{ color: "#34d399", fontSize: "13px" }}>{rec.assignedToName}</strong>
+                                <span className="font-mono" style={{ display: "block", fontSize: "11.5px", color: "#94a3b8" }}>
+                                  {rec.assignedTo}
+                                </span>
+                              </div>
+                            ) : (
+                              <span style={{ color: "#f59e0b", fontSize: "12px", fontStyle: "italic" }}>
+                                Unassigned
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            <span style={{ fontSize: "12px", color: "#cbd5e1", display: "block" }}>
+                              {rec.assignedBy || "PM-ADMIN-0001"}
+                            </span>
+                            <span style={{ fontSize: "11px", color: "#64748b" }}>
+                              {rec.assignedAt || "—"}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`status-pill pill-${rec.assignedTo ? "green" : "gold"}`}>
+                              {rec.assignedTo ? "ASSIGNED" : "UNASSIGNED"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    {recordsData.length === 0 && (
+                      <tr>
+                        <td colSpan="8" className="empty-table-cell">
+                          No records stored in database yet. Click "Load Standard 200 Records Batch" or upload a file above!
                         </td>
                       </tr>
                     )}

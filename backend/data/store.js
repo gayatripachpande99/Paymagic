@@ -125,3 +125,24 @@ export const leaveRequests = [
     appliedOn: todayStr
   }
 ];
+
+// Initial 200 records uploaded by PM-ADMIN-0001
+export const uploadedRecords = Array.from({ length: 200 }, (_, i) => {
+  const index = i + 1;
+  const isGroup1 = index <= 100;
+  return {
+    id: `REC-${String(index).padStart(4, "0")}`,
+    recordNumber: index,
+    title: `Payment Processing Record #${1000 + index}`,
+    customerName: `Client ${String.fromCharCode(65 + (index % 26))}${index}`,
+    amount: `₹${(2500 + index * 175).toLocaleString("en-IN")}`,
+    category: index % 3 === 0 ? "Vendor Settlement" : index % 2 === 0 ? "Corporate Payroll" : "Merchant Payout",
+    status: "ASSIGNED",
+    assignedTo: isGroup1 ? "PM-EMP-0001" : "PM-EMP-0002",
+    assignedToName: isGroup1 ? "Rahul Sharma" : "Priya Patel",
+    assignedBy: "PM-ADMIN-0001",
+    assignedAt: new Date().toISOString().split("T")[0],
+    recordStatus: "PENDING"
+  };
+});
+
