@@ -33,6 +33,8 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
   // Employee Assigned Records State
   const [myAssignedRecords, setMyAssignedRecords] = useState([]);
   const [empRecordSearch, setEmpRecordSearch] = useState("");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
 
   const loadEmployeeAssignedRecords = async () => {
     try {
@@ -230,10 +232,9 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
 
   const statusInfo = getAttendanceStatus();
 
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-
   return (
     <div className="portal-layout">
+
       {/* Mobile Drawer Overlay Backdrop */}
       {mobileSidebarOpen && (
         <div

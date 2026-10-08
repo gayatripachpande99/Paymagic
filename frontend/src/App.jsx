@@ -115,6 +115,8 @@ export default function App() {
   const [loginError, setLoginError] = useState("");
   const [scrolled, setScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
@@ -238,10 +240,9 @@ export default function App() {
     );
   }
 
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   return (
     <div className="website">
+
 
       {/* ── NAVBAR ── */}
       <header className={`navbar${scrolled ? " navbar-scrolled" : ""}`}>

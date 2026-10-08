@@ -19,6 +19,8 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [deptFilter, setDeptFilter] = useState("ALL");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
 
   // Show/Hide password states
   const [showAllPasswords, setShowAllPasswords] = useState(false);
@@ -347,10 +349,9 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
     new Set(attendanceData.map((d) => d.department).filter(Boolean))
   );
 
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-
   return (
     <div className="portal-layout">
+
       {/* Mobile Drawer Overlay Backdrop */}
       {mobileSidebarOpen && (
         <div
