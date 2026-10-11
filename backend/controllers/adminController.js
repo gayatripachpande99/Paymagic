@@ -1,4 +1,5 @@
-import { users, attendanceRecords, uploadedRecords } from "../data/store.js";
+import { users, attendanceRecords, uploadedRecords, recordColumns, setRecordColumns } from "../data/store.js";
+import { Record, RecordMeta } from "../models/Record.js";
 
 // @desc    Get live admin dashboard attendance summary & logs
 // @route   GET /api/admin/attendance/today
@@ -118,6 +119,7 @@ export const getAllRecords = (req, res) => {
       unassignedRecords: unassigned,
       breakdown
     },
+    columns: recordColumns,
     records: uploadedRecords
   });
 };
@@ -125,10 +127,17 @@ export const getAllRecords = (req, res) => {
 // @desc    Upload / batch import new records file
 // @route   POST /api/admin/records/upload
 export const uploadRecords = (req, res) => {
-  const { records, mode } = req.body;
+  const { records, columns, mode } = req.body;
 
   if (!records || !Array.isArray(records) || records.length === 0) {
     return res.status(400).json({ message: "Please provide a valid list of records to upload." });
+  }
+
+  // Update dynamic columns derived from the file's first row
+  if (columns && Array.isArray(columns) && columns.length > 0) {
+    setRecordColumns(columns);
+  } else if (records[0]?.data) {
+    setRecordColumns(Object.keys(records[0].data));
   }
 
   // If mode === "replace", clear existing records array
@@ -141,13 +150,17 @@ export const uploadRecords = (req, res) => {
 
   const addedRecords = records.map((rec, i) => {
     const num = startNumber + i;
+    // Dynamic row data based on uploaded file's columns:
+    let rowData = rec.data;
+    if (!rowData) {
+      const { id, recordNumber, status, assignedTo, assignedToName, assignedBy, assignedAt, recordStatus, ...rest } = rec;
+      rowData = rest;
+    }
+
     return {
       id: `REC-${String(num).padStart(4, "0")}`,
       recordNumber: num,
-      title: rec.title || rec.name || `Uploaded Record #${num}`,
-      customerName: rec.customerName || rec.client || `Customer #${num}`,
-      amount: rec.amount || `₹${(1000 + num * 50).toLocaleString("en-IN")}`,
-      category: rec.category || "Uploaded Data Batch",
+      data: rowData,
       status: "UNASSIGNED",
       assignedTo: null,
       assignedToName: null,
@@ -159,9 +172,27 @@ export const uploadRecords = (req, res) => {
 
   uploadedRecords.push(...addedRecords);
 
+  // Asynchronously persist to MongoDB
+  (async () => {
+    try {
+      if (mode === "replace") {
+        await Record.deleteMany({});
+      }
+      await Record.insertMany(addedRecords);
+      await RecordMeta.findOneAndUpdate(
+        { key: "activeColumns" },
+        { columns: recordColumns },
+        { upsert: true }
+      );
+    } catch (err) {
+      console.warn("MongoDB record save warning:", err.message);
+    }
+  })();
+
   return res.status(201).json({
     success: true,
-    message: `Successfully uploaded and stored ${addedRecords.length} records!`,
+    message: `Successfully uploaded and stored ${addedRecords.length} records with ${recordColumns.length} dynamic columns!`,
+    columns: recordColumns,
     totalRecordsCount: uploadedRecords.length,
     newRange: { start: startNumber, end: startNumber + addedRecords.length - 1 }
   });
@@ -205,6 +236,26 @@ export const assignRecordsRange = (req, res) => {
       updatedCount++;
     }
   });
+
+  // Asynchronously persist assignment to MongoDB
+  (async () => {
+    try {
+      await Record.updateMany(
+        { recordNumber: { $gte: start, $lte: end } },
+        {
+          $set: {
+            assignedTo: targetEmployee.employeeId,
+            assignedToName: targetEmployee.fullName || targetEmployee.name,
+            assignedBy: req.user?.employeeId || "PM-ADMIN-0001",
+            assignedAt: todayStr,
+            status: "ASSIGNED"
+          }
+        }
+      );
+    } catch (err) {
+      console.warn("MongoDB record assign update warning:", err.message);
+    }
+  })();
 
   return res.status(200).json({
     success: true,

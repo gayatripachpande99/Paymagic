@@ -126,17 +126,44 @@ export const leaveRequests = [
   }
 ];
 
+// Dynamic record column definitions derived from the uploaded file's first row
+export const recordColumns = [
+  "Record Title",
+  "Customer / Client",
+  "Amount",
+  "Category"
+];
+
+export const setRecordColumns = (newCols) => {
+  if (Array.isArray(newCols)) {
+    recordColumns.length = 0;
+    recordColumns.push(...newCols);
+  }
+};
+
 // Initial 200 records uploaded by PM-ADMIN-0001
 export const uploadedRecords = Array.from({ length: 200 }, (_, i) => {
   const index = i + 1;
   const isGroup1 = index <= 100;
+  const title = `Payment Processing Record #${1000 + index}`;
+  const customerName = `Client ${String.fromCharCode(65 + (index % 26))}${index}`;
+  const amount = `₹${(2500 + index * 175).toLocaleString("en-IN")}`;
+  const category = index % 3 === 0 ? "Vendor Settlement" : index % 2 === 0 ? "Corporate Payroll" : "Merchant Payout";
+
   return {
     id: `REC-${String(index).padStart(4, "0")}`,
     recordNumber: index,
-    title: `Payment Processing Record #${1000 + index}`,
-    customerName: `Client ${String.fromCharCode(65 + (index % 26))}${index}`,
-    amount: `₹${(2500 + index * 175).toLocaleString("en-IN")}`,
-    category: index % 3 === 0 ? "Vendor Settlement" : index % 2 === 0 ? "Corporate Payroll" : "Merchant Payout",
+    // Dynamic record columns data mapped by column name:
+    data: {
+      "Record Title": title,
+      "Customer / Client": customerName,
+      "Amount": amount,
+      "Category": category
+    },
+    title,
+    customerName,
+    amount,
+    category,
     status: "ASSIGNED",
     assignedTo: isGroup1 ? "PM-EMP-0001" : "PM-EMP-0002",
     assignedToName: isGroup1 ? "Rahul Sharma" : "Priya Patel",
@@ -145,4 +172,5 @@ export const uploadedRecords = Array.from({ length: 200 }, (_, i) => {
     recordStatus: "PENDING"
   };
 });
+
 

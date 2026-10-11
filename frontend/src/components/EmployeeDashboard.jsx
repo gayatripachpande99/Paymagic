@@ -32,6 +32,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
 
   // Employee Assigned Records State
   const [myAssignedRecords, setMyAssignedRecords] = useState([]);
+  const [recordColumns, setRecordColumns] = useState([]);
   const [empRecordSearch, setEmpRecordSearch] = useState("");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -41,6 +42,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
       const res = await api.get("/employee/records");
       if (res && res.success) {
         setMyAssignedRecords(res.records || []);
+        setRecordColumns(res.columns || []);
       }
     } catch (err) {
       console.error("Failed to load employee assigned records:", err);
@@ -915,6 +917,25 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
                   <p>
                     Records assigned by Administrator ({user?.employeeId || profile?.employeeId})
                   </p>
+                  {recordColumns.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "6px" }}>
+                      {recordColumns.map((col, idx) => (
+                        <span
+                          key={col}
+                          style={{
+                            fontSize: "11px",
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            background: "rgba(59, 130, 246, 0.12)",
+                            color: "#93c5fd",
+                            border: "1px solid rgba(59, 130, 246, 0.25)"
+                          }}
+                        >
+                          {idx + 1}. {col}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="search-wrap">
@@ -936,10 +957,9 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
                   <thead>
                     <tr>
                       <th>Record # &amp; ID</th>
-                      <th>Record Title / Transaction</th>
-                      <th>Customer / Client Name</th>
-                      <th>Amount</th>
-                      <th>Category</th>
+                      {recordColumns.map((colName) => (
+                        <th key={colName}>{colName}</th>
+                      ))}
                       <th>Assigned Date</th>
                       <th>Processing Status</th>
                       <th>Action</th>
@@ -952,8 +972,10 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
                         return (
                           String(rec.recordNumber).includes(q) ||
                           rec.id?.toLowerCase().includes(q) ||
-                          rec.title?.toLowerCase().includes(q) ||
-                          rec.customerName?.toLowerCase().includes(q)
+                          (rec.data &&
+                            Object.values(rec.data).some((val) =>
+                              String(val ?? "").toLowerCase().includes(q)
+                            ))
                         );
                       })
                       .map((rec) => (
@@ -964,16 +986,15 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
                               {rec.id}
                             </span>
                           </td>
-                          <td>
-                            <strong>{rec.title}</strong>
-                          </td>
-                          <td>{rec.customerName}</td>
-                          <td className="font-mono" style={{ fontWeight: 700, color: "#60a5fa" }}>
-                            {rec.amount}
-                          </td>
-                          <td>
-                            <span className="service-tag" style={{ margin: 0 }}>{rec.category}</span>
-                          </td>
+                          {recordColumns.map((colName) => (
+                            <td key={colName}>
+                              {rec.data?.[colName] !== undefined && rec.data?.[colName] !== null && rec.data?.[colName] !== ""
+                                ? String(rec.data[colName])
+                                : rec[colName] !== undefined && rec[colName] !== null && rec[colName] !== ""
+                                ? String(rec[colName])
+                                : "—"}
+                            </td>
+                          ))}
                           <td>
                             <span style={{ fontSize: "12px", color: "#cbd5e1" }}>{rec.assignedAt || "Today"}</span>
                           </td>
@@ -998,7 +1019,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
 
                     {myAssignedRecords.length === 0 && (
                       <tr>
-                        <td colSpan="8" className="empty-table-cell">
+                        <td colSpan={recordColumns.length + 4} className="empty-table-cell">
                           No records have been assigned to your account ({user?.employeeId || "Employee"}) yet.
                         </td>
                       </tr>

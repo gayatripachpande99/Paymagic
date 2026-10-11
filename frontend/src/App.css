@@ -2456,11 +2456,13 @@ footer {
   color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .custom-table td {
   padding: 14px 16px;
+  white-space: nowrap;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   color: #e2e8f0;
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import * as XLSX from "xlsx";
 import api from "../services/api";
 
 export default function AdminDashboard({ user, onLogout, onBackToHome }) {
@@ -60,6 +61,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
   // Record Management & Allocation State
   const [recordsData, setRecordsData] = useState([]);
+  const [recordColumns, setRecordColumns] = useState([]);
   const [recordsSummary, setRecordsSummary] = useState({
     totalRecords: 0,
     assignedRecords: 0,
@@ -80,6 +82,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
       if (res && res.success) {
         setRecordsData(res.records || []);
         setRecordsSummary(res.summary || {});
+        setRecordColumns(res.columns || []);
       }
     } catch (err) {
       console.error("Admin records fetch error:", err);
@@ -183,44 +186,121 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
     setSuccessMsg("");
 
     const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        const content = event.target.result;
-        let parsedRecords = [];
 
-        if (file.name.endsWith(".json")) {
-          parsedRecords = JSON.parse(content);
-        } else {
-          // Parse CSV or Text lines
-          const lines = content.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-          parsedRecords = lines.map((line, idx) => {
-            const cols = line.split(",");
-            return {
-              title: cols[0] || `Uploaded Item #${idx + 1}`,
-              customerName: cols[1] || `Customer #${idx + 1}`,
-              amount: cols[2] || `₹${(2000 + idx * 100).toLocaleString("en-IN")}`,
-              category: cols[3] || "Uploaded File Batch"
-            };
+    if (file.name.endsWith(".json")) {
+      reader.onload = async (event) => {
+        try {
+          const content = event.target.result;
+          const parsedJson = JSON.parse(content);
+          if (!Array.isArray(parsedJson) || parsedJson.length === 0) {
+            setErrorMsg("JSON file must be an array of records.");
+            return;
+          }
+
+          // Headers derived from the first object keys:
+          const headers = Object.keys(parsedJson[0]);
+          const parsedRecords = parsedJson.map((item) => ({ data: item }));
+
+          const res = await api.post("/admin/records/upload", {
+            records: parsedRecords,
+            columns: headers,
+            mode: "replace"
           });
-        }
 
-        if (parsedRecords.length === 0) {
-          setErrorMsg("File contains no valid record entries.");
-          return;
+          if (res.success) {
+            setSuccessMsg(`File '${file.name}' uploaded successfully! Extracted ${headers.length} dynamic columns: [${headers.join(", ")}].`);
+            await loadAdminRecords();
+          }
+        } catch (err) {
+          setErrorMsg("Failed to upload/parse JSON file: " + err.message);
+        } finally {
+          setFileUploadLoading(false);
+          e.target.value = "";
         }
+      };
+      reader.readAsText(file);
+    } else {
+      // Excel (.xlsx, .xls) and CSV / TSV / TXT parsing
+      reader.onload = async (event) => {
+        try {
+          const data = new Uint8Array(event.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheetName = workbook.SheetNames[0];
 
-        const res = await api.post("/admin/records/upload", { records: parsedRecords });
-        if (res.success) {
-          setSuccessMsg(`File '${file.name}' uploaded successfully! ${res.message}`);
-          await loadAdminRecords();
+          if (!firstSheetName) {
+            setErrorMsg("The uploaded workbook has no sheets.");
+            setFileUploadLoading(false);
+            return;
+          }
+
+          const worksheet = workbook.Sheets[firstSheetName];
+          const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+          if (!rawRows || rawRows.length < 2) {
+            setErrorMsg("The uploaded file must contain at least a header row (first row) and data rows.");
+            setFileUploadLoading(false);
+            return;
+          }
+
+          // ROW 1: DYNAMIC COLUMN HEADERS
+          const firstRow = rawRows[0] || [];
+          let lastValidHeaderIdx = -1;
+          for (let i = 0; i < firstRow.length; i++) {
+            if (firstRow[i] !== undefined && firstRow[i] !== null && String(firstRow[i]).trim() !== "") {
+              lastValidHeaderIdx = i;
+            }
+          }
+
+          if (lastValidHeaderIdx === -1) {
+            setErrorMsg("Could not detect any column headers in the first row of this file.");
+            setFileUploadLoading(false);
+            return;
+          }
+
+          const headers = firstRow.slice(0, lastValidHeaderIdx + 1).map((h, idx) => {
+            const val = h !== undefined && h !== null ? String(h).trim() : "";
+            return val || `Column ${idx + 1}`;
+          });
+
+          // SUBSEQUENT ROWS: DATA RECORDS
+          const parsedRecords = [];
+          for (let r = 1; r < rawRows.length; r++) {
+            const row = rawRows[r];
+            if (!row || !row.some((cell) => cell !== undefined && cell !== null && String(cell).trim() !== "")) {
+              continue;
+            }
+            const rowData = {};
+            headers.forEach((header, colIdx) => {
+              rowData[header] = row[colIdx] !== undefined && row[colIdx] !== null ? String(row[colIdx]) : "";
+            });
+            parsedRecords.push({ data: rowData });
+          }
+
+          if (parsedRecords.length === 0) {
+            setErrorMsg("No data rows found below the header row in this file.");
+            setFileUploadLoading(false);
+            return;
+          }
+
+          const res = await api.post("/admin/records/upload", {
+            records: parsedRecords,
+            columns: headers,
+            mode: "replace"
+          });
+
+          if (res.success) {
+            setSuccessMsg(`File '${file.name}' processed successfully! Created ${parsedRecords.length} records with dynamic columns: [${headers.join(", ")}].`);
+            await loadAdminRecords();
+          }
+        } catch (err) {
+          setErrorMsg("Failed to upload/parse file: " + err.message);
+        } finally {
+          setFileUploadLoading(false);
+          e.target.value = "";
         }
-      } catch (err) {
-        setErrorMsg("Failed to upload/parse file: " + err.message);
-      } finally {
-        setFileUploadLoading(false);
-      }
-    };
-    reader.readAsText(file);
+      };
+      reader.readAsArrayBuffer(file);
+    }
   };
 
   const handleGenerateDefaultBatch = async () => {
@@ -229,16 +309,23 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
       setErrorMsg("");
       setSuccessMsg("");
 
+      const defaultCols = ["Record Title", "Customer / Client", "Amount", "Category"];
       const defaultRecords = Array.from({ length: 200 }, (_, i) => ({
-        title: `Payment Settlement Transaction #${1000 + i + 1}`,
-        customerName: `Client ${String.fromCharCode(65 + ((i + 1) % 26))}${i + 1}`,
-        amount: `₹${(2500 + (i + 1) * 175).toLocaleString("en-IN")}`,
-        category: (i + 1) % 3 === 0 ? "Vendor Settlement" : (i + 1) % 2 === 0 ? "Corporate Payroll" : "Merchant Payout"
+        data: {
+          "Record Title": `Payment Settlement Transaction #${1000 + i + 1}`,
+          "Customer / Client": `Client ${String.fromCharCode(65 + ((i + 1) % 26))}${i + 1}`,
+          "Amount": `₹${(2500 + (i + 1) * 175).toLocaleString("en-IN")}`,
+          "Category": (i + 1) % 3 === 0 ? "Vendor Settlement" : (i + 1) % 2 === 0 ? "Corporate Payroll" : "Merchant Payout"
+        }
       }));
 
-      const res = await api.post("/admin/records/upload", { records: defaultRecords, mode: "replace" });
+      const res = await api.post("/admin/records/upload", {
+        records: defaultRecords,
+        columns: defaultCols,
+        mode: "replace"
+      });
       if (res.success) {
-        setSuccessMsg("Generated and stored 200 standard records in database successfully!");
+        setSuccessMsg("Generated standard 200 records batch in database successfully!");
         await loadAdminRecords();
       }
     } catch (err) {
@@ -741,19 +828,22 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
               {/* Card 1: File Upload & Records Import */}
               <div className="leave-form-card" style={{ background: "rgba(15, 23, 42, 0.7)", borderColor: "rgba(59, 130, 246, 0.2)" }}>
-                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: "12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                  <span className="user-role-tag" style={{ background: "rgba(59, 130, 246, 0.15)", color: "#60a5fa" }}>
+                    DYNAMIC COLUMNS (ROW 1)
+                  </span>
                   <span className="user-role-tag admin-tag">ADMIN ACCESS</span>
                 </div>
                 <h3 style={{ color: "white", fontSize: "18px" }}>Upload Records File</h3>
                 <p className="side-card-sub" style={{ fontSize: "13px" }}>
-                  Upload CSV, JSON, or text file containing batch data records to store in database.
+                  Upload Excel (.xlsx/.xls), CSV, or text file. The <strong>first row</strong> will automatically define dynamic table columns for both Admin and Staff accounts.
                 </p>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "16px" }}>
                   <div className="file-upload-dropzone">
                     <input
                       type="file"
-                      accept=".csv, .json, .txt"
+                      accept=".xlsx, .xls, .csv, .tsv, .txt, .json"
                       onChange={handleFileUploadInput}
                       id="record-file-input"
                       style={{ display: "none" }}
@@ -765,11 +855,39 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                         <line x1="12" y1="3" x2="12" y2="15" />
                       </svg>
                       <div>
-                        <strong>{fileUploadLoading ? "Uploading & Storing Records..." : "Click to Upload File (.CSV / .JSON / .TXT)"}</strong>
-                        <p style={{ fontSize: "11.5px", color: "#94a3b8", marginTop: "2px" }}>Automated sequential index numbering &amp; record ID generation</p>
+                        <strong>{fileUploadLoading ? "Uploading & Storing Records..." : "Click to Upload File (.XLSX / .CSV / .XLS / .TXT / .JSON)"}</strong>
+                        <p style={{ fontSize: "11.5px", color: "#94a3b8", marginTop: "2px" }}>
+                          First row automatically becomes the columns shown to Admin &amp; Employees
+                        </p>
                       </div>
                     </label>
                   </div>
+
+                  {/* Active File Columns Preview */}
+                  {recordColumns.length > 0 && (
+                    <div style={{ background: "rgba(15, 23, 42, 0.5)", border: "1px solid rgba(59, 130, 246, 0.15)", borderRadius: "8px", padding: "10px 12px" }}>
+                      <span style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>
+                        Active File Columns ({recordColumns.length}):
+                      </span>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                        {recordColumns.map((col, idx) => (
+                          <span
+                            key={col}
+                            style={{
+                              fontSize: "11.5px",
+                              padding: "2px 8px",
+                              borderRadius: "4px",
+                              background: "rgba(59, 130, 246, 0.12)",
+                              color: "#93c5fd",
+                              border: "1px solid rgba(59, 130, 246, 0.25)"
+                            }}
+                          >
+                            {idx + 1}. {col}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                     <button
@@ -898,10 +1016,9 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                   <thead>
                     <tr>
                       <th>Record # &amp; ID</th>
-                      <th>Record Title / Transaction</th>
-                      <th>Customer / Client</th>
-                      <th>Amount</th>
-                      <th>Category</th>
+                      {recordColumns.map((colName) => (
+                        <th key={colName}>{colName}</th>
+                      ))}
                       <th>Assigned Employee</th>
                       <th>Assigned By &amp; Date</th>
                       <th>Status</th>
@@ -914,10 +1031,12 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                         const matchesSearch =
                           String(rec.recordNumber).includes(searchLower) ||
                           rec.id?.toLowerCase().includes(searchLower) ||
-                          rec.title?.toLowerCase().includes(searchLower) ||
-                          rec.customerName?.toLowerCase().includes(searchLower) ||
                           rec.assignedTo?.toLowerCase().includes(searchLower) ||
-                          rec.assignedToName?.toLowerCase().includes(searchLower);
+                          rec.assignedToName?.toLowerCase().includes(searchLower) ||
+                          (rec.data &&
+                            Object.values(rec.data).some((val) =>
+                              String(val ?? "").toLowerCase().includes(searchLower)
+                            ));
 
                         const matchesEmp =
                           recordFilterEmp === "ALL"
@@ -937,16 +1056,15 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                               {rec.id}
                             </span>
                           </td>
-                          <td>
-                            <strong>{rec.title}</strong>
-                          </td>
-                          <td>{rec.customerName}</td>
-                          <td className="font-mono" style={{ fontWeight: 700, color: "#60a5fa" }}>
-                            {rec.amount}
-                          </td>
-                          <td>
-                            <span className="service-tag" style={{ margin: 0 }}>{rec.category}</span>
-                          </td>
+                          {recordColumns.map((colName) => (
+                            <td key={colName}>
+                              {rec.data?.[colName] !== undefined && rec.data?.[colName] !== null && rec.data?.[colName] !== ""
+                                ? String(rec.data[colName])
+                                : rec[colName] !== undefined && rec[colName] !== null && rec[colName] !== ""
+                                ? String(rec[colName])
+                                : "—"}
+                            </td>
+                          ))}
                           <td>
                             {rec.assignedTo ? (
                               <div>
@@ -978,7 +1096,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                       ))}
                     {recordsData.length === 0 && (
                       <tr>
-                        <td colSpan="8" className="empty-table-cell">
+                        <td colSpan={recordColumns.length + 4} className="empty-table-cell">
                           No records stored in database yet. Click "Load Standard 200 Records Batch" or upload a file above!
                         </td>
                       </tr>

@@ -1,4 +1,5 @@
-import { uploadedRecords } from "../data/store.js";
+import { uploadedRecords, recordColumns } from "../data/store.js";
+import { Record } from "../models/Record.js";
 
 // @desc    Get current employee profile
 // @route   GET /api/employee/me
@@ -30,6 +31,7 @@ export const getEmployeeAssignedRecords = (req, res) => {
     success: true,
     employeeId: empId,
     totalAssigned: myRecords.length,
+    columns: recordColumns,
     records: myRecords
   });
 };
@@ -49,6 +51,15 @@ export const updateRecordStatus = (req, res) => {
   if (recordStatus) {
     record.recordStatus = recordStatus;
   }
+
+  // Asynchronously persist to MongoDB
+  (async () => {
+    try {
+      await Record.updateOne({ id }, { $set: { recordStatus } });
+    } catch (err) {
+      console.warn("MongoDB record status update warning:", err.message);
+    }
+  })();
 
   return res.status(200).json({
     success: true,
