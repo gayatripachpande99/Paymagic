@@ -191,7 +191,7 @@ export const uploadRecords = (req, res) => {
 
   return res.status(201).json({
     success: true,
-    message: `Successfully uploaded and stored ${addedRecords.length} records with ${recordColumns.length} dynamic columns!`,
+    message: "Load Record successfully!!",
     columns: recordColumns,
     totalRecordsCount: uploadedRecords.length,
     newRange: { start: startNumber, end: startNumber + addedRecords.length - 1 }

@@ -208,7 +208,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
           });
 
           if (res.success) {
-            setSuccessMsg(`File '${file.name}' uploaded successfully! Extracted ${headers.length} dynamic columns: [${headers.join(", ")}].`);
+            setSuccessMsg("Load Record successfully!!");
             await loadAdminRecords();
           }
         } catch (err) {
@@ -289,7 +289,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
           });
 
           if (res.success) {
-            setSuccessMsg(`File '${file.name}' processed successfully! Created ${parsedRecords.length} records with dynamic columns: [${headers.join(", ")}].`);
+            setSuccessMsg("Load Record successfully!!");
             await loadAdminRecords();
           }
         } catch (err) {
@@ -325,7 +325,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
         mode: "replace"
       });
       if (res.success) {
-        setSuccessMsg("Generated standard 200 records batch in database successfully!");
+        setSuccessMsg("Load Record successfully!!");
         await loadAdminRecords();
       }
     } catch (err) {
@@ -897,7 +897,43 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                       onClick={handleGenerateDefaultBatch}
                       disabled={fileUploadLoading}
                     >
-                      ⚡ Load Standard 200 Records Batch
+                      {fileUploadLoading ? (
+                        <>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="spin-icon"
+                          >
+                            <path d="M23 4v6h-6" />
+                            <path d="M1 20v-6h6" />
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                          </svg>
+                          <span>Loading Records...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="12" y1="12" x2="12" y2="18" />
+                            <polyline points="9 15 12 18 15 15" />
+                          </svg>
+                          <span>Load Records</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -1097,7 +1133,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                     {recordsData.length === 0 && (
                       <tr>
                         <td colSpan={recordColumns.length + 4} className="empty-table-cell">
-                          No records stored in database yet. Click "Load Standard 200 Records Batch" or upload a file above!
+                          No records stored in database yet. Click "Load Records" or upload a file above!
                         </td>
                       </tr>
                     )}
