@@ -263,6 +263,7 @@ export default function App() {
 
           {loggedInUser ? (
             <div className="user-badge-nav mobile-user-badge">
+              <div className="user-dot" />
               <span className="user-name">{loggedInUser.fullName || loggedInUser.name}</span>
               <button className="portal-launch-btn" onClick={() => { setAppMode("portal"); setMobileMenuOpen(false); }}>
                 Open Portal →
