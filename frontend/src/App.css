@@ -3990,49 +3990,73 @@ footer {
   overflow-x: hidden;
 }
 
+/* Card Boxes Margin and Padding */
+.case-allocation-page .portal-card,
+.case-allocation-page .bg-slate-900\/90 {
+  margin-bottom: 20px;
+}
+
 .case-allocation-page .table-card-wrapper {
   padding: 0 !important;
-  margin-bottom: 20px !important;
+  margin-bottom: 24px !important;
+  border-radius: 20px !important;
 }
 
 .case-allocation-page .table-card-wrapper .card-header {
-  padding: 16px 20px;
-  margin-bottom: 0;
+  padding: 20px 24px !important;
+  margin-bottom: 0 !important;
 }
 
 .case-allocation-page .portal-table-container {
-  margin-bottom: 0;
-  border-radius: 0;
-  border-left: none;
-  border-right: none;
+  margin-bottom: 0 !important;
+  border-radius: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
   -webkit-overflow-scrolling: touch;
+}
+
+.case-allocation-page .portal-table th {
+  padding: 14px 18px !important;
+}
+
+.case-allocation-page .portal-table td {
+  padding: 14px 18px !important;
 }
 
 /* Touch-optimized horizontal status scroll */
 .case-allocation-page .status-filter-scroll {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
+  margin-top: 6px;
+  margin-bottom: 14px;
+}
+
+/* Action button padding */
+.case-allocation-page .primary-btn,
+.case-allocation-page .secondary-btn {
+  padding: 10px 16px;
+  gap: 8px;
 }
 
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
   .case-allocation-page .table-card-wrapper .card-header {
-    padding: 14px 14px 12px;
+    padding: 16px 18px !important;
   }
 
   .case-allocation-page select {
-    min-height: 32px;
+    min-height: 34px;
   }
 }
 
 @media (max-width: 640px) {
   .case-allocation-page {
-    padding-bottom: 24px;
+    padding-bottom: 28px;
   }
 
   .case-allocation-page .table-card-wrapper .card-header {
-    padding: 12px;
-    gap: 10px;
+    padding: 14px 16px !important;
+    gap: 12px;
   }
 
   .case-allocation-page .table-card-wrapper .search-box {
@@ -4042,17 +4066,21 @@ footer {
   .case-allocation-page .table-card-wrapper .search-box input {
     width: 100%;
     font-size: 13px;
-    padding-top: 8px;
-    padding-bottom: 8px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 38px;
+    padding-right: 14px;
   }
 }
 
 @media (max-width: 480px) {
   .case-allocation-page .portal-card {
-    padding: 14px 12px !important;
+    padding: 16px 14px !important;
+    margin-bottom: 16px;
   }
 
   .case-allocation-page .table-card-wrapper {
     padding: 0 !important;
+    border-radius: 16px !important;
   }
 }
