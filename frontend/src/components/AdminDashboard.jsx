@@ -1,170 +1,35 @@
 import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import api from "../services/api";
-import {
-  BarChart3,
-  TrendingUp,
-  PhoneCall,
-  IndianRupee,
-  Users,
-  CheckCircle2,
-  AlertCircle,
-  Calendar,
-  Clock,
-  Sparkles,
-  ShieldCheck,
-  FileSpreadsheet,
-  Layers,
-  Download,
-  Search,
-  Filter,
-  ArrowRightLeft,
-  Play,
-  FileAudio,
-  Plus,
-  RefreshCw,
-  Eye,
-  Copy,
-  ChevronLeft,
-  ChevronRight,
-  MapPin,
-  Navigation,
-  ExternalLink,
-  Activity,
-  QrCode,
-  Receipt,
-  Building2,
-  Compass,
-  Radio,
-  Scale,
-  Bell
-} from "lucide-react";
-
-import CaseDetailModal from "./portal/CaseDetailModal";
-import AudioPlayerModal from "./portal/AudioPlayerModal";
-import PaymentModal from "./portal/PaymentModal";
-import BulkAllocateModal from "./portal/BulkAllocateModal";
-import TransferCasesModal from "./portal/TransferCasesModal";
-import SetTargetModal from "./portal/SetTargetModal";
-import CallActivityReport from "./portal/CallActivityReport";
 import WebPhoneDialer from "./portal/WebPhoneDialer";
-import CallingModal from "./portal/CallingModal";
-import PerformanceDashboard from "./portal/PerformanceDashboard";
-import ScheduleFieldVisitModal from "./portal/ScheduleFieldVisitModal";
-import DigitalReceiptModal from "./portal/DigitalReceiptModal";
-import ComplaintManagementDesk from "./portal/ComplaintManagementDesk";
-import NotificationBell from "./portal/NotificationBell";
-import NotificationHub from "./portal/NotificationHub";
-
-import {
-  ManagementAnalyticsPage,
-  CaseAllocationPage,
-  CallRecordsAudioPage,
-  PaymentRecoveryPage,
-  TeamPerformancePage,
-  LiveAttendancePage,
-  StaffDirectoryPage,
-  FieldRecoveryVisitsPage,
-  LeaveApprovalsPage,
-  GrievanceDisputesPage,
-  RemindersQueuePage
-} from "../panels/admin/pages";
-
-const CASE_STATUSES = [
-  "New",
-  "Assigned",
-  "Contacted",
-  "Promise to Pay",
-  "Partially Paid",
-  "Fully Paid",
-  "Disputed",
-  "Not Reachable",
-  "Field Visit",
-  "Closed"
-];
-
-const STATUS_PILL_CLASSES = {
-  New: "bg-slate-500/10 text-slate-400 border border-slate-500/20",
-  Assigned: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-  Contacted: "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20",
-  "Promise to Pay": "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-  "Partially Paid": "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
-  "Fully Paid": "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-  Disputed: "bg-rose-500/10 text-rose-400 border border-rose-500/20",
-  "Not Reachable": "bg-slate-500/10 text-slate-400 border border-slate-500/20",
-  "Field Visit": "bg-purple-500/10 text-purple-400 border border-purple-500/20",
-  Closed: "bg-teal-500/10 text-teal-400 border border-teal-500/20"
-};
 
 export default function AdminDashboard({ user, onLogout, onBackToHome }) {
-  // Navigation: analytics | cases | calls | payments | performance | attendance | employees | leave-approvals
-  const [activeTab, setActiveTab] = useState("cases");
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("attendance");
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [employeesList, setEmployeesList] = useState([]);
+  const [summary, setSummary] = useState({
+    totalEmployees: 0,
+    present: 0,
+    working: 0,
+    completed: 0,
+    notMarked: 0,
+    onLeave: 0
+  });
+  const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [deptFilter, setDeptFilter] = useState("ALL");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // ── 1. MANAGEMENT ANALYTICS & REPORTS STATE (Feature 7 & 5) ──
-  const [reportsData, setReportsData] = useState(null);
-  const [adminOverview, setAdminOverview] = useState(null);
-  const [reportsLoading, setReportsLoading] = useState(false);
 
-  // ── 2. RECOVERY CASES STATE (Feature 3) ──
-  const [casesList, setCasesList] = useState([]);
-  const [casesLoading, setCasesLoading] = useState(false);
-  const [casePage, setCasePage] = useState(1);
-  const [casesPagination, setCasesPagination] = useState({ page: 1, limit: 15, totalCount: 0, totalPages: 1 });
-  const [caseFilterStatus, setCaseFilterStatus] = useState("ALL");
-  const [caseFilterPriority, setCaseFilterPriority] = useState("ALL");
-  const [caseFilterLender, setCaseFilterLender] = useState("ALL");
-  const [caseSearchTerm, setCaseSearchTerm] = useState("");
-  const [selectedCaseId, setSelectedCaseId] = useState(null);
-  const [showCaseDetailModal, setShowCaseDetailModal] = useState(false);
-
-  // Legacy Range Allocation & Upload state (preserved)
-  const [recordsData, setRecordsData] = useState([]);
-  const [recordColumns, setRecordColumns] = useState([]);
-  const [recordsSummary, setRecordsSummary] = useState({ totalRecords: 0, assignedRecords: 0, unassignedRecords: 0, breakdown: {} });
-  const [selectedAssignEmp, setSelectedAssignEmp] = useState("PM-EMP-0001");
-  const [startRangeNum, setStartRangeNum] = useState("1");
-  const [endRangeNum, setEndRangeNum] = useState("100");
-  const [assignLoading, setAssignLoading] = useState(false);
-  const [fileUploadLoading, setFileUploadLoading] = useState(false);
-
-  // ── 3. CALL RECORDS & EVIDENCE STATE (Feature 1 & 4) ──
-  const [callsList, setCallsList] = useState([]);
-  const [callsLoading, setCallsLoading] = useState(false);
-  const [callFilterStatus, setCallFilterStatus] = useState("ALL");
-  const [callSearchTerm, setCallSearchTerm] = useState("");
-  const [selectedCallAudio, setSelectedCallAudio] = useState(null);
-  const [showAudioModal, setShowAudioModal] = useState(false);
-  const [adminCallingCase, setAdminCallingCase] = useState(null);
-  const [showAdminCallingModal, setShowAdminCallingModal] = useState(false);
-
-  // ── 4. PAYMENT & COLLECTIONS TRACKING STATE (Feature 5) ──
-  const [paymentsList, setPaymentsList] = useState([]);
-  const [paymentsLoading, setPaymentsLoading] = useState(false);
-  const [paymentsSummary, setPaymentsSummary] = useState({ total_count: 0, total_collected: 0 });
-  const [selectedPaymentCase, setSelectedPaymentCase] = useState(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-
-  // ── 5. PERFORMANCE & LEADERBOARD STATE (Feature 6) ──
-  const [teamDashboard, setTeamDashboard] = useState(null);
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [leaderboardPeriod, setLeaderboardPeriod] = useState("all");
-
-  // ── 6. ATTENDANCE & SHIFTS STATE (Feature 2) ──
-  const [attendanceData, setAttendanceData] = useState([]);
-  const [attendanceSummary, setAttendanceSummary] = useState({ totalEmployees: 0, present: 0, working: 0, completed: 0, notMarked: 0, onLeave: 0 });
-  const [attSearchTerm, setAttSearchTerm] = useState("");
-  const [attStatusFilter, setAttStatusFilter] = useState("ALL");
-  const [attDeptFilter, setAttDeptFilter] = useState("ALL");
-
-  // ── 7. STAFF DIRECTORY & PASSWORDS STATE ──
-  const [employeesList, setEmployeesList] = useState([]);
+  // Show/Hide password states
   const [showAllPasswords, setShowAllPasswords] = useState(false);
   const [visiblePasswords, setVisiblePasswords] = useState({});
   const [copiedId, setCopiedId] = useState(null);
+
+  // Modal State for Adding New Employee
   const [showAddModal, setShowAddModal] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState("");
@@ -179,147 +44,38 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
     joiningDate: new Date().toISOString().split("T")[0]
   });
 
-  // ── 8. LEAVE APPROVALS & SUPERVISOR DESK STATE (Module D) ──
-  const [leaveApprovals, setLeaveApprovals] = useState([]);
-  const [leaveLoading, setLeaveLoading] = useState(false);
-
-  // ── 9. FIELD RECOVERY MANAGEMENT STATE (Module E) ──
-  const [fieldVisitsList, setFieldVisitsList] = useState([]);
-  const [fieldVisitsLoading, setFieldVisitsLoading] = useState(false);
-  const [fieldOverviewData, setFieldOverviewData] = useState(null);
-  const [cashHandoversList, setCashHandoversList] = useState([]);
-  const [cashHandoversLoading, setCashHandoversLoading] = useState(false);
-  const [fieldSubTab, setFieldSubTab] = useState("visits"); // "visits" | "overview" | "handovers"
-  const [fieldFilterStatus, setFieldFilterStatus] = useState("ALL");
-  const [fieldFilterZone, setFieldFilterZone] = useState("ALL");
-  const [fieldSearchTerm, setFieldSearchTerm] = useState("");
-  const [showScheduleVisitModal, setShowScheduleVisitModal] = useState(false);
-  const [selectedReceiptRef, setSelectedReceiptRef] = useState(null);
-  const [showDigitalReceiptModal, setShowDigitalReceiptModal] = useState(false);
-
-  // Bulk Allocate Modal
-  const [showBulkAllocateModal, setShowBulkAllocateModal] = useState(false);
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [showTargetModal, setShowTargetModal] = useState(false);
-
-  // ── DATA FETCHERS ──
-
-  const loadManagementReports = async () => {
-    try {
-      setReportsLoading(true);
-      const [reportsRes, overviewRes] = await Promise.allSettled([
-        api.get("/dashboard/reports"),
-        api.get("/dashboard/admin-overview")
-      ]);
-
-      if (reportsRes.status === "fulfilled" && reportsRes.value.success) {
-        setReportsData(reportsRes.value.data);
-      }
-      if (overviewRes.status === "fulfilled" && overviewRes.value.success) {
-        setAdminOverview(overviewRes.value.data);
-      }
-    } catch (err) {
-      console.error("Management reports fetch error:", err);
-    } finally {
-      setReportsLoading(false);
+  // Sample pending leave requests for HR / Admin approval
+  const [leaveApprovals, setLeaveApprovals] = useState([
+    {
+      id: "LV-204",
+      employeeId: "PM-EMP-0001",
+      employeeName: "Rahul Sharma",
+      department: "Operations",
+      type: "Casual Leave",
+      fromDate: "2026-10-02",
+      toDate: "2026-10-03",
+      days: 2,
+      reason: "Family emergency",
+      status: "PENDING"
     }
-  };
+  ]);
 
-  const loadCases = async (page = casePage) => {
-    try {
-      setCasesLoading(true);
-      const queryParams = new URLSearchParams({
-        page: String(page),
-        limit: "15"
-      });
-      if (caseFilterStatus !== "ALL") queryParams.append("status", caseFilterStatus);
-      if (caseFilterPriority !== "ALL") queryParams.append("priority", caseFilterPriority);
-      if (caseFilterLender !== "ALL") queryParams.append("lender", caseFilterLender);
-      if (caseSearchTerm.trim()) queryParams.append("search", caseSearchTerm.trim());
-
-      const res = await api.get(`/cases?${queryParams.toString()}`);
-      if (res && res.success && res.data) {
-        setCasesList(res.data.cases || []);
-        setCasesPagination(res.data.pagination || { page: 1, limit: 15, totalCount: 0, totalPages: 1 });
-      }
-    } catch (err) {
-      console.error("Cases fetch error:", err);
-    } finally {
-      setCasesLoading(false);
-    }
-  };
-
-  const loadCalls = async () => {
-    try {
-      setCallsLoading(true);
-      const res = await api.get("/telephony/calls?limit=50");
-      if (res && res.success && res.data) {
-        setCallsList(res.data.calls || []);
-      }
-    } catch (err) {
-      console.error("Calls fetch error:", err);
-    } finally {
-      setCallsLoading(false);
-    }
-  };
-
-  const loadPayments = async () => {
-    try {
-      setPaymentsLoading(true);
-      const res = await api.get("/cases/payments/all?limit=50");
-      if (res && res.success && res.data) {
-        setPaymentsList(res.data.payments || []);
-        setPaymentsSummary(res.data.summary || { total_count: 0, total_collected: 0 });
-      }
-    } catch (err) {
-      console.error("Payments fetch error:", err);
-    } finally {
-      setPaymentsLoading(false);
-    }
-  };
-
-  const loadTeamPerformance = async () => {
-    try {
-      const [teamRes, leaderRes] = await Promise.allSettled([
-        api.get("/dashboard/team"),
-        api.get(`/dashboard/leaderboard?period=${leaderboardPeriod}`)
-      ]);
-      if (teamRes.status === "fulfilled" && teamRes.value.success) {
-        setTeamDashboard(teamRes.value.data);
-      }
-      if (leaderRes.status === "fulfilled" && leaderRes.value.success) {
-        setLeaderboard(leaderRes.value.data.leaderboard || []);
-      }
-    } catch (err) {
-      console.error("Performance fetch error:", err);
-    }
-  };
-
-  const loadAdminAttendance = async () => {
-    try {
-      setLoading(true);
-      const [attRes, empRes] = await Promise.allSettled([
-        api.get("/admin/attendance/today"),
-        api.get("/admin/employees")
-      ]);
-
-      if (attRes.status === "fulfilled" && attRes.value.success) {
-        setAttendanceSummary(attRes.value.summary || {});
-        setAttendanceData(attRes.value.attendance || []);
-      }
-
-      if (empRes.status === "fulfilled" && empRes.value.success) {
-        setEmployeesList(empRes.value.employees || []);
-      }
-
-      await loadAdminRecords();
-    } catch (err) {
-      console.error("Attendance fetch error:", err);
-      setErrorMsg(err.message || "Failed to load admin data.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Record Management & Allocation State
+  const [recordsData, setRecordsData] = useState([]);
+  const [recordColumns, setRecordColumns] = useState([]);
+  const [recordsSummary, setRecordsSummary] = useState({
+    totalRecords: 0,
+    assignedRecords: 0,
+    unassignedRecords: 0,
+    breakdown: {}
+  });
+  const [selectedAssignEmp, setSelectedAssignEmp] = useState("PM-EMP-0001");
+  const [startRangeNum, setStartRangeNum] = useState("1");
+  const [endRangeNum, setEndRangeNum] = useState("100");
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [recordSearchTerm, setRecordSearchTerm] = useState("");
+  const [recordFilterEmp, setRecordFilterEmp] = useState("ALL");
+  const [fileUploadLoading, setFileUploadLoading] = useState(false);
 
   const loadAdminRecords = async () => {
     try {
@@ -334,186 +90,37 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
     }
   };
 
-  const loadLeaveApprovals = async () => {
+  const loadAdminAttendance = async () => {
     try {
-      setLeaveLoading(true);
-      const res = await api.get("/attendance/leave/all");
-      if (res && res.success && res.leaveRequests) {
-        setLeaveApprovals(res.leaveRequests);
+      setLoading(true);
+      setErrorMsg("");
+
+      const [attRes, empRes] = await Promise.allSettled([
+        api.get("/admin/attendance/today"),
+        api.get("/admin/employees")
+      ]);
+
+      if (attRes.status === "fulfilled" && attRes.value.success) {
+        setSummary(attRes.value.summary || {});
+        setAttendanceData(attRes.value.attendance || []);
       }
+
+      if (empRes.status === "fulfilled" && empRes.value.success) {
+        setEmployeesList(empRes.value.employees || []);
+      }
+
+      await loadAdminRecords();
     } catch (err) {
-      console.warn("Leave approvals fetch warning:", err);
+      console.error("Admin data fetch error:", err);
+      setErrorMsg(err.message || "Failed to load admin data.");
     } finally {
-      setLeaveLoading(false);
+      setLoading(false);
     }
   };
 
-  const loadFieldVisits = async () => {
-    try {
-      setFieldVisitsLoading(true);
-      const res = await api.get("/field/visits");
-      if (res && res.success && res.visits) {
-        setFieldVisitsList(res.visits);
-      }
-    } catch (err) {
-      console.warn("Field visits fetch warning:", err);
-    } finally {
-      setFieldVisitsLoading(false);
-    }
-  };
-
-  const loadFieldOverview = async () => {
-    try {
-      const res = await api.get("/field/overview");
-      if (res && res.success && res.data) {
-        setFieldOverviewData(res.data);
-      }
-    } catch (err) {
-      console.warn("Field overview fetch warning:", err);
-    }
-  };
-
-  const loadCashHandovers = async () => {
-    try {
-      setCashHandoversLoading(true);
-      const res = await api.get("/field/cash-handovers");
-      if (res && res.success && res.handovers) {
-        setCashHandoversList(res.handovers);
-      }
-    } catch (err) {
-      console.warn("Cash handovers fetch warning:", err);
-    } finally {
-      setCashHandoversLoading(false);
-    }
-  };
-
-  const handleReconcileCash = async (id, status) => {
-    try {
-      const res = await api.patch(`/field/cash-handover/${id}/reconcile`, {
-        status,
-        remarks: `Reconciliation ${status.toLowerCase()} by Operations Administrator.`
-      });
-      if (res && res.success) {
-        setSuccessMsg(res.message || `Cash handover ${status.toLowerCase()} successfully!`);
-        await loadCashHandovers();
-        await loadFieldOverview();
-      }
-    } catch (err) {
-      setErrorMsg("Failed to reconcile cash handover: " + err.message);
-    }
-  };
-
-  // Initial load
   useEffect(() => {
-    loadManagementReports();
-    loadCases(1);
-    loadCalls();
-    loadPayments();
-    loadTeamPerformance();
     loadAdminAttendance();
-    loadLeaveApprovals();
-    loadFieldVisits();
-    loadFieldOverview();
-    loadCashHandovers();
   }, []);
-
-  // Reload cases when filters change
-  useEffect(() => {
-    loadCases(1);
-  }, [caseFilterStatus, caseFilterPriority, caseFilterLender]);
-
-  // Reload leaderboard when period changes
-  useEffect(() => {
-    loadTeamPerformance();
-  }, [leaderboardPeriod]);
-
-  // ── CSV EXPORTERS ──
-
-  const handleExportReportsCSV = () => {
-    if (!reportsData) return;
-    const wb = XLSX.utils.book_new();
-
-    // Sheet 1: DPD Aging
-    const dpdRows = (reportsData.dpd_aging || []).map((b) => ({
-      "DPD Bucket": b.bucket,
-      "Case Count": b.case_count,
-      "Outstanding Debt (₹)": b.outstanding_amount,
-      "Recovered Debt (₹)": b.recovered_amount,
-      "Recovery Rate (%)": `${b.recovery_rate}%`
-    }));
-    const ws1 = XLSX.utils.json_to_sheet(dpdRows);
-    XLSX.utils.book_append_sheet(wb, ws1, "DPD Aging Analysis");
-
-    // Sheet 2: Lender Breakdown
-    const lenderRows = (reportsData.lender_breakdown || []).map((l) => ({
-      "Lending Partner": l.lender,
-      "Total Cases": l.cases_count,
-      "Principal Amount (₹)": l.principal_amount,
-      "Outstanding (₹)": l.outstanding_amount,
-      "Recovered (₹)": l.recovered_amount,
-      "Recovery Rate (%)": `${l.recovery_rate}%`
-    }));
-    const ws2 = XLSX.utils.json_to_sheet(lenderRows);
-    XLSX.utils.book_append_sheet(wb, ws2, "Lender Portfolio");
-
-    XLSX.writeFile(wb, `PayMagic_Management_Report_${new Date().toISOString().split("T")[0]}.xlsx`);
-  };
-
-  const handleExportCasesCSV = () => {
-    if (!casesList || casesList.length === 0) return;
-    const rows = casesList.map((c) => ({
-      "Case Number": c.case_number,
-      "Customer Name": c.customer_name,
-      "Loan Account": c.loan_account_no,
-      "Lender": c.lender_name,
-      "Outstanding Amount (₹)": c.outstanding_amount,
-      "Recovered Amount (₹)": c.recovered_amount || 0,
-      "Status": c.status,
-      "Priority": c.priority,
-      "DPD": c.dpd,
-      "Assigned Employee": c.assigned_employee_id || "Unassigned",
-      "Follow-up Date": c.follow_up_date || "N/A"
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Recovery Cases");
-    XLSX.writeFile(wb, `PayMagic_Recovery_Cases_${new Date().toISOString().split("T")[0]}.xlsx`);
-  };
-
-  // ── LEGACY HANDLERS PRESERVED ──
-
-  const handleInlineAssign = async (caseId, empId) => {
-    try {
-      setErrorMsg("");
-      setSuccessMsg("");
-      const res = await api.post("/cases/assign", { caseId, employeeId: empId });
-      if (res && res.success) {
-        setSuccessMsg(res.message || "Case assigned successfully!");
-        await loadCases(casePage);
-        await loadManagementReports();
-      }
-    } catch (err) {
-      setErrorMsg(err.message || "Failed to assign case.");
-    }
-  };
-
-  const handleQuickStatusChange = async (caseId, newStatus) => {
-    try {
-      setErrorMsg("");
-      setSuccessMsg("");
-      const res = await api.patch(`/cases/${caseId}/status`, {
-        newStatus,
-        remarks: `Quick status transition to ${newStatus} from Case Allocation desk`
-      });
-      if (res && res.success) {
-        setSuccessMsg(`Status updated to '${newStatus}' with atomic entry in case_status_history!`);
-        await loadCases(casePage);
-        await loadManagementReports();
-      }
-    } catch (err) {
-      setErrorMsg(err.message || "Failed to update case status.");
-    }
-  };
 
   const handleAssignRangeSubmit = async (e) => {
     e.preventDefault();
@@ -581,85 +188,154 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
     const reader = new FileReader();
 
-    reader.onload = async (event) => {
-      try {
-        const data = new Uint8Array(event.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const firstSheetName = workbook.SheetNames[0];
-
-        if (!firstSheetName) {
-          setErrorMsg("The uploaded workbook has no sheets.");
-          setFileUploadLoading(false);
-          return;
-        }
-
-        const worksheet = workbook.Sheets[firstSheetName];
-        const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-        if (!rawRows || rawRows.length < 2) {
-          setErrorMsg("The uploaded file must contain at least a header row and data rows.");
-          setFileUploadLoading(false);
-          return;
-        }
-
-        const firstRow = rawRows[0] || [];
-        let lastValidHeaderIdx = -1;
-        for (let i = 0; i < firstRow.length; i++) {
-          if (firstRow[i] !== undefined && firstRow[i] !== null && String(firstRow[i]).trim() !== "") {
-            lastValidHeaderIdx = i;
+    if (file.name.endsWith(".json")) {
+      reader.onload = async (event) => {
+        try {
+          const content = event.target.result;
+          const parsedJson = JSON.parse(content);
+          if (!Array.isArray(parsedJson) || parsedJson.length === 0) {
+            setErrorMsg("JSON file must be an array of records.");
+            return;
           }
-        }
 
-        if (lastValidHeaderIdx === -1) {
-          setErrorMsg("Could not detect any column headers in the first row of this file.");
-          setFileUploadLoading(false);
-          return;
-        }
+          // Headers derived from the first object keys:
+          const headers = Object.keys(parsedJson[0]);
+          const parsedRecords = parsedJson.map((item) => ({ data: item }));
 
-        const headers = firstRow.slice(0, lastValidHeaderIdx + 1).map((h, idx) => {
-          const val = h !== undefined && h !== null ? String(h).trim() : "";
-          return val || `Column ${idx + 1}`;
-        });
-
-        const parsedRecords = [];
-        for (let r = 1; r < rawRows.length; r++) {
-          const row = rawRows[r];
-          if (!row || !row.some((cell) => cell !== undefined && cell !== null && String(cell).trim() !== "")) {
-            continue;
-          }
-          const rowData = {};
-          headers.forEach((header, colIdx) => {
-            rowData[header] = row[colIdx] !== undefined && row[colIdx] !== null ? String(row[colIdx]) : "";
+          const res = await api.post("/admin/records/upload", {
+            records: parsedRecords,
+            columns: headers,
+            mode: "replace"
           });
-          parsedRecords.push({ data: rowData });
-        }
 
-        if (parsedRecords.length === 0) {
-          setErrorMsg("No data rows found below the header row in this file.");
+          if (res.success) {
+            setSuccessMsg("Load Record successfully!!");
+            await loadAdminRecords();
+          }
+        } catch (err) {
+          setErrorMsg("Failed to upload/parse JSON file: " + err.message);
+        } finally {
           setFileUploadLoading(false);
-          return;
+          e.target.value = "";
         }
+      };
+      reader.readAsText(file);
+    } else {
+      // Excel (.xlsx, .xls) and CSV / TSV / TXT parsing
+      reader.onload = async (event) => {
+        try {
+          const data = new Uint8Array(event.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheetName = workbook.SheetNames[0];
 
-        const res = await api.post("/admin/records/upload", {
-          records: parsedRecords,
-          columns: headers,
-          mode: "replace"
-        });
+          if (!firstSheetName) {
+            setErrorMsg("The uploaded workbook has no sheets.");
+            setFileUploadLoading(false);
+            return;
+          }
 
-        if (res.success) {
-          setSuccessMsg("Uploaded customer loan data successfully!");
-          await loadAdminRecords();
-          await loadCases(1);
+          const worksheet = workbook.Sheets[firstSheetName];
+          const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+          if (!rawRows || rawRows.length < 2) {
+            setErrorMsg("The uploaded file must contain at least a header row (first row) and data rows.");
+            setFileUploadLoading(false);
+            return;
+          }
+
+          // ROW 1: DYNAMIC COLUMN HEADERS
+          const firstRow = rawRows[0] || [];
+          let lastValidHeaderIdx = -1;
+          for (let i = 0; i < firstRow.length; i++) {
+            if (firstRow[i] !== undefined && firstRow[i] !== null && String(firstRow[i]).trim() !== "") {
+              lastValidHeaderIdx = i;
+            }
+          }
+
+          if (lastValidHeaderIdx === -1) {
+            setErrorMsg("Could not detect any column headers in the first row of this file.");
+            setFileUploadLoading(false);
+            return;
+          }
+
+          const headers = firstRow.slice(0, lastValidHeaderIdx + 1).map((h, idx) => {
+            const val = h !== undefined && h !== null ? String(h).trim() : "";
+            return val || `Column ${idx + 1}`;
+          });
+
+          // SUBSEQUENT ROWS: DATA RECORDS
+          const parsedRecords = [];
+          for (let r = 1; r < rawRows.length; r++) {
+            const row = rawRows[r];
+            if (!row || !row.some((cell) => cell !== undefined && cell !== null && String(cell).trim() !== "")) {
+              continue;
+            }
+            const rowData = {};
+            headers.forEach((header, colIdx) => {
+              rowData[header] = row[colIdx] !== undefined && row[colIdx] !== null ? String(row[colIdx]) : "";
+            });
+            parsedRecords.push({ data: rowData });
+          }
+
+          if (parsedRecords.length === 0) {
+            setErrorMsg("No data rows found below the header row in this file.");
+            setFileUploadLoading(false);
+            return;
+          }
+
+          const res = await api.post("/admin/records/upload", {
+            records: parsedRecords,
+            columns: headers,
+            mode: "replace"
+          });
+
+          if (res.success) {
+            setSuccessMsg("Load Record successfully!!");
+            await loadAdminRecords();
+          }
+        } catch (err) {
+          setErrorMsg("Failed to upload/parse file: " + err.message);
+        } finally {
+          setFileUploadLoading(false);
+          e.target.value = "";
         }
-      } catch (err) {
-        setErrorMsg("Failed to upload/parse file: " + err.message);
-      } finally {
-        setFileUploadLoading(false);
-        e.target.value = "";
-      }
-    };
-    reader.readAsArrayBuffer(file);
+      };
+      reader.readAsArrayBuffer(file);
+    }
   };
+
+  const handleGenerateDefaultBatch = async () => {
+    try {
+      setFileUploadLoading(true);
+      setErrorMsg("");
+      setSuccessMsg("");
+
+      const defaultCols = ["Record Title", "Customer / Client", "Amount", "Category"];
+      const defaultRecords = Array.from({ length: 200 }, (_, i) => ({
+        data: {
+          "Record Title": `Payment Settlement Transaction #${1000 + i + 1}`,
+          "Customer / Client": `Client ${String.fromCharCode(65 + ((i + 1) % 26))}${i + 1}`,
+          "Amount": `₹${(2500 + (i + 1) * 175).toLocaleString("en-IN")}`,
+          "Category": (i + 1) % 3 === 0 ? "Vendor Settlement" : (i + 1) % 2 === 0 ? "Corporate Payroll" : "Merchant Payout"
+        }
+      }));
+
+      const res = await api.post("/admin/records/upload", {
+        records: defaultRecords,
+        columns: defaultCols,
+        mode: "replace"
+      });
+      if (res.success) {
+        setSuccessMsg("Load Record successfully!!");
+        await loadAdminRecords();
+      }
+    } catch (err) {
+      setErrorMsg("Failed to generate default batch: " + err.message);
+    } finally {
+      setFileUploadLoading(false);
+    }
+  };
+
 
   const togglePasswordVisibility = (empId) => {
     setVisiblePasswords((prev) => ({
@@ -712,34 +388,20 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
     }
   };
 
-  const handleApproveLeave = async (id) => {
-    try {
-      const res = await api.patch(`/attendance/leave/${id}/status`, {
-        status: "APPROVED",
-        remarks: "Approved by Operations Administrator"
-      });
-      if (res && res.success) {
-        setSuccessMsg(`Leave request ${id} approved successfully!`);
-        await loadLeaveApprovals();
-      }
-    } catch (err) {
-      setErrorMsg("Failed to approve leave: " + err.message);
-    }
+  const handleApproveLeave = (id) => {
+    setLeaveApprovals(
+      leaveApprovals.map((req) =>
+        req.id === id ? { ...req, status: "APPROVED" } : req
+      )
+    );
   };
 
-  const handleRejectLeave = async (id) => {
-    try {
-      const res = await api.patch(`/attendance/leave/${id}/status`, {
-        status: "REJECTED",
-        remarks: "Rejected by Operations Administrator"
-      });
-      if (res && res.success) {
-        setSuccessMsg(`Leave request ${id} rejected.`);
-        await loadLeaveApprovals();
-      }
-    } catch (err) {
-      setErrorMsg("Failed to reject leave: " + err.message);
-    }
+  const handleRejectLeave = (id) => {
+    setLeaveApprovals(
+      leaveApprovals.map((req) =>
+        req.id === id ? { ...req, status: "REJECTED" } : req
+      )
+    );
   };
 
   const formatTime = (isoString) => {
@@ -755,46 +417,37 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
     return `${h}h ${m}m`;
   };
 
-  const formatDurationSeconds = (sec) => {
-    if (!sec || sec <= 0) return "0s";
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    if (m > 0) return `${m}m ${s}s`;
-    return `${s}s`;
-  };
-
   // Filter attendance records
-  const filteredAttendance = attendanceData.filter((item) => {
+  const filteredRecords = attendanceData.filter((item) => {
     const matchesSearch =
-      item.name?.toLowerCase().includes(attSearchTerm.toLowerCase()) ||
-      item.employeeId?.toLowerCase().includes(attSearchTerm.toLowerCase()) ||
-      item.department?.toLowerCase().includes(attSearchTerm.toLowerCase());
-    const matchesStatus = attStatusFilter === "ALL" ? true : item.status === attStatusFilter;
-    const matchesDept = attDeptFilter === "ALL" ? true : item.department === attDeptFilter;
+      item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.employeeId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.department?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "ALL" ? true : item.status === statusFilter;
+
+    const matchesDept =
+      deptFilter === "ALL" ? true : item.department === deptFilter;
+
     return matchesSearch && matchesStatus && matchesDept;
   });
 
-  const departments = Array.from(new Set(attendanceData.map((d) => d.department).filter(Boolean)));
-
-  // Filter calls
-  const filteredCalls = callsList.filter((call) => {
-    const matchesStatus = callFilterStatus === "ALL" ? true : call.status === callFilterStatus;
-    const term = callSearchTerm.toLowerCase();
-    const matchesSearch =
-      !term ||
-      call.customer_name?.toLowerCase().includes(term) ||
-      call.case_number?.toLowerCase().includes(term) ||
-      call.employee_id?.toLowerCase().includes(term) ||
-      call.call_outcome?.toLowerCase().includes(term);
-    return matchesStatus && matchesSearch;
-  });
+  const departments = Array.from(
+    new Set(attendanceData.map((d) => d.department).filter(Boolean))
+  );
 
   return (
     <div className="portal-layout">
+
       {/* Mobile Drawer Overlay Backdrop */}
       {mobileSidebarOpen && (
-        <div className="portal-sidebar-backdrop" onClick={() => setMobileSidebarOpen(false)} />
+        <div
+          className="portal-sidebar-backdrop"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
       )}
+
 
       {/* ── SIDEBAR ── */}
       <aside className={`portal-sidebar ${mobileSidebarOpen ? "mobile-drawer-open" : ""}`}>
@@ -820,44 +473,67 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
         </div>
 
         <nav className="portal-nav">
-          {/* Module A: Recovery Case Management & Allocation */}
-          <button
-            className={`portal-nav-item ${activeTab === "cases" ? "active" : ""}`}
-            onClick={() => { setActiveTab("cases"); setErrorMsg(""); setMobileSidebarOpen(false); }}
-          >
-            <Layers className="w-5 h-5 shrink-0" />
-            <span>Recovery Case Allocation</span>
-          </button>
-
-          {/* Pre-Oct 11: Live Staff Attendance */}
           <button
             className={`portal-nav-item ${activeTab === "attendance" ? "active" : ""}`}
             onClick={() => { setActiveTab("attendance"); setErrorMsg(""); setMobileSidebarOpen(false); }}
           >
-            <Clock className="w-5 h-5 shrink-0" />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+            </svg>
             <span>Live Attendance</span>
           </button>
 
-          {/* Pre-Oct 11: Staff Directory & Passwords */}
           <button
             className={`portal-nav-item ${activeTab === "employees" ? "active" : ""}`}
             onClick={() => { setActiveTab("employees"); setErrorMsg(""); setMobileSidebarOpen(false); }}
           >
-            <Users className="w-5 h-5 shrink-0" />
-            <span>Staff Directory</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span>Staff Directory &amp; Passwords</span>
           </button>
 
-          {/* Pre-Oct 11: HR Leave Approvals */}
+          <button
+            className={`portal-nav-item ${activeTab === "records" ? "active" : ""}`}
+            onClick={() => { setActiveTab("records"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+              <line x1="12" y1="11" x2="12" y2="17" />
+              <line x1="9" y1="14" x2="15" y2="14" />
+            </svg>
+            <span>Record Upload &amp; Allocation</span>
+          </button>
+
           <button
             className={`portal-nav-item ${activeTab === "leave-approvals" ? "active" : ""}`}
             onClick={() => { setActiveTab("leave-approvals"); setErrorMsg(""); setMobileSidebarOpen(false); }}
           >
-            <Calendar className="w-5 h-5 shrink-0" />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
             <span>Leave Approvals</span>
           </button>
         </nav>
 
         <div className="portal-sidebar-footer">
+          <button className="portal-back-btn" onClick={onBackToHome}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+            <span>Public Website</span>
+          </button>
           <button className="portal-logout-btn" onClick={onLogout}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -873,9 +549,9 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
       <main className="portal-main">
         {/* Top Header */}
         <header className="portal-topbar">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <button
-              className="portal-mobile-toggle-btn shrink-0"
+              className="portal-mobile-toggle-btn"
               onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
               aria-label="Toggle Navigation Drawer"
             >
@@ -885,349 +561,950 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                 <line x1="3" y1="18" x2="21" y2="18" />
               </svg>
             </button>
-            <div className="topbar-title-wrap min-w-0">
+            <div className="topbar-welcome">
               <h2>
-                {activeTab === "cases" && "Recovery Case Management & Allocation"}
-                {activeTab === "attendance" && "Live Staff Attendance Roster"}
-                {activeTab === "employees" && "Staff Directory & Security Passwords"}
-                {activeTab === "leave-approvals" && "HR Leave Approval Desk"}
+                Admin Command Center · <span className="gradient-text">Staff &amp; Credentials</span>
               </h2>
+              <p className="topbar-subtitle">
+                Live Employee Operations, Biometric Attendance &amp; Credential Management
+              </p>
             </div>
           </div>
 
-          <div className="topbar-actions flex items-center gap-2.5 sm:gap-3 shrink-0">
+
+          <div className="topbar-right">
+            {/* Prominent Add Employee Button */}
             <button
-              className="refresh-btn"
-              onClick={() => {
-                loadManagementReports();
-                loadCases(casePage);
-                loadAdminAttendance();
-                loadLeaveApprovals();
-              }}
-              title="Refresh Platform Data"
+              className="primary-btn add-emp-btn"
+              onClick={() => { setShowAddModal(true); setModalError(""); }}
             >
-              <RefreshCw className="w-4 h-4" />
+              <span>Add New Employee</span>
+
+            </button>
+
+            <button className="refresh-btn" onClick={loadAdminAttendance} title="Refresh Live Data" disabled={loading}>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className={loading ? "spin-icon" : ""}
+              >
+                <path d="M23 4v6h-6" />
+                <path d="M1 20v-6h6" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
               <span>Refresh</span>
             </button>
           </div>
         </header>
 
-        {/* Global Notifications */}
         {errorMsg && (
-          <div className="portal-alert-bar alert-error" style={{ margin: "16px 24px 0" }}>
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="portal-banner banner-error">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
             <span>{errorMsg}</span>
           </div>
         )}
+
         {successMsg && (
-          <div className="portal-alert-bar alert-success" style={{ margin: "16px 24px 0" }}>
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
+          <div className="portal-banner banner-success">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
             <span>{successMsg}</span>
           </div>
         )}
 
-        {/* ═══════════════════════════════════════════════════════
-            TAB 1: CASE ALLOCATION & OPERATIONS (Module A)
-        ═══════════════════════════════════════════════════════ */}
-        {activeTab === "cases" && (
-          <CaseAllocationPage
-            adminOverview={adminOverview}
-            casesPagination={casesPagination}
-            employeesList={employeesList}
-            fileUploadLoading={fileUploadLoading}
-            handleFileUploadInput={handleFileUploadInput}
-            setShowBulkAllocateModal={setShowBulkAllocateModal}
-            setShowTransferModal={setShowTransferModal}
-            setShowTargetModal={setShowTargetModal}
-            handleExportCasesCSV={handleExportCasesCSV}
-            caseFilterStatus={caseFilterStatus}
-            setCaseFilterStatus={setCaseFilterStatus}
-            CASE_STATUSES={CASE_STATUSES}
-            STATUS_PILL_CLASSES={STATUS_PILL_CLASSES}
-            caseSearchTerm={caseSearchTerm}
-            setCaseSearchTerm={setCaseSearchTerm}
-            loadCases={loadCases}
-            casesLoading={casesLoading}
-            casesList={casesList}
-            handleQuickStatusChange={handleQuickStatusChange}
-            handleInlineAssign={handleInlineAssign}
-            setSelectedCaseId={setSelectedCaseId}
-            setShowCaseDetailModal={setShowCaseDetailModal}
-            setSelectedPaymentCase={setSelectedPaymentCase}
-            setShowPaymentModal={setShowPaymentModal}
-            casePage={casePage}
-            setCasePage={setCasePage}
-          />
-        )}
-
-        {/* ═══════════════════════════════════════════════════════
-            TAB 2: LIVE ATTENDANCE (Pre-Oct 11)
-        ═══════════════════════════════════════════════════════ */}
+        {/* ── TAB 1: LIVE ATTENDANCE MONITORING ── */}
         {activeTab === "attendance" && (
-          <LiveAttendancePage
-            attendanceSummary={attendanceSummary}
-            attSearchTerm={attSearchTerm}
-            setAttSearchTerm={setAttSearchTerm}
-            attStatusFilter={attStatusFilter}
-            setAttStatusFilter={setAttStatusFilter}
-            attDeptFilter={attDeptFilter}
-            setAttDeptFilter={setAttDeptFilter}
-            departments={departments}
-            filteredAttendance={filteredAttendance}
-            formatTime={formatTime}
-            formatMinutes={formatMinutes}
-          />
+          <div className="portal-tab-content">
+            {/* KPI Summary Cards */}
+            <div className="admin-kpi-grid">
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap blue-wrap">👥</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Total Staff</span>
+                  <div className="kpi-val">{summary.totalEmployees}</div>
+                </div>
+              </div>
+
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap green-wrap">⚡</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Present Today</span>
+                  <div className="kpi-val text-green">{summary.present}</div>
+                </div>
+              </div>
+
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap purple-wrap">💼</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Currently Working</span>
+                  <div className="kpi-val text-purple">{summary.working}</div>
+                </div>
+              </div>
+
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap teal-wrap">✓</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Shift Completed</span>
+                  <div className="kpi-val text-teal">{summary.completed}</div>
+                </div>
+              </div>
+
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap gold-wrap">⏳</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Not Marked Yet</span>
+                  <div className="kpi-val text-gold">{summary.notMarked}</div>
+                </div>
+              </div>
+
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap red-wrap">🌴</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">On Leave</span>
+                  <div className="kpi-val text-red">{summary.onLeave}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Attendance Table & Filters */}
+            <div className="portal-table-container">
+              <div className="table-header-row table-filter-bar">
+                <div className="search-wrap">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search by name, ID or department..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="search-input"
+                  />
+                </div>
+
+                <div className="filter-dropdowns">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="ALL">All Statuses</option>
+                    <option value="WORKING">Working (In Progress)</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="NOT_MARKED">Not Marked</option>
+                    <option value="ON_LEAVE">On Leave</option>
+                  </select>
+
+                  <select
+                    value={deptFilter}
+                    onChange={(e) => setDeptFilter(e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="ALL">All Departments</option>
+                    {departments.map((dept) => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="custom-table-wrap">
+                <table className="custom-table">
+                  <thead>
+                    <tr>
+                      <th>Employee</th>
+                      <th>Department</th>
+                      <th>Designation</th>
+                      <th>Check In</th>
+                      <th>Check Out</th>
+                      <th>Working Time</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredRecords.map((item) => (
+                      <tr key={item.employeeMongoId}>
+                        <td>
+                          <div className="table-emp-cell">
+                            <div className="table-avatar">
+                              {item.name ? item.name.slice(0, 2).toUpperCase() : "EM"}
+                            </div>
+                            <div>
+                              <strong>{item.name}</strong>
+                              <span className="font-mono text-muted" style={{ display: "block", fontSize: "11.5px" }}>
+                                {item.employeeId}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>{item.department || "Operations"}</td>
+                        <td>{item.designation || "Staff"}</td>
+                        <td className="font-mono">{formatTime(item.checkIn)}</td>
+                        <td className="font-mono">{formatTime(item.checkOut)}</td>
+                        <td><strong>{formatMinutes(item.totalWorkMinutes)}</strong></td>
+                        <td>
+                          <span
+                            className={`status-pill pill-${
+                              item.status === "WORKING"
+                                ? "green pulse-pill"
+                                : item.status === "COMPLETED"
+                                ? "blue"
+                                : item.status === "NOT_MARKED"
+                                ? "gold"
+                                : "red"
+                            }`}
+                          >
+                            {item.status === "WORKING"
+                              ? "● Working"
+                              : item.status === "COMPLETED"
+                              ? "Completed"
+                              : item.status === "NOT_MARKED"
+                              ? "Not Marked"
+                              : item.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredRecords.length === 0 && (
+                      <tr>
+                        <td colSpan="7" className="empty-table-cell">
+                          No matching records found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* ═══════════════════════════════════════════════════════
-            TAB 3: STAFF DIRECTORY & PASSWORDS (Pre-Oct 11)
-        ═══════════════════════════════════════════════════════ */}
+        {/* ── TAB: RECORD UPLOAD & RANGE ALLOCATION ── */}
+        {activeTab === "records" && (
+          <div className="portal-tab-content">
+            {/* KPI Summary Banner */}
+            <div className="admin-kpi-grid records-kpi-grid" style={{ marginBottom: "20px" }}>
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap blue-wrap">📁</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Total Stored Records</span>
+                  <div className="kpi-val">{recordsSummary.totalRecords || recordsData.length}</div>
+                </div>
+              </div>
+
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap green-wrap">⚡</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Assigned Records</span>
+                  <div className="kpi-val text-green">{recordsSummary.assignedRecords || 0}</div>
+                </div>
+              </div>
+
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap gold-wrap">⏳</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Unassigned Records</span>
+                  <div className="kpi-val text-gold">{recordsSummary.unassignedRecords || 0}</div>
+                </div>
+              </div>
+
+              <div className="admin-kpi-card">
+                <div className="kpi-icon-wrap purple-wrap">👥</div>
+                <div className="kpi-data">
+                  <span className="kpi-label">Staff Accounts</span>
+                  <div className="kpi-val text-purple">{employeesList.filter((e) => e.role === "EMPLOYEE").length}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Workflow Step Cards Grid */}
+            <div className="admin-workflow-grid" style={{ marginBottom: "24px" }}>
+
+              {/* Card 1: File Upload & Records Import */}
+              <div className="leave-form-card" style={{ background: "rgba(15, 23, 42, 0.7)", borderColor: "rgba(59, 130, 246, 0.2)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                  <span className="user-role-tag" style={{ background: "rgba(59, 130, 246, 0.15)", color: "#60a5fa" }}>
+                    DYNAMIC COLUMNS (ROW 1)
+                  </span>
+                  <span className="user-role-tag admin-tag">ADMIN ACCESS</span>
+                </div>
+                <h3 style={{ color: "white", fontSize: "18px" }}>Upload Records File</h3>
+                <p className="side-card-sub" style={{ fontSize: "13px" }}>
+                  Upload Excel (.xlsx/.xls), CSV, or text file. The <strong>first row</strong> will automatically define dynamic table columns for both Admin and Staff accounts.
+                </p>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "16px" }}>
+                  <div className="file-upload-dropzone">
+                    <input
+                      type="file"
+                      accept=".xlsx, .xls, .csv, .tsv, .txt, .json"
+                      onChange={handleFileUploadInput}
+                      id="record-file-input"
+                      style={{ display: "none" }}
+                    />
+                    <label htmlFor="record-file-input" className="file-drop-label">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      <div>
+                        <strong>{fileUploadLoading ? "Uploading & Storing Records..." : "Click to Upload File (.XLSX / .CSV / .XLS / .TXT / .JSON)"}</strong>
+                        <p style={{ fontSize: "11.5px", color: "#94a3b8", marginTop: "2px" }}>
+                          First row automatically becomes the columns shown to Admin &amp; Employees
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Active File Columns Preview */}
+                  {recordColumns.length > 0 && (
+                    <div style={{ background: "rgba(15, 23, 42, 0.5)", border: "1px solid rgba(59, 130, 246, 0.15)", borderRadius: "8px", padding: "10px 12px" }}>
+                      <span style={{ fontSize: "11px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>
+                        Active File Columns ({recordColumns.length}):
+                      </span>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                        {recordColumns.map((col, idx) => (
+                          <span
+                            key={col}
+                            style={{
+                              fontSize: "11.5px",
+                              padding: "2px 8px",
+                              borderRadius: "4px",
+                              background: "rgba(59, 130, 246, 0.12)",
+                              color: "#93c5fd",
+                              border: "1px solid rgba(59, 130, 246, 0.25)"
+                            }}
+                          >
+                            {idx + 1}. {col}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      style={{ width: "100%", justifyContent: "center", fontSize: "13px", padding: "10px 14px" }}
+                      onClick={handleGenerateDefaultBatch}
+                      disabled={fileUploadLoading}
+                    >
+                      {fileUploadLoading ? (
+                        <>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            className="spin-icon"
+                          >
+                            <path d="M23 4v6h-6" />
+                            <path d="M1 20v-6h6" />
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                          </svg>
+                          <span>Loading Records...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="12" y1="12" x2="12" y2="18" />
+                            <polyline points="9 15 12 18 15 15" />
+                          </svg>
+                          <span>Load Records</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Range Assignment Tool */}
+              <div className="leave-form-card" style={{ background: "rgba(15, 23, 42, 0.7)", borderColor: "rgba(16, 185, 129, 0.2)" }}>
+                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: "12px" }}>
+                  <span className="user-role-tag" style={{ background: "rgba(59,130,246,0.15)", color: "#93c5fd" }}>
+                    {recordsSummary.assignedRecords || 0} Assigned
+                  </span>
+                </div>
+                <h3 style={{ color: "white", fontSize: "18px" }}>Assign Record Ranges to Employee</h3>
+                <p className="side-card-sub" style={{ fontSize: "13px" }}>
+                  Specify start and end record numbers to assign in bulk to any employee account.
+                </p>
+
+                <form onSubmit={handleAssignRangeSubmit} className="leave-form" style={{ marginTop: "16px" }}>
+                  <div className="form-group">
+                    <label>Select Target Employee Account *</label>
+                    <select
+                      value={selectedAssignEmp}
+                      onChange={(e) => setSelectedAssignEmp(e.target.value)}
+                      className="custom-select"
+                      required
+                    >
+                      {employeesList
+                        .filter((u) => u.role === "EMPLOYEE")
+                        .map((emp) => (
+                          <option key={emp.id} value={emp.employeeId}>
+                            {emp.fullName} ({emp.employeeId}) — {emp.department}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>From Record #</label>
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="1"
+                        value={startRangeNum}
+                        onChange={(e) => setStartRangeNum(e.target.value)}
+                        className="custom-input font-mono"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>To Record #</label>
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="100"
+                        value={endRangeNum}
+                        onChange={(e) => setEndRangeNum(e.target.value)}
+                        className="custom-input font-mono"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="primary-btn"
+                    style={{ width: "100%", justifyContent: "center" }}
+                    disabled={assignLoading}
+                  >
+                    {assignLoading
+                      ? "Assigning Range..."
+                      : `Assign Records ${startRangeNum || 1} to ${endRangeNum || 100} → ${selectedAssignEmp}`}
+                  </button>
+                </form>
+              </div>
+
+            </div>
+
+            {/* Live Database Records Table */}
+            <div className="portal-table-container">
+              <div className="table-header-row table-filter-bar">
+                <div>
+                  <h3>Stored Records Master Database ({recordsData.length})</h3>
+                  <p>Real-time dataset stored in backend database, showing range assignment &amp; status</p>
+                </div>
+
+                <div className="search-wrap">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search by record #, ID, customer name..."
+                    value={recordSearchTerm}
+                    onChange={(e) => setRecordSearchTerm(e.target.value)}
+                    className="search-input"
+                  />
+                </div>
+
+                <div className="filter-dropdowns">
+                  <select
+                    value={recordFilterEmp}
+                    onChange={(e) => setRecordFilterEmp(e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="ALL">All Employees</option>
+                    <option value="PM-EMP-0001">PM-EMP-0001 (Rahul Sharma)</option>
+                    <option value="PM-EMP-0002">PM-EMP-0002 (Priya Patel)</option>
+                    <option value="UNASSIGNED">Unassigned Records Only</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="custom-table-wrap">
+                <table className="custom-table">
+                  <thead>
+                    <tr>
+                      <th>Record # &amp; ID</th>
+                      {recordColumns.map((colName) => (
+                        <th key={colName}>{colName}</th>
+                      ))}
+                      <th>Assigned Employee</th>
+                      <th>Assigned By &amp; Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recordsData
+                      .filter((rec) => {
+                        const searchLower = recordSearchTerm.toLowerCase();
+                        const matchesSearch =
+                          String(rec.recordNumber).includes(searchLower) ||
+                          rec.id?.toLowerCase().includes(searchLower) ||
+                          rec.assignedTo?.toLowerCase().includes(searchLower) ||
+                          rec.assignedToName?.toLowerCase().includes(searchLower) ||
+                          (rec.data &&
+                            Object.values(rec.data).some((val) =>
+                              String(val ?? "").toLowerCase().includes(searchLower)
+                            ));
+
+                        const matchesEmp =
+                          recordFilterEmp === "ALL"
+                            ? true
+                            : recordFilterEmp === "UNASSIGNED"
+                            ? !rec.assignedTo
+                            : rec.assignedTo === recordFilterEmp;
+
+                        return matchesSearch && matchesEmp;
+                      })
+                      .slice(0, 100)
+                      .map((rec) => (
+                        <tr key={rec.id}>
+                          <td>
+                            <strong className="font-mono text-green">#{rec.recordNumber}</strong>
+                            <span className="font-mono text-muted" style={{ display: "block", fontSize: "11px" }}>
+                              {rec.id}
+                            </span>
+                          </td>
+                          {recordColumns.map((colName) => (
+                            <td key={colName}>
+                              {rec.data?.[colName] !== undefined && rec.data?.[colName] !== null && rec.data?.[colName] !== ""
+                                ? String(rec.data[colName])
+                                : rec[colName] !== undefined && rec[colName] !== null && rec[colName] !== ""
+                                ? String(rec[colName])
+                                : "—"}
+                            </td>
+                          ))}
+                          <td>
+                            {rec.assignedTo ? (
+                              <div>
+                                <strong style={{ color: "#34d399", fontSize: "13px" }}>{rec.assignedToName}</strong>
+                                <span className="font-mono" style={{ display: "block", fontSize: "11.5px", color: "#94a3b8" }}>
+                                  {rec.assignedTo}
+                                </span>
+                              </div>
+                            ) : (
+                              <span style={{ color: "#f59e0b", fontSize: "12px", fontStyle: "italic" }}>
+                                Unassigned
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            <span style={{ fontSize: "12px", color: "#cbd5e1", display: "block" }}>
+                              {rec.assignedBy || "PM-ADMIN-0001"}
+                            </span>
+                            <span style={{ fontSize: "11px", color: "#64748b" }}>
+                              {rec.assignedAt || "—"}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`status-pill pill-${rec.assignedTo ? "green" : "gold"}`}>
+                              {rec.assignedTo ? "ASSIGNED" : "UNASSIGNED"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    {recordsData.length === 0 && (
+                      <tr>
+                        <td colSpan={recordColumns.length + 4} className="empty-table-cell">
+                          No records stored in database yet. Click "Load Records" or upload a file above!
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB 2: EMPLOYEES DIRECTORY & PASSWORDS ── */}
         {activeTab === "employees" && (
-          <StaffDirectoryPage
-            employeesList={employeesList}
-            setShowAddModal={setShowAddModal}
-          />
+          <div className="portal-tab-content">
+            <div className="portal-table-container">
+              <div className="table-header-row">
+                <div>
+                  <h3>Staff Credentials &amp; Directory</h3>
+                  <p>View all employee names, unique employee IDs, and access passwords for system login</p>
+                </div>
+
+                <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                  <button
+                    className="toggle-pass-btn"
+                    onClick={() => setShowAllPasswords(!showAllPasswords)}
+                  >
+                    {showAllPasswords ? "🙈 Hide Passwords" : "👁️ Reveal All Passwords"}
+                  </button>
+
+                  <button
+                    className="primary-btn add-emp-btn"
+                    onClick={() => { setShowAddModal(true); setModalError(""); }}
+                  >
+                    Add New Employee
+
+                  </button>
+                </div>
+              </div>
+
+              <div className="custom-table-wrap">
+                <table className="custom-table credential-table">
+                  <thead>
+                    <tr>
+                      <th>Employee Name</th>
+                      <th>Employee ID</th>
+                      <th>Password</th>
+                      <th>Department &amp; Role</th>
+                      <th>Contact Info</th>
+                      <th>Quick Copy</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {employeesList.map((emp) => {
+                      const isRevealed = showAllPasswords || visiblePasswords[emp.id];
+                      const isCopied = copiedId === emp.id;
+
+                      return (
+                        <tr key={emp.id}>
+                          {/* Name */}
+                          <td>
+                            <div className="table-emp-cell">
+                              <div className={`table-avatar ${emp.role === "ADMIN" ? "admin-avatar-circle" : ""}`}>
+                                {emp.fullName ? emp.fullName.slice(0, 2).toUpperCase() : "EM"}
+                              </div>
+                              <div>
+                                <strong style={{ color: "white", fontSize: "14px" }}>{emp.fullName}</strong>
+                                <span className={`portal-tag-pill ${emp.role === "ADMIN" ? "admin-pill" : ""}`} style={{ display: "block", marginTop: "4px" }}>
+                                  {emp.role}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Employee ID */}
+                          <td>
+                            <div className="id-copy-cell">
+                              <span className="font-mono credential-badge">{emp.employeeId}</span>
+                              <button
+                                className="inline-copy-btn"
+                                onClick={() => copyToClipboard(emp.employeeId, `${emp.id}-id`)}
+                                title="Copy Employee ID"
+                              >
+                                {copiedId === `${emp.id}-id` ? "✓" : "📋"}
+                              </button>
+                            </div>
+                          </td>
+
+                          {/* Password */}
+                          <td>
+                            <div className="password-cell">
+                              <span className="font-mono password-badge">
+                                {isRevealed ? emp.password || "Emp@123" : "••••••••"}
+                              </span>
+                              <button
+                                className="inline-eye-btn"
+                                onClick={() => togglePasswordVisibility(emp.id)}
+                                title={isRevealed ? "Hide Password" : "Show Password"}
+                              >
+                                {isRevealed ? "🙈" : "👁️"}
+                              </button>
+                              <button
+                                className="inline-copy-btn"
+                                onClick={() => copyToClipboard(emp.password || "Emp@123", `${emp.id}-pass`)}
+                                title="Copy Password"
+                              >
+                                {copiedId === `${emp.id}-pass` ? "✓" : "📋"}
+                              </button>
+                            </div>
+                          </td>
+
+                          {/* Department & Role */}
+                          <td>
+                            <strong style={{ color: "#e2e8f0" }}>{emp.department || "Operations"}</strong>
+                            <span style={{ display: "block", fontSize: "12px", color: "#94a3b8" }}>
+                              {emp.designation || "Executive"}
+                            </span>
+                          </td>
+
+                          {/* Contact Info */}
+                          <td>
+                            <span style={{ display: "block", fontSize: "12.5px", color: "#cbd5e1" }}>
+                              {emp.email || "—"}
+                            </span>
+                            <span style={{ display: "block", fontSize: "12px", color: "#64748b" }}>
+                              {emp.phone || "—"}
+                            </span>
+                          </td>
+
+                          {/* Copy Full Credentials */}
+                          <td>
+                            <button
+                              className="copy-creds-btn"
+                              onClick={() => {
+                                const creds = `PayMagic Login Credentials:\nName: ${emp.fullName}\nEmployee ID: ${emp.employeeId}\nPassword: ${emp.password || "Emp@123"}\nLogin URL: https://paymagic-48er.vercel.app/`;
+                                copyToClipboard(creds, emp.id);
+                              }}
+                            >
+                              {isCopied ? "✓ Copied!" : "Copy Details"}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+
+                    {employeesList.length === 0 && (
+                      <tr>
+                        <td colSpan="6" className="empty-table-cell">
+                          No staff registered yet. Click "+ Add New Employee" to create credentials.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* ═══════════════════════════════════════════════════════
-            TAB 4: LEAVE APPROVALS & SUPERVISOR DESK (Pre-Oct 11)
-        ═══════════════════════════════════════════════════════ */}
+        {/* ── TAB 3: LEAVE APPROVALS ── */}
         {activeTab === "leave-approvals" && (
-          <LeaveApprovalsPage
-            leaveApprovals={leaveApprovals}
-            leaveLoading={leaveLoading}
-            loadLeaveApprovals={loadLeaveApprovals}
-            handleApproveLeave={handleApproveLeave}
-            handleRejectLeave={handleRejectLeave}
-          />
+          <div className="portal-tab-content">
+            <div className="portal-table-container">
+              <div className="table-header-row">
+                <div>
+                  <h3>Pending Leave Requests</h3>
+                  <p>Review and act on employee leave applications</p>
+                </div>
+              </div>
+
+              <div className="custom-table-wrap">
+                <table className="custom-table">
+                  <thead>
+                    <tr>
+                      <th>Employee</th>
+                      <th>Department</th>
+                      <th>Leave Type</th>
+                      <th>Duration</th>
+                      <th>Reason</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leaveApprovals.map((req) => (
+                      <tr key={req.id}>
+                        <td>
+                          <strong>{req.employeeName}</strong>
+                          <span className="font-mono text-muted" style={{ display: "block" }}>
+                            {req.employeeId}
+                          </span>
+                        </td>
+                        <td>{req.department}</td>
+                        <td><strong>{req.type}</strong></td>
+                        <td>{req.fromDate} to {req.toDate} ({req.days} days)</td>
+                        <td>{req.reason}</td>
+                        <td>
+                          {req.status === "PENDING" ? (
+                            <div className="table-action-btns">
+                              <button
+                                className="action-btn-approve"
+                                onClick={() => handleApproveLeave(req.id)}
+                              >
+                                Approve
+                              </button>
+                              <button
+                                className="action-btn-reject"
+                                onClick={() => handleRejectLeave(req.id)}
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <span className={`status-pill pill-${req.status === "APPROVED" ? "green" : "red"}`}>
+                              {req.status}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         )}
       </main>
 
-      {/* ── MODALS ── */}
-
-      {/* Case Detail & Status History Modal */}
-      {showCaseDetailModal && selectedCaseId && (
-        <CaseDetailModal
-          caseId={selectedCaseId}
-          isOpen={showCaseDetailModal}
-          onClose={() => {
-            setShowCaseDetailModal(false);
-            setSelectedCaseId(null);
-          }}
-          onUpdate={() => {
-            loadCases(casePage);
-            loadManagementReports();
-          }}
-        />
-      )}
-
-      {/* Audio Player Modal */}
-      {showAudioModal && selectedCallAudio && (
-        <AudioPlayerModal
-          callData={selectedCallAudio}
-          isOpen={showAudioModal}
-          currentUser={user}
-          onClose={() => {
-            setShowAudioModal(false);
-            setSelectedCallAudio(null);
-          }}
-        />
-      )}
-
-      {/* Payment Recording Modal */}
-      {showPaymentModal && selectedPaymentCase && (
-        <PaymentModal
-          caseData={selectedPaymentCase}
-          isOpen={showPaymentModal}
-          onClose={() => {
-            setShowPaymentModal(false);
-            setSelectedPaymentCase(null);
-          }}
-          onPaymentRecorded={(data) => {
-            setSuccessMsg(`Payment of ₹${data.payment?.amount?.toLocaleString()} recorded successfully!`);
-            loadPayments();
-            loadCases(casePage);
-            loadManagementReports();
-          }}
-        />
-      )}
-
-      {/* Bulk Allocation Modal */}
-      {showBulkAllocateModal && (
-        <BulkAllocateModal
-          employees={employeesList}
-          isOpen={showBulkAllocateModal}
-          onClose={() => setShowBulkAllocateModal(false)}
-          onSuccess={(msg) => {
-            setSuccessMsg(msg);
-            loadCases(1);
-            loadManagementReports();
-          }}
-        />
-      )}
-
-      {/* Transfer Cases Modal */}
-      {showTransferModal && (
-        <TransferCasesModal
-          employees={employeesList}
-          cases={casesList}
-          isOpen={showTransferModal}
-          onClose={() => setShowTransferModal(false)}
-          onSuccess={(msg) => {
-            setSuccessMsg(msg);
-            loadCases(casePage);
-            loadManagementReports();
-          }}
-        />
-      )}
-
-      {/* Set Target & Follow-up Modal */}
-      {showTargetModal && (
-        <SetTargetModal
-          employees={employeesList}
-          cases={casesList}
-          isOpen={showTargetModal}
-          onClose={() => setShowTargetModal(false)}
-          onSuccess={(msg) => {
-            setSuccessMsg(msg);
-            loadCases(casePage);
-            loadManagementReports();
-          }}
-        />
-      )}
-
-      {/* Add Employee Modal (Preserved) */}
+      {/* ── MODAL: ADD NEW EMPLOYEE ── */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-5 sm:p-6 text-slate-100">
-            <h3 className="font-bold text-lg text-white mb-4">Register New Operations Staff</h3>
-            {modalError && <div className="portal-alert-bar alert-error mb-4">{modalError}</div>}
-            <form onSubmit={handleCreateEmployeeSubmit} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={newEmployeeForm.fullName}
-                  onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, fullName: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs"
-                />
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal-container add-emp-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setShowAddModal(false)} aria-label="Close">✕</button>
+
+            <div className="login-header">
+              <p className="portal-badge admin-badge">STAFF ONBOARDING</p>
+              <h2>Add New Employee</h2>
+              <p>Create credentials &amp; profile in MongoDB Atlas database</p>
+            </div>
+
+            {modalError && (
+              <div className="portal-banner banner-error" style={{ marginBottom: "16px" }}>
+                <span>{modalError}</span>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Employee ID</label>
+            )}
+
+            <form onSubmit={handleCreateEmployeeSubmit} className="login-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Full Name *</label>
                   <input
                     type="text"
-                    placeholder="Auto-generated"
+                    placeholder="e.g. Amit Jadhav"
+                    value={newEmployeeForm.fullName}
+                    onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, fullName: e.target.value })}
+                    className="custom-input"
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Employee ID (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="Auto-generated if blank (e.g. PM-EMP-0004)"
                     value={newEmployeeForm.employeeId}
                     onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, employeeId: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Designation</label>
-                  <input
-                    type="text"
-                    value={newEmployeeForm.designation}
-                    onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, designation: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs"
+                    className="custom-input font-mono"
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Email</label>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Corporate Email</label>
                   <input
                     type="email"
+                    placeholder="amit.jadhav@paymagic.in"
                     value={newEmployeeForm.email}
                     onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, email: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs"
+                    className="custom-input"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Phone</label>
+
+                <div className="form-group">
+                  <label>Contact Phone</label>
                   <input
-                    type="text"
+                    type="tel"
+                    placeholder="+91 9876543210"
                     value={newEmployeeForm.phone}
                     onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, phone: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs"
+                    className="custom-input"
                   />
                 </div>
               </div>
-              <div className="flex gap-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="w-1/2 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold"
-                >
-                  Cancel
-                </button>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Department</label>
+                  <select
+                    value={newEmployeeForm.department}
+                    onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, department: e.target.value })}
+                    className="custom-select"
+                  >
+                    <option value="Operations">Operations</option>
+                    <option value="Engineering">Engineering / Tech</option>
+                    <option value="Finance">Finance &amp; Accounts</option>
+                    <option value="HR">Human Resources</option>
+                    <option value="Marketing">Marketing &amp; Growth</option>
+                    <option value="Sales">Corporate Sales</option>
+                    <option value="Management">Management</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Designation</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Operations Executive"
+                    value={newEmployeeForm.designation}
+                    onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, designation: e.target.value })}
+                    className="custom-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Initial Password</label>
+                  <input
+                    type="text"
+                    value={newEmployeeForm.password}
+                    onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, password: e.target.value })}
+                    className="custom-input font-mono"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Joining Date</label>
+                  <input
+                    type="date"
+                    value={newEmployeeForm.joiningDate}
+                    onChange={(e) => setNewEmployeeForm({ ...newEmployeeForm, joiningDate: e.target.value })}
+                    className="custom-input"
+                  />
+                </div>
+              </div>
+
+              <div className="modal-form-actions" style={{ marginTop: "20px", display: "flex", gap: "12px" }}>
                 <button
                   type="submit"
+                  className="primary-btn"
+                  style={{ flex: 1, justifyContent: "center" }}
                   disabled={modalLoading}
-                  className="w-1/2 py-2 rounded-xl bg-indigo-600 text-white text-xs font-semibold"
                 >
-                  {modalLoading ? "Saving..." : "Create Staff"}
+                  {modalLoading ? "Creating Account..." : "Create Employee Account"}
+                </button>
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={() => setShowAddModal(false)}
+                >
+                  Cancel
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-      {/* Schedule Field Recovery Visit Modal (Module E) */}
-      {showScheduleVisitModal && (
-        <ScheduleFieldVisitModal
-          isOpen={showScheduleVisitModal}
-          cases={casesList}
-          onClose={() => setShowScheduleVisitModal(false)}
-          onSuccess={(msg) => {
-            setSuccessMsg(msg);
-            loadFieldVisits();
-            loadFieldOverview();
-            loadCases(casePage);
-          }}
-        />
-      )}
-
-      {/* Digital Receipt Modal (Module E) */}
-      {showDigitalReceiptModal && selectedReceiptRef && (
-        <DigitalReceiptModal
-          receiptNumber={selectedReceiptRef}
-          isOpen={showDigitalReceiptModal}
-          onClose={() => {
-            setShowDigitalReceiptModal(false);
-            setSelectedReceiptRef(null);
-          }}
-        />
-      )}
-
       {/* Floating WebPhone Dialer Widget */}
-      <WebPhoneDialer
-        user={user}
-        cases={casesList}
-        onCallCase={(loanCase) => {
-          setAdminCallingCase(loanCase);
-          setShowAdminCallingModal(true);
-        }}
-      />
-
-      {/* Calling Voice Bridge Modal for WebPhone / Click-to-Call */}
-      {showAdminCallingModal && adminCallingCase && (
-        <CallingModal
-          caseData={adminCallingCase}
-          isOpen={showAdminCallingModal}
-          onClose={() => {
-            setShowAdminCallingModal(false);
-            setAdminCallingCase(null);
-          }}
-          onCallCompleted={() => {
-            setShowAdminCallingModal(false);
-            setAdminCallingCase(null);
-            loadCases(casePage);
-            loadManagementReports();
-          }}
-        />
-      )}
+      <WebPhoneDialer user={user} />
     </div>
   );
 }
