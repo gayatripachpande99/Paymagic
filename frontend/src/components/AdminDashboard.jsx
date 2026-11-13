@@ -1015,7 +1015,8 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             adminOverview={adminOverview}
             reportsLoading={reportsLoading}
             reportsData={reportsData}
-            handleExportCSV={handleExportCSV}
+            handleExportReportsCSV={handleExportReportsCSV}
+            handleExportCSV={handleExportReportsCSV}
           />
         )}
 
