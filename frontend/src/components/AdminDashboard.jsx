@@ -98,7 +98,7 @@ const STATUS_PILL_CLASSES = {
 
 export default function AdminDashboard({ user, onLogout, onBackToHome }) {
   // Navigation: analytics | cases | calls | payments | performance | attendance | employees | leave-approvals
-  const [activeTab, setActiveTab] = useState("analytics");
+  const [activeTab, setActiveTab] = useState("cases");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -820,16 +820,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
         </div>
 
         <nav className="portal-nav">
-          {/* Feature 7 & 5: Management Analytics & Reports */}
-          <button
-            className={`portal-nav-item ${activeTab === "analytics" ? "active" : ""}`}
-            onClick={() => { setActiveTab("analytics"); setErrorMsg(""); setMobileSidebarOpen(false); }}
-          >
-            <BarChart3 className="w-5 h-5 shrink-0" />
-            <span>Management Analytics</span>
-          </button>
-
-          {/* Feature 3: Recovery Case Allocation */}
+          {/* Module A: Recovery Case Management & Allocation */}
           <button
             className={`portal-nav-item ${activeTab === "cases" ? "active" : ""}`}
             onClick={() => { setActiveTab("cases"); setErrorMsg(""); setMobileSidebarOpen(false); }}
@@ -838,34 +829,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             <span>Recovery Case Allocation</span>
           </button>
 
-          {/* Feature 1 & 4: Call History & Audio Evidence */}
-          <button
-            className={`portal-nav-item ${activeTab === "calls" ? "active" : ""}`}
-            onClick={() => { setActiveTab("calls"); setErrorMsg(""); setMobileSidebarOpen(false); }}
-          >
-            <PhoneCall className="w-5 h-5 shrink-0" />
-            <span>Call Records &amp; Audio</span>
-          </button>
-
-          {/* Feature 5: Recovery Amount & Payments */}
-          <button
-            className={`portal-nav-item ${activeTab === "payments" ? "active" : ""}`}
-            onClick={() => { setActiveTab("payments"); setErrorMsg(""); setMobileSidebarOpen(false); }}
-          >
-            <IndianRupee className="w-5 h-5 shrink-0" />
-            <span>Payment &amp; Recovery</span>
-          </button>
-
-          {/* Feature 6: Performance & Leaderboard */}
-          <button
-            className={`portal-nav-item ${activeTab === "performance" ? "active" : ""}`}
-            onClick={() => { setActiveTab("performance"); setErrorMsg(""); setMobileSidebarOpen(false); }}
-          >
-            <TrendingUp className="w-5 h-5 shrink-0" />
-            <span>Team Performance</span>
-          </button>
-
-          {/* Feature 2: Live Attendance & Shifts */}
+          {/* Pre-Oct 11: Live Staff Attendance */}
           <button
             className={`portal-nav-item ${activeTab === "attendance" ? "active" : ""}`}
             onClick={() => { setActiveTab("attendance"); setErrorMsg(""); setMobileSidebarOpen(false); }}
@@ -874,16 +838,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             <span>Live Attendance</span>
           </button>
 
-          {/* Module D: Field Recovery Visits with GPS Audit */}
-          <button
-            className={`portal-nav-item ${activeTab === "field-visits" ? "active" : ""}`}
-            onClick={() => { setActiveTab("field-visits"); setErrorMsg(""); setMobileSidebarOpen(false); }}
-          >
-            <MapPin className="w-5 h-5 shrink-0" />
-            <span>Field Recovery Visits</span>
-          </button>
-
-          {/* Staff Directory & Passwords */}
+          {/* Pre-Oct 11: Staff Directory & Passwords */}
           <button
             className={`portal-nav-item ${activeTab === "employees" ? "active" : ""}`}
             onClick={() => { setActiveTab("employees"); setErrorMsg(""); setMobileSidebarOpen(false); }}
@@ -892,31 +847,13 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             <span>Staff Directory</span>
           </button>
 
-          {/* Leave Approvals */}
+          {/* Pre-Oct 11: HR Leave Approvals */}
           <button
             className={`portal-nav-item ${activeTab === "leave-approvals" ? "active" : ""}`}
             onClick={() => { setActiveTab("leave-approvals"); setErrorMsg(""); setMobileSidebarOpen(false); }}
           >
             <Calendar className="w-5 h-5 shrink-0" />
             <span>Leave Approvals</span>
-          </button>
-
-          {/* Module G: Grievances & Disputes */}
-          <button
-            className={`portal-nav-item ${activeTab === "complaints" ? "active" : ""}`}
-            onClick={() => { setActiveTab("complaints"); setErrorMsg(""); setMobileSidebarOpen(false); }}
-          >
-            <Scale className="w-5 h-5 shrink-0" />
-            <span>Grievance &amp; Disputes</span>
-          </button>
-
-          {/* Module H: Automated Reminders & Notifications */}
-          <button
-            className={`portal-nav-item ${activeTab === "notifications" ? "active" : ""}`}
-            onClick={() => { setActiveTab("notifications"); setErrorMsg(""); setMobileSidebarOpen(false); }}
-          >
-            <Bell className="w-5 h-5 shrink-0" />
-            <span>Reminders &amp; Queue</span>
           </button>
         </nav>
 
@@ -950,40 +887,22 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             </button>
             <div className="topbar-title-wrap min-w-0">
               <h2>
-                {activeTab === "analytics" && "Management Reports & Analytics"}
                 {activeTab === "cases" && "Recovery Case Management & Allocation"}
-                {activeTab === "calls" && "Call History & Audio Evidence"}
-                {activeTab === "payments" && "Recovery Amount & Payment Tracking"}
-                {activeTab === "performance" && "Employee Performance & Leaderboards"}
                 {activeTab === "attendance" && "Live Staff Attendance Roster"}
                 {activeTab === "employees" && "Staff Directory & Security Passwords"}
                 {activeTab === "leave-approvals" && "HR Leave Approval Desk"}
-                {activeTab === "field-visits" && "Field Recovery Operations Hub"}
-                {activeTab === "complaints" && "Grievance & Dispute Management Desk"}
-                {activeTab === "notifications" && "Automated Reminders, Notifications & Queue Hub"}
               </h2>
             </div>
           </div>
 
           <div className="topbar-actions flex items-center gap-2.5 sm:gap-3 shrink-0">
-            {/* Topbar Notification Bell for Module H */}
-            <NotificationBell
-              currentUser={user}
-              onNavigateToHub={() => {
-                setActiveTab("notifications");
-                setErrorMsg("");
-              }}
-            />
-
             <button
               className="refresh-btn"
               onClick={() => {
                 loadManagementReports();
                 loadCases(casePage);
-                loadCalls();
-                loadPayments();
-                loadTeamPerformance();
                 loadAdminAttendance();
+                loadLeaveApprovals();
               }}
               title="Refresh Platform Data"
             >
@@ -1008,20 +927,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
         )}
 
         {/* ═══════════════════════════════════════════════════════
-            TAB 1: MANAGEMENT ANALYTICS & REPORTS (Feature 7 & 5)
-        ═══════════════════════════════════════════════════════ */}
-        {activeTab === "analytics" && (
-          <ManagementAnalyticsPage
-            adminOverview={adminOverview}
-            reportsLoading={reportsLoading}
-            reportsData={reportsData}
-            handleExportReportsCSV={handleExportReportsCSV}
-            handleExportCSV={handleExportReportsCSV}
-          />
-        )}
-
-        {/* ═══════════════════════════════════════════════════════
-            TAB 2: CASE ALLOCATION & OPERATIONS (Feature 3 & Module A)
+            TAB 1: CASE ALLOCATION & OPERATIONS (Module A)
         ═══════════════════════════════════════════════════════ */}
         {activeTab === "cases" && (
           <CaseAllocationPage
@@ -1055,39 +961,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
         )}
 
         {/* ═══════════════════════════════════════════════════════
-            TAB 3: CALL ACTIVITY REPORT & CDR AUDIO EVIDENCE (Feature 1 & 4)
-        ═══════════════════════════════════════════════════════ */}
-        {activeTab === "calls" && (
-          <CallRecordsAudioPage
-            user={user}
-            setSelectedCallAudio={setSelectedCallAudio}
-            setShowAudioModal={setShowAudioModal}
-          />
-        )}
-
-        {/* ═══════════════════════════════════════════════════════
-            TAB 4: PAYMENT & RECOVERY TRACKING (Feature 5)
-        ═══════════════════════════════════════════════════════ */}
-        {activeTab === "payments" && (
-          <PaymentRecoveryPage
-            paymentsSummary={paymentsSummary}
-            paymentsList={paymentsList}
-            paymentsLoading={paymentsLoading}
-            casesList={casesList}
-            setSelectedPaymentCase={setSelectedPaymentCase}
-            setShowPaymentModal={setShowPaymentModal}
-          />
-        )}
-
-        {/* ═══════════════════════════════════════════════════════
-            TAB 5: PERFORMANCE & LEADERBOARD (Feature 6 & Module C)
-        ═══════════════════════════════════════════════════════ */}
-        {activeTab === "performance" && (
-          <TeamPerformancePage />
-        )}
-
-        {/* ═══════════════════════════════════════════════════════
-            TAB 6: LIVE ATTENDANCE (Feature 2)
+            TAB 2: LIVE ATTENDANCE (Pre-Oct 11)
         ═══════════════════════════════════════════════════════ */}
         {activeTab === "attendance" && (
           <LiveAttendancePage
@@ -1106,7 +980,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
         )}
 
         {/* ═══════════════════════════════════════════════════════
-            TAB 7: STAFF DIRECTORY & PASSWORDS
+            TAB 3: STAFF DIRECTORY & PASSWORDS (Pre-Oct 11)
         ═══════════════════════════════════════════════════════ */}
         {activeTab === "employees" && (
           <StaffDirectoryPage
@@ -1116,27 +990,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
         )}
 
         {/* ═══════════════════════════════════════════════════════
-            TAB 8: MODULE E — FIELD RECOVERY OPERATIONS HUB
-        ═══════════════════════════════════════════════════════ */}
-        {activeTab === "field-visits" && (
-          <FieldRecoveryVisitsPage
-            setShowScheduleVisitModal={setShowScheduleVisitModal}
-            loadFieldVisits={loadFieldVisits}
-            loadFieldOverview={loadFieldOverview}
-            loadCashHandovers={loadCashHandovers}
-            fieldOverviewData={fieldOverviewData}
-            fieldVisitsList={fieldVisitsList}
-            fieldVisitsLoading={fieldVisitsLoading}
-            cashHandoversList={cashHandoversList}
-            cashHandoversLoading={cashHandoversLoading}
-            setSelectedReceiptRef={setSelectedReceiptRef}
-            setShowDigitalReceiptModal={setShowDigitalReceiptModal}
-            handleReconcileCash={handleReconcileCash}
-          />
-        )}
-
-        {/* ═══════════════════════════════════════════════════════
-            TAB 9: LEAVE APPROVALS & SUPERVISOR DESK (Module D)
+            TAB 4: LEAVE APPROVALS & SUPERVISOR DESK (Pre-Oct 11)
         ═══════════════════════════════════════════════════════ */}
         {activeTab === "leave-approvals" && (
           <LeaveApprovalsPage
@@ -1145,24 +999,6 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             loadLeaveApprovals={loadLeaveApprovals}
             handleApproveLeave={handleApproveLeave}
             handleRejectLeave={handleRejectLeave}
-          />
-        )}
-
-        {/* ═══════════════════════════════════════════════════════
-            TAB 10: COMPLAINT & DISPUTE MANAGEMENT DESK (Module G)
-        ═══════════════════════════════════════════════════════ */}
-        {activeTab === "complaints" && (
-          <GrievanceDisputesPage user={user} />
-        )}
-
-        {/* ═══════════════════════════════════════════════════════
-            TAB 11: AUTOMATED REMINDERS & NOTIFICATION QUEUE (Module H)
-        ═══════════════════════════════════════════════════════ */}
-        {activeTab === "notifications" && (
-          <RemindersQueuePage
-            user={user}
-            setSelectedCaseId={setSelectedCaseId}
-            setShowCaseDetailModal={setShowCaseDetailModal}
           />
         )}
       </main>
