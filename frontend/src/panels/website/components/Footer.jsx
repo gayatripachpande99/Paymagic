@@ -13,9 +13,6 @@ export default function Footer({ openLogin, handleAdminSelect }) {
             </div>
             <span>Pay<strong>Magic</strong> PVT LTD</span>
           </a>
-          <p className="footer-tagline" style={{ marginTop: "12px", fontSize: "13px", lineHeight: "1.6", color: "#94a3b8" }}>
-            High-velocity corporate payments, automated recovery infrastructure, and smart financial operations.
-          </p>
           
           <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "9px", fontSize: "12.5px", color: "#cbd5e1" }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", lineHeight: "1.5" }}>
