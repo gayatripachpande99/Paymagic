@@ -2,6 +2,9 @@
   "name": "paymagic-monorepo",
   "private": true,
   "scripts": {
-    "build": "cd frontend && npm install && npm run build"
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run dev",
+    "test": "cd backend && npm test",
+    "build": "cd frontend && npm run build"
   }
 }

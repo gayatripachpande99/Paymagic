@@ -1,7 +1,83 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import {
+  TrendingUp,
+  PhoneCall,
+  IndianRupee,
+  Clock,
+  Layers,
+  Calendar,
+  User,
+  FileText,
+  ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
+  Play,
+  Plus,
+  RefreshCw,
+  Search,
+  ChevronRight,
+  MapPin,
+  Activity,
+  Navigation,
+  QrCode,
+  Receipt,
+  Building2,
+  Radio,
+  Compass,
+  ExternalLink
+} from "lucide-react";
+
+import CallingModal from "./portal/CallingModal";
+import AudioPlayerModal from "./portal/AudioPlayerModal";
+import PaymentModal from "./portal/PaymentModal";
+import CaseDetailModal from "./portal/CaseDetailModal";
+import WebPhoneDialer from "./portal/WebPhoneDialer";
+import CallActivityReport from "./portal/CallActivityReport";
+import PerformanceDashboard from "./portal/PerformanceDashboard";
+import FieldVisitModal from "./portal/FieldVisitModal";
+import CashHandoverModal from "./portal/CashHandoverModal";
+import DigitalReceiptModal from "./portal/DigitalReceiptModal";
+
+import {
+  EmployeePerformancePage,
+  MyRecoveryCasesPage,
+  FieldVisitsAgentPage,
+  MyCallHistoryPage,
+  DailyAttendancePage,
+  LeaveManagementPage,
+  MyProfilePage,
+  RegulatorySopPage
+} from "../panels/employee/pages";
+
+const CASE_STATUSES = [
+  "New",
+  "Assigned",
+  "Contacted",
+  "Promise to Pay",
+  "Partially Paid",
+  "Fully Paid",
+  "Disputed",
+  "Not Reachable",
+  "Field Visit",
+  "Closed"
+];
+
+const STATUS_PILL_CLASSES = {
+  New: "bg-slate-500/10 text-slate-400 border border-slate-500/20",
+  Assigned: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+  Contacted: "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20",
+  "Promise to Pay": "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+  "Partially Paid": "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
+  "Fully Paid": "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  Disputed: "bg-rose-500/10 text-rose-400 border border-rose-500/20",
+  "Not Reachable": "bg-slate-500/10 text-slate-400 border border-slate-500/20",
+  "Field Visit": "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+  Closed: "bg-teal-500/10 text-teal-400 border border-teal-500/20"
+};
 
 export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
+  // Navigation tabs: dashboard | cases | calls | attendance | leave | profile | documents
   const [activeTab, setActiveTab] = useState("dashboard");
   const [profile, setProfile] = useState(user || null);
   const [todayAttendance, setTodayAttendance] = useState(null);
@@ -11,8 +87,51 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [liveWorkingTime, setLiveWorkingTime] = useState("");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  // Leave management local state
+  // ── 1. EMPLOYEE PERFORMANCE KPIS (Feature 6) ──
+  const [kpiData, setKpiData] = useState({
+    assigned_cases: 150,
+    total_calls: 120,
+    connected_calls: 85,
+    unanswered_calls: 35,
+    total_talk_time_formatted: "4h 20m",
+    follow_ups_pending: 18,
+    promises_to_pay: 12,
+    amount_recovered: 85000,
+    target_amount: 100000,
+    total_outstanding: 650000,
+    call_connection_rate: 70.83,
+    recovery_percentage: 13.08,
+    target_achievement: 85.0
+  });
+
+  const [dashboardMode, setDashboardMode] = useState("scorecard"); // "scorecard" | "team-analytics"
+
+  // ── 2. MY ASSIGNED RECOVERY CASES (Feature 3) ──
+  const [myCases, setMyCases] = useState([]);
+  const [casesLoading, setCasesLoading] = useState(false);
+  const [caseFilterStatus, setCaseFilterStatus] = useState("ALL");
+  const [caseSearchTerm, setCaseSearchTerm] = useState("");
+
+  // ── 3. MY CALL HISTORY (Feature 4) ──
+  const [myCalls, setMyCalls] = useState([]);
+  const [callsLoading, setCallsLoading] = useState(false);
+
+  // ── 4. FIELD VISITS & GPS TRACKING (Module D & Module E) ──
+  const [fieldVisits, setFieldVisits] = useState([]);
+  const [fieldVisitsLoading, setFieldVisitsLoading] = useState(false);
+  const [fieldVisitCase, setFieldVisitCase] = useState(null);
+  const [showFieldVisitModal, setShowFieldVisitModal] = useState(false);
+  const [myRouteData, setMyRouteData] = useState(null);
+  const [showCashHandoverModal, setShowCashHandoverModal] = useState(false);
+  const [selectedReceiptRef, setSelectedReceiptRef] = useState(null);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+
+  // ── 5. DAILY PRODUCTIVITY (Module D) ──
+  const [productivityData, setProductivityData] = useState(null);
+
+  // ── 6. LEAVE MANAGEMENT (Feature 2) ──
   const [leaveType, setLeaveType] = useState("Casual Leave");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -30,75 +149,161 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
     }
   ]);
 
-  // Employee Assigned Records State
-  const [myAssignedRecords, setMyAssignedRecords] = useState([]);
-  const [recordColumns, setRecordColumns] = useState([]);
-  const [empRecordSearch, setEmpRecordSearch] = useState("");
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  // ── MODALS STATE ──
+  // Click-to-call modal
+  const [callingCase, setCallingCase] = useState(null);
+  const [showCallingModal, setShowCallingModal] = useState(false);
 
+  // Payment recording modal
+  const [paymentCase, setPaymentCase] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-  const loadEmployeeAssignedRecords = async () => {
+  // Audio player modal
+  const [audioCall, setAudioCall] = useState(null);
+  const [showAudioModal, setShowAudioModal] = useState(false);
+
+  // Case details timeline modal
+  const [timelineCaseId, setTimelineCaseId] = useState(null);
+  const [showTimelineModal, setShowTimelineModal] = useState(false);
+
+  // ── DATA FETCHERS ──
+
+  const loadEmployeeDashboard = async () => {
     try {
-      const res = await api.get("/employee/records");
-      if (res && res.success) {
-        setMyAssignedRecords(res.records || []);
-        setRecordColumns(res.columns || []);
+      const res = await api.get("/dashboard/employee");
+      if (res && res.success && res.data) {
+        if (res.data.kpis) {
+          setKpiData(res.data.kpis);
+        }
+        if (res.data.employee) {
+          setProfile((prev) => ({ ...prev, ...res.data.employee }));
+        }
       }
     } catch (err) {
-      console.error("Failed to load employee assigned records:", err);
+      console.warn("Employee KPI fetch warning:", err.message);
     }
   };
 
-  const handleToggleRecordStatus = async (recordId, currentStatus) => {
-    const nextStatus = currentStatus === "COMPLETED" ? "PENDING" : "COMPLETED";
+  const loadMyCases = async () => {
     try {
-      setErrorMsg("");
-      setSuccessMsg("");
-      const res = await api.post(`/employee/records/${recordId}/status`, { recordStatus: nextStatus });
-      if (res && res.success) {
-        setSuccessMsg(`Record ${recordId} updated to ${nextStatus}!`);
-        await loadEmployeeAssignedRecords();
+      setCasesLoading(true);
+      const res = await api.get("/cases?limit=100");
+      if (res && res.success && res.data) {
+        setMyCases(res.data.cases || []);
       }
     } catch (err) {
-      setErrorMsg(err.message || "Failed to update record status.");
+      console.error("My cases fetch error:", err);
+    } finally {
+      setCasesLoading(false);
     }
   };
 
-  // Fetch initial profile, today attendance, and history
-  const loadDashboardData = async () => {
+  const loadMyCalls = async () => {
     try {
-      setLoading(true);
-      setErrorMsg("");
+      setCallsLoading(true);
+      const res = await api.get("/telephony/calls?limit=50");
+      if (res && res.success && res.data) {
+        setMyCalls(res.data.calls || []);
+      }
+    } catch (err) {
+      console.error("My calls fetch error:", err);
+    } finally {
+      setCallsLoading(false);
+    }
+  };
 
-      const [profileRes, todayRes, historyRes] = await Promise.allSettled([
-        api.get("/employee/me"),
+  const loadAttendanceData = async () => {
+    try {
+      const [todayRes, historyRes, meRes] = await Promise.allSettled([
         api.get("/attendance/today"),
-        api.get("/attendance/history")
+        api.get("/attendance/history"),
+        api.get("/employee/me")
       ]);
 
-      if (profileRes.status === "fulfilled" && profileRes.value.success) {
-        setProfile(profileRes.value.employee);
-      }
       if (todayRes.status === "fulfilled" && todayRes.value.success) {
         setTodayAttendance(todayRes.value.attendance);
       }
       if (historyRes.status === "fulfilled" && historyRes.value.success) {
         setHistory(historyRes.value.attendance || []);
       }
-
-      await loadEmployeeAssignedRecords();
+      if (meRes.status === "fulfilled" && meRes.value.success) {
+        setProfile(meRes.value.employee);
+      }
     } catch (err) {
-      console.error("Failed to load dashboard data:", err);
-      setErrorMsg("Failed to load dashboard data. Please try again.");
+      console.warn("Attendance load warning:", err.message);
+    }
+  };
+
+  const loadFieldVisits = async () => {
+    try {
+      setFieldVisitsLoading(true);
+      const res = await api.get("/cases/field-visits");
+      if (res && res.success) {
+        setFieldVisits(res.visits || []);
+      }
+    } catch (err) {
+      console.warn("Field visits fetch error:", err.message);
+    } finally {
+      setFieldVisitsLoading(false);
+    }
+  };
+
+  const loadProductivity = async () => {
+    try {
+      const res = await api.get("/attendance/productivity");
+      if (res && res.success) {
+        setProductivityData(res.productivity);
+      }
+    } catch (err) {
+      console.warn("Productivity fetch error:", err.message);
+    }
+  };
+
+  const loadLeaveRequests = async () => {
+    try {
+      const res = await api.get("/attendance/leave");
+      if (res && res.success && res.leaveRequests?.length) {
+        setLeaveRequests(res.leaveRequests);
+      }
+    } catch (err) {
+      console.warn("Leave requests fetch error:", err.message);
+    }
+  };
+
+  const loadMyRoute = async () => {
+    try {
+      const res = await api.get("/field/my-route");
+      if (res && res.success) {
+        setMyRouteData(res);
+      }
+    } catch (err) {
+      console.warn("Route fetch error:", err);
+    }
+  };
+
+  const loadAll = async () => {
+    try {
+      setLoading(true);
+      await Promise.all([
+        loadEmployeeDashboard(),
+        loadMyCases(),
+        loadMyCalls(),
+        loadAttendanceData(),
+        loadFieldVisits(),
+        loadProductivity(),
+        loadLeaveRequests(),
+        loadMyRoute()
+      ]);
+    } catch (err) {
+      console.error("Dashboard initial load error:", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadDashboardData();
+    loadAll();
   }, []);
-
 
   // Live timer ticker for active working session
   useEffect(() => {
@@ -131,7 +336,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
     };
   }, [todayAttendance]);
 
-  // Check-In Action
+  // Attendance Actions
   const handleCheckIn = async () => {
     try {
       setActionLoading(true);
@@ -141,8 +346,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
       const res = await api.post("/attendance/check-in", {});
       if (res.success) {
         setTodayAttendance(res.attendance);
-        setSuccessMsg("Attendance marked successfully! Have a productive day.");
-        // Refresh history
+        setSuccessMsg("Attendance marked successfully! Have a productive recovery shift.");
         const hist = await api.get("/attendance/history");
         if (hist.success) setHistory(hist.attendance || []);
       }
@@ -153,7 +357,6 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
     }
   };
 
-  // Check-Out Action
   const handleCheckOut = async () => {
     try {
       setActionLoading(true);
@@ -163,8 +366,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
       const res = await api.post("/attendance/check-out", {});
       if (res.success) {
         setTodayAttendance(res.attendance);
-        setSuccessMsg("Checked out successfully! Great work today.");
-        // Refresh history
+        setSuccessMsg("Shift completed and checked out successfully! Great recovery work today.");
         const hist = await api.get("/attendance/history");
         if (hist.success) setHistory(hist.attendance || []);
       }
@@ -175,47 +377,55 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
     }
   };
 
-  // Apply Leave Action
-  const handleApplyLeave = (e) => {
+  // Leave Action
+  const handleApplyLeave = async (e) => {
     e.preventDefault();
     if (!fromDate || !toDate || !leaveReason) {
       setErrorMsg("Please provide from date, to date, and reason.");
       return;
     }
 
-    const newReq = {
-      id: `LV-${Math.floor(100 + Math.random() * 900)}`,
-      type: leaveType,
-      fromDate,
-      toDate,
-      days: Math.max(1, Math.round((new Date(toDate) - new Date(fromDate)) / (1000 * 60 * 60 * 24)) + 1),
-      reason: leaveReason,
-      status: "PENDING",
-      appliedOn: new Date().toISOString().split("T")[0]
-    };
+    try {
+      setActionLoading(true);
+      setErrorMsg("");
+      const res = await api.post("/attendance/leave", {
+        type: leaveType,
+        fromDate,
+        toDate,
+        reason: leaveReason
+      });
 
-    setLeaveRequests([newReq, ...leaveRequests]);
-    setSuccessMsg("Leave application submitted successfully for Admin review.");
-    setFromDate("");
-    setToDate("");
-    setLeaveReason("");
+      if (res && res.success) {
+        setLeaveRequests((prev) => [res.leave, ...prev]);
+        setSuccessMsg("Leave application submitted successfully for supervisor review.");
+      } else {
+        const newReq = {
+          id: `LV-${Math.floor(100 + Math.random() * 900)}`,
+          type: leaveType,
+          fromDate,
+          toDate,
+          days: Math.max(1, Math.round((new Date(toDate) - new Date(fromDate)) / (1000 * 60 * 60 * 24)) + 1),
+          reason: leaveReason,
+          status: "PENDING",
+          appliedOn: new Date().toISOString().split("T")[0]
+        };
+        setLeaveRequests((prev) => [newReq, ...prev]);
+        setSuccessMsg("Leave application submitted successfully for supervisor review.");
+      }
+      setFromDate("");
+      setToDate("");
+      setLeaveReason("");
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to submit leave application.");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  // Format Helper functions
   const formatTime = (isoString) => {
     if (!isoString) return "--:--";
     const date = new Date(isoString);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
-  };
-
-  const formatDate = (isoString) => {
-    if (!isoString) return "--";
-    const date = new Date(isoString);
-    return date.toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    });
   };
 
   const formatMinutes = (mins) => {
@@ -225,31 +435,39 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
     return `${h}h ${m}m`;
   };
 
-  const getAttendanceStatus = () => {
-    if (!todayAttendance) return { label: "Not Marked", color: "gray", isWorking: false, isDone: false };
-    if (todayAttendance.checkOut) return { label: "Completed", color: "blue", isWorking: false, isDone: true };
-    if (todayAttendance.checkIn) return { label: "Working / Present", color: "green", isWorking: true, isDone: false };
-    return { label: todayAttendance.status || "Present", color: "green", isWorking: false, isDone: false };
+  const formatDurationSeconds = (sec) => {
+    if (!sec || sec <= 0) return "0s";
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    if (m > 0) return `${m}m ${s}s`;
+    return `${s}s`;
   };
 
-  const statusInfo = getAttendanceStatus();
+  // Filter assigned cases
+  const filteredCases = myCases.filter((item) => {
+    const matchesStatus = caseFilterStatus === "ALL" ? true : item.status === caseFilterStatus;
+    const term = caseSearchTerm.toLowerCase();
+    const matchesSearch =
+      !term ||
+      item.customer_name?.toLowerCase().includes(term) ||
+      item.loan_account_no?.toLowerCase().includes(term) ||
+      item.case_number?.toLowerCase().includes(term) ||
+      item.lender_name?.toLowerCase().includes(term);
+    return matchesStatus && matchesSearch;
+  });
 
   return (
     <div className="portal-layout">
-
       {/* Mobile Drawer Overlay Backdrop */}
       {mobileSidebarOpen && (
-        <div
-          className="portal-sidebar-backdrop"
-          onClick={() => setMobileSidebarOpen(false)}
-        />
+        <div className="portal-sidebar-backdrop" onClick={() => setMobileSidebarOpen(false)} />
       )}
 
       {/* ── SIDEBAR ── */}
       <aside className={`portal-sidebar ${mobileSidebarOpen ? "mobile-drawer-open" : ""}`}>
         <div className="portal-sidebar-brand" onClick={onBackToHome} role="button" tabIndex={0}>
           <div className="brand-icon">
-            <img src="/logo.jpg" alt="PayMagic Logo" className="logo-img" />
+            <img src="/Logo_Name_PayMagic.png" alt="PayMagic Logo" className="logo-img" />
           </div>
           <div className="brand-text">
             <span>Pay<strong>Magic</strong></span>
@@ -262,97 +480,87 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
             {profile?.fullName ? profile.fullName.slice(0, 2).toUpperCase() : "EM"}
           </div>
           <div className="user-meta">
-            <h4>{profile?.fullName || "Employee"}</h4>
+            <h4>{profile?.fullName || "Operations Executive"}</h4>
             <p>{profile?.employeeId || "PM-EMP-0001"}</p>
-            <span className="user-role-tag">{profile?.designation || "Executive"}</span>
+            <span className="user-role-tag">{profile?.designation || "Recovery Caller"}</span>
           </div>
         </div>
 
         <nav className="portal-nav">
+          {/* Feature 6: Employee Performance Dashboard */}
           <button
             className={`portal-nav-item ${activeTab === "dashboard" ? "active" : ""}`}
             onClick={() => { setActiveTab("dashboard"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="3" width="7" height="7" rx="1.5" />
-              <rect x="14" y="3" width="7" height="7" rx="1.5" />
-              <rect x="14" y="14" width="7" height="7" rx="1.5" />
-              <rect x="3" y="14" width="7" height="7" rx="1.5" />
-            </svg>
-            <span>Dashboard</span>
+            <TrendingUp className="w-5 h-5 shrink-0" />
+            <span>Performance Dashboard</span>
           </button>
 
+          {/* Feature 3: Recovery Cases & Click-to-call */}
           <button
-            className={`portal-nav-item ${activeTab === "profile" ? "active" : ""}`}
-            onClick={() => { setActiveTab("profile"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
+            className={`portal-nav-item ${activeTab === "cases" ? "active" : ""}`}
+            onClick={() => { setActiveTab("cases"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-            <span>My Profile</span>
+            <Layers className="w-5 h-5 shrink-0" />
+            <span>My Recovery Cases</span>
           </button>
 
+          {/* Module D: Field Recovery Visits */}
+          <button
+            className={`portal-nav-item ${activeTab === "field-visits" ? "active" : ""}`}
+            onClick={() => { setActiveTab("field-visits"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
+          >
+            <MapPin className="w-5 h-5 shrink-0" />
+            <span>Field Visits &amp; GPS</span>
+          </button>
+
+          {/* Feature 4: Call History & Audio */}
+          <button
+            className={`portal-nav-item ${activeTab === "calls" ? "active" : ""}`}
+            onClick={() => { setActiveTab("calls"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
+          >
+            <PhoneCall className="w-5 h-5 shrink-0" />
+            <span>My Call History</span>
+          </button>
+
+          {/* Feature 2: Attendance & Shifts */}
           <button
             className={`portal-nav-item ${activeTab === "attendance" ? "active" : ""}`}
             onClick={() => { setActiveTab("attendance"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            <span>Attendance Log</span>
+            <Clock className="w-5 h-5 shrink-0" />
+            <span>Attendance &amp; Shifts</span>
           </button>
 
+          {/* Feature 2: Leave Management */}
           <button
             className={`portal-nav-item ${activeTab === "leave" ? "active" : ""}`}
             onClick={() => { setActiveTab("leave"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-            <span>Leave Requests</span>
+            <Calendar className="w-5 h-5 shrink-0" />
+            <span>Leave Management</span>
           </button>
 
+          {/* Profile */}
           <button
-            className={`portal-nav-item ${activeTab === "records" ? "active" : ""}`}
-            onClick={() => { setActiveTab("records"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
+            className={`portal-nav-item ${activeTab === "profile" ? "active" : ""}`}
+            onClick={() => { setActiveTab("profile"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-            <span>Assigned Records ({myAssignedRecords.length})</span>
+            <User className="w-5 h-5 shrink-0" />
+            <span>My Profile</span>
           </button>
 
+          {/* Documents */}
           <button
             className={`portal-nav-item ${activeTab === "documents" ? "active" : ""}`}
             onClick={() => { setActiveTab("documents"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-              <polyline points="10 9 9 9 8 9" />
-            </svg>
-            <span>Documents &amp; Payslips</span>
+            <FileText className="w-5 h-5 shrink-0" />
+            <span>Regulatory &amp; SOP</span>
           </button>
         </nav>
 
         <div className="portal-sidebar-footer">
-          <button className="portal-back-btn" onClick={onBackToHome}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
-            <span>Public Website</span>
-          </button>
           <button className="portal-logout-btn" onClick={onLogout}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -380,706 +588,290 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
                 <line x1="3" y1="18" x2="21" y2="18" />
               </svg>
             </button>
-            <div className="topbar-welcome">
+            <div className="topbar-title-wrap">
               <h2>
-                Good Day, <span className="gradient-text">{profile?.fullName?.split(" ")[0] || "Employee"}</span> 👋
+                {activeTab === "dashboard" && "Employee Recovery Performance"}
+                {activeTab === "cases" && "My Assigned Loan Recovery Cases"}
+                {activeTab === "field-visits" && "Authorized Field Recovery Visits & On-Site Collections"}
+                {activeTab === "calls" && "My Outbound Call Records"}
+                {activeTab === "attendance" && "Daily Shift Attendance & Productivity"}
+                {activeTab === "leave" && "Employee Leave Portal"}
+                {activeTab === "profile" && "My Profile & Employment Details"}
+                {activeTab === "documents" && "Regulatory Guidelines & Training"}
               </h2>
-              <p className="topbar-subtitle">
-                {new Date().toLocaleDateString("en-IN", {
-                  weekday: "long",
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric"
-                })}
-              </p>
             </div>
           </div>
 
-          <div className="topbar-right">
-
-            <div className="live-status-pill">
-              <span className={`status-indicator-dot ${statusInfo.color}`} />
-              <span>Status: <strong>{statusInfo.label}</strong></span>
-            </div>
-            <button className="refresh-btn" onClick={loadDashboardData} title="Refresh Data" disabled={loading}>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className={loading ? "spin-icon" : ""}
-              >
-                <path d="M23 4v6h-6" />
-                <path d="M1 20v-6h6" />
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-              </svg>
+          <div className="topbar-actions">
+            <button
+              className="refresh-btn"
+              onClick={loadAll}
+              title="Refresh My Workspace"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Refresh</span>
             </button>
           </div>
         </header>
 
-        {/* Notifications & Alerts */}
+        {/* Global Notifications */}
         {errorMsg && (
-          <div className="portal-banner banner-error">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
+          <div className="portal-alert-bar alert-error" style={{ margin: "16px 24px 0" }}>
+            <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
-
         {successMsg && (
-          <div className="portal-banner banner-success">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
+          <div className="portal-alert-bar alert-success" style={{ margin: "16px 24px 0" }}>
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
-        {/* ── TAB 1: DASHBOARD OVERVIEW ── */}
+        {/* ═══════════════════════════════════════════════════════
+            TAB 1: PERFORMANCE DASHBOARD (Feature 6)
+        ═══════════════════════════════════════════════════════ */}
         {activeTab === "dashboard" && (
-          <div className="portal-tab-content">
-            {/* Core Attendance Punch Card */}
-            <div className="attendance-punch-card">
-              <div className="punch-card-glow" />
-              <div className="punch-card-header">
-                <div>
-                  <span className="punch-tag">BIOMETRIC / TIME TRACKER</span>
-                  <h3>Today's Attendance</h3>
-                </div>
-                <div className={`status-badge-lg badge-${statusInfo.color}`}>
-                  <span className="pulse-dot" />
-                  {statusInfo.label}
-                </div>
-              </div>
-
-              <div className="punch-metrics-grid">
-                <div className="punch-metric">
-                  <span className="metric-title">Check-In Time</span>
-                  <div className="metric-val">
-                    {todayAttendance?.checkIn ? formatTime(todayAttendance.checkIn) : "--:--"}
-                  </div>
-                  <span className="metric-sub">
-                    {todayAttendance?.checkIn ? "Server Timestamp Verified" : "Not recorded yet"}
-                  </span>
-                </div>
-
-                <div className="punch-metric">
-                  <span className="metric-title">Check-Out Time</span>
-                  <div className="metric-val">
-                    {todayAttendance?.checkOut ? formatTime(todayAttendance.checkOut) : "--:--"}
-                  </div>
-                  <span className="metric-sub">
-                    {todayAttendance?.checkOut ? "End of Shift" : statusInfo.isWorking ? "Shift in Progress" : "Pending"}
-                  </span>
-                </div>
-
-                <div className="punch-metric">
-                  <span className="metric-title">Hours Worked</span>
-                  <div className="metric-val highlight-val">
-                    {statusInfo.isWorking
-                      ? liveWorkingTime || "Calculating..."
-                      : todayAttendance?.totalWorkMinutes !== null && todayAttendance?.totalWorkMinutes !== undefined
-                      ? formatMinutes(todayAttendance.totalWorkMinutes)
-                      : "--"}
-                  </div>
-                  <span className="metric-sub">
-                    {statusInfo.isWorking ? "● Live Working Timer" : "Shift Total"}
-                  </span>
-                </div>
-              </div>
-
-              <div className="punch-action-bar">
-                {!todayAttendance && (
-                  <button
-                    className="punch-btn check-in-btn"
-                    onClick={handleCheckIn}
-                    disabled={actionLoading}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                    <span>{actionLoading ? "Recording Check-In..." : "MARK ATTENDANCE (CHECK IN)"}</span>
-                  </button>
-                )}
-
-                {todayAttendance && !todayAttendance.checkOut && (
-                  <button
-                    className="punch-btn check-out-btn"
-                    onClick={handleCheckOut}
-                    disabled={actionLoading}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <rect x="3" y="3" width="18" height="18" rx="2" />
-                      <line x1="9" y1="9" x2="15" y2="15" />
-                      <line x1="15" y1="9" x2="9" y2="15" />
-                    </svg>
-                    <span>{actionLoading ? "Calculating Work Hours..." : "CHECK OUT & END SHIFT"}</span>
-                  </button>
-                )}
-
-                {todayAttendance && todayAttendance.checkOut && (
-                  <div className="completed-shift-banner">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2">
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                      <polyline points="22 4 12 14.01 9 11.01" />
-                    </svg>
-                    <span>You have completed today's attendance cycle ({formatMinutes(todayAttendance.totalWorkMinutes)} recorded).</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Quick Stats Grid */}
-            <div className="portal-stats-row">
-              <div className="portal-stat-card">
-                <div className="stat-icon-wrap blue-wrap">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
-                </div>
-                <div className="stat-content">
-                  <span className="stat-label">Department</span>
-                  <div className="stat-value">{profile?.department || "Operations"}</div>
-                  <span className="stat-hint">{profile?.designation || "Executive"}</span>
-                </div>
-              </div>
-
-              <div className="portal-stat-card">
-                <div className="stat-icon-wrap green-wrap">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
-                <div className="stat-content">
-                  <span className="stat-label">Total Days Logged</span>
-                  <div className="stat-value">{history.length}</div>
-                  <span className="stat-hint">Active History Logs</span>
-                </div>
-              </div>
-
-              <div className="portal-stat-card">
-                <div className="stat-icon-wrap purple-wrap">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                  </svg>
-                </div>
-                <div className="stat-content">
-                  <span className="stat-label">Payroll Status</span>
-                  <div className="stat-value text-green">On Schedule</div>
-                  <span className="stat-hint">T+0 Automated Payout</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Recent History Preview */}
-            <div className="portal-table-container">
-              <div className="table-header-row">
-                <div>
-                  <h3>Recent Attendance Activity</h3>
-                  <p>Verified timestamps recorded directly by backend server</p>
-                </div>
-                <button className="view-all-btn" onClick={() => setActiveTab("attendance")}>
-                  View Full History →
-                </button>
-              </div>
-
-              <div className="custom-table-wrap">
-                <table className="custom-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Check In</th>
-                      <th>Check Out</th>
-                      <th>Total Hours</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {history.slice(0, 5).map((rec) => (
-                      <tr key={rec._id}>
-                        <td><strong>{formatDate(rec.attendanceDate)}</strong></td>
-                        <td>{formatTime(rec.checkIn)}</td>
-                        <td>{formatTime(rec.checkOut)}</td>
-                        <td>{formatMinutes(rec.totalWorkMinutes)}</td>
-                        <td>
-                          <span className={`status-pill pill-${rec.checkOut ? "green" : "blue"}`}>
-                            {rec.checkOut ? "Completed" : rec.checkIn ? "Working" : rec.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                    {history.length === 0 && (
-                      <tr>
-                        <td colSpan="5" className="empty-table-cell">
-                          No attendance records found yet. Mark today's attendance above to create your first record!
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+          <EmployeePerformancePage
+            todayAttendance={todayAttendance}
+            liveWorkingTime={liveWorkingTime}
+            handleCheckIn={handleCheckIn}
+            handleCheckOut={handleCheckOut}
+            actionLoading={actionLoading}
+            formatTime={formatTime}
+            formatMinutes={formatMinutes}
+            dashboardMode={dashboardMode}
+            setDashboardMode={setDashboardMode}
+            kpiData={kpiData}
+            myCases={myCases}
+            setActiveTab={setActiveTab}
+          />
         )}
 
-        {/* ── TAB 2: MY PROFILE ── */}
-        {activeTab === "profile" && (
-          <div className="portal-tab-content">
-            <div className="profile-grid">
-              <div className="profile-card profile-main-card">
-                <div className="profile-header-banner">
-                  <div className="profile-large-avatar">
-                    {profile?.fullName ? profile.fullName.slice(0, 2).toUpperCase() : "EM"}
-                  </div>
-                  <div className="profile-title-area">
-                    <h3>{profile?.fullName}</h3>
-                    <p>{profile?.designation} · {profile?.department}</p>
-                    <span className="badge-active">ACTIVE EMPLOYEE</span>
-                  </div>
-                </div>
-
-                <div className="profile-details-grid">
-                  <div className="detail-item">
-                    <span className="detail-label">Employee ID</span>
-                    <span className="detail-val font-mono">{profile?.employeeId}</span>
-                  </div>
-
-                  <div className="detail-item">
-                    <span className="detail-label">Corporate Email</span>
-                    <span className="detail-val">{profile?.email || "employee@paymagic.in"}</span>
-                  </div>
-
-                  <div className="detail-item">
-                    <span className="detail-label">Contact Phone</span>
-                    <span className="detail-val">{profile?.phone || "+91 9876543211"}</span>
-                  </div>
-
-                  <div className="detail-item">
-                    <span className="detail-label">Department</span>
-                    <span className="detail-val">{profile?.department || "Operations"}</span>
-                  </div>
-
-                  <div className="detail-item">
-                    <span className="detail-label">Designation</span>
-                    <span className="detail-val">{profile?.designation || "Executive"}</span>
-                  </div>
-
-                  <div className="detail-item">
-                    <span className="detail-label">Joining Date</span>
-                    <span className="detail-val">
-                      {profile?.joiningDate ? formatDate(profile.joiningDate) : "01 Sep 2026"}
-                    </span>
-                  </div>
-
-                  <div className="detail-item">
-                    <span className="detail-label">System Role</span>
-                    <span className="detail-val">{profile?.role || "EMPLOYEE"}</span>
-                  </div>
-
-                  <div className="detail-item">
-                    <span className="detail-label">Verification Status</span>
-                    <span className="detail-val text-green">✓ KYC Verified</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="profile-card profile-side-card">
-                <h3>Security &amp; Account</h3>
-                <p className="side-card-sub">Manage your security preferences and active sessions.</p>
-                <div className="security-actions">
-                  <div className="security-row">
-                    <div>
-                      <strong>Authentication Token</strong>
-                      <p>Active 24h JWT Session</p>
-                    </div>
-                    <span className="status-pill pill-green">Valid</span>
-                  </div>
-                  <div className="security-row">
-                    <div>
-                      <strong>Password Protection</strong>
-                      <p>Encrypted with bcrypt (10 rounds)</p>
-                    </div>
-                    <span className="status-pill pill-blue">Protected</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* ═══════════════════════════════════════════════════════
+            TAB 2: MY ASSIGNED RECOVERY CASES (Feature 3 & 1)
+        ═══════════════════════════════════════════════════════ */}
+        {activeTab === "cases" && (
+          <MyRecoveryCasesPage
+            caseSearchTerm={caseSearchTerm}
+            setCaseSearchTerm={setCaseSearchTerm}
+            caseFilterStatus={caseFilterStatus}
+            setCaseFilterStatus={setCaseFilterStatus}
+            CASE_STATUSES={CASE_STATUSES}
+            STATUS_PILL_CLASSES={STATUS_PILL_CLASSES}
+            filteredCases={filteredCases}
+            casesLoading={casesLoading}
+            setCallingCase={setCallingCase}
+            setShowCallingModal={setShowCallingModal}
+            setPaymentCase={setPaymentCase}
+            setShowPaymentModal={setShowPaymentModal}
+            setFieldVisitCase={setFieldVisitCase}
+            setShowFieldVisitModal={setShowFieldVisitModal}
+            setTimelineCaseId={setTimelineCaseId}
+            setShowTimelineModal={setShowTimelineModal}
+          />
         )}
 
-        {/* ── TAB 3: ATTENDANCE HISTORY ── */}
+        {/* ═══════════════════════════════════════════════════════
+            TAB 3: FIELD VISITS & GROUND ROUTE (Module D & Module E)
+        ═══════════════════════════════════════════════════════ */}
+        {activeTab === "field-visits" && (
+          <FieldVisitsAgentPage
+            myRouteData={myRouteData}
+            setShowCashHandoverModal={setShowCashHandoverModal}
+            myCases={myCases}
+            setFieldVisitCase={setFieldVisitCase}
+            setShowFieldVisitModal={setShowFieldVisitModal}
+            setErrorMsg={setErrorMsg}
+            fieldVisits={fieldVisits}
+            fieldVisitsLoading={fieldVisitsLoading}
+            formatTime={formatTime}
+            setSelectedReceiptRef={setSelectedReceiptRef}
+            setShowReceiptModal={setShowReceiptModal}
+          />
+        )}
+
+        {/* ═══════════════════════════════════════════════════════
+            TAB 4: MY CALL ACTIVITY & AUDIO EVIDENCE (Feature 1 & 4)
+        ═══════════════════════════════════════════════════════ */}
+        {activeTab === "calls" && (
+          <MyCallHistoryPage
+            user={user}
+            setAudioCall={setAudioCall}
+            setShowAudioModal={setShowAudioModal}
+          />
+        )}
+
+        {/* ═══════════════════════════════════════════════════════
+            TAB 5: ATTENDANCE & SHIFTS (Feature 2 & Module D)
+        ═══════════════════════════════════════════════════════ */}
         {activeTab === "attendance" && (
-          <div className="portal-tab-content">
-            <div className="portal-table-container">
-              <div className="table-header-row">
-                <div>
-                  <h3>Full Attendance Log</h3>
-                  <p>Comprehensive record of all employee check-ins and check-outs</p>
-                </div>
-                <div className="record-count-badge">{history.length} Total Records</div>
-              </div>
-
-              <div className="custom-table-wrap">
-                <table className="custom-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Check In</th>
-                      <th>Check Out</th>
-                      <th>Total Working Time</th>
-                      <th>Status</th>
-                      <th>Audit Trail</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {history.map((rec) => (
-                      <tr key={rec._id}>
-                        <td><strong>{formatDate(rec.attendanceDate)}</strong></td>
-                        <td className="font-mono">{formatTime(rec.checkIn)}</td>
-                        <td className="font-mono">{formatTime(rec.checkOut)}</td>
-                        <td><strong>{formatMinutes(rec.totalWorkMinutes)}</strong></td>
-                        <td>
-                          <span className={`status-pill pill-${rec.checkOut ? "green" : "blue"}`}>
-                            {rec.checkOut ? "Completed" : rec.checkIn ? "Working" : rec.status}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="audit-tag">✓ Server Verified</span>
-                        </td>
-                      </tr>
-                    ))}
-                    {history.length === 0 && (
-                      <tr>
-                        <td colSpan="6" className="empty-table-cell">
-                          No history records found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+          <DailyAttendancePage
+            productivityData={productivityData}
+            todayAttendance={todayAttendance}
+            liveWorkingTime={liveWorkingTime}
+            handleCheckIn={handleCheckIn}
+            handleCheckOut={handleCheckOut}
+            actionLoading={actionLoading}
+            history={history}
+            formatTime={formatTime}
+            formatMinutes={formatMinutes}
+          />
         )}
 
-        {/* ── TAB 4: LEAVE MANAGEMENT ── */}
+        {/* ═══════════════════════════════════════════════════════
+            TAB 6: LEAVE MANAGEMENT (Feature 2)
+        ═══════════════════════════════════════════════════════ */}
         {activeTab === "leave" && (
-          <div className="portal-tab-content">
-            <div className="leave-grid">
-              <div className="leave-form-card">
-                <h3>Apply for Leave</h3>
-                <p className="side-card-sub">Submit a formal leave request for HR and Admin approval.</p>
-
-                <form onSubmit={handleApplyLeave} className="leave-form">
-                  <div className="form-group">
-                    <label>Leave Type</label>
-                    <select
-                      value={leaveType}
-                      onChange={(e) => setLeaveType(e.target.value)}
-                      className="custom-select"
-                    >
-                      <option value="Casual Leave">Casual Leave (CL)</option>
-                      <option value="Sick Leave">Sick Leave (SL)</option>
-                      <option value="Paid Leave">Paid Privilege Leave (PL)</option>
-                      <option value="Comp Off">Compensatory Off</option>
-                    </select>
-                  </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>From Date</label>
-                      <input
-                        type="date"
-                        value={fromDate}
-                        onChange={(e) => setFromDate(e.target.value)}
-                        className="custom-input"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>To Date</label>
-                      <input
-                        type="date"
-                        value={toDate}
-                        onChange={(e) => setToDate(e.target.value)}
-                        className="custom-input"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Reason for Leave</label>
-                    <textarea
-                      rows="3"
-                      placeholder="Briefly describe the reason for your leave request..."
-                      value={leaveReason}
-                      onChange={(e) => setLeaveReason(e.target.value)}
-                      className="custom-textarea"
-                      required
-                    />
-                  </div>
-
-                  <button type="submit" className="primary-btn submit-leave-btn">
-                    Submit Leave Application
-                  </button>
-                </form>
-              </div>
-
-              <div className="leave-balance-card">
-                <h3>Leave Balances</h3>
-                <div className="balance-tiles">
-                  <div className="balance-tile">
-                    <span className="balance-val">12</span>
-                    <span className="balance-label">Casual Leaves</span>
-                  </div>
-                  <div className="balance-tile">
-                    <span className="balance-val">08</span>
-                    <span className="balance-label">Sick Leaves</span>
-                  </div>
-                  <div className="balance-tile">
-                    <span className="balance-val">15</span>
-                    <span className="balance-label">Paid Leaves</span>
-                  </div>
-                </div>
-
-                <h4 style={{ marginTop: "24px", marginBottom: "12px", fontSize: "15px", color: "white" }}>
-                  My Leave Applications
-                </h4>
-                <div className="leave-requests-list">
-                  {leaveRequests.map((req) => (
-                    <div className="leave-req-item" key={req.id}>
-                      <div className="leave-req-top">
-                        <strong>{req.type}</strong>
-                        <span className={`status-pill pill-${req.status === "APPROVED" ? "green" : "gold"}`}>
-                          {req.status}
-                        </span>
-                      </div>
-                      <p className="leave-req-dates">
-                        {req.fromDate} to {req.toDate} ({req.days} days)
-                      </p>
-                      <p className="leave-req-reason">{req.reason}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <LeaveManagementPage
+            handleApplyLeave={handleApplyLeave}
+            leaveType={leaveType}
+            setLeaveType={setLeaveType}
+            fromDate={fromDate}
+            setFromDate={setFromDate}
+            toDate={toDate}
+            setToDate={setToDate}
+            leaveReason={leaveReason}
+            setLeaveReason={setLeaveReason}
+            leaveRequests={leaveRequests}
+          />
         )}
 
-        {/* ── TAB: ASSIGNED RECORDS ── */}
-        {activeTab === "records" && (
-          <div className="portal-tab-content">
-            {/* KPI Summary Header Cards */}
-            <div className="admin-kpi-grid" style={{ marginBottom: "20px" }}>
-
-              <div className="admin-kpi-card">
-                <div className="kpi-icon-wrap blue-wrap">📑</div>
-                <div className="kpi-data">
-                  <span className="kpi-label">Total Assigned Records</span>
-                  <div className="kpi-val">{myAssignedRecords.length}</div>
-                </div>
-              </div>
-
-              <div className="admin-kpi-card">
-                <div className="kpi-icon-wrap green-wrap">✓</div>
-                <div className="kpi-data">
-                  <span className="kpi-label">Completed Records</span>
-                  <div className="kpi-val text-green">
-                    {myAssignedRecords.filter((r) => r.recordStatus === "COMPLETED").length}
-                  </div>
-                </div>
-              </div>
-
-              <div className="admin-kpi-card">
-                <div className="kpi-icon-wrap gold-wrap">⏳</div>
-                <div className="kpi-data">
-                  <span className="kpi-label">Pending Processing</span>
-                  <div className="kpi-val text-gold">
-                    {myAssignedRecords.filter((r) => r.recordStatus !== "COMPLETED").length}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Records List Table */}
-            <div className="portal-table-container">
-              <div className="table-header-row table-filter-bar">
-                <div>
-                  <h3>My Assigned Work Records</h3>
-                  <p>
-                    Records assigned by Administrator ({user?.employeeId || profile?.employeeId})
-                  </p>
-                  {recordColumns.length > 0 && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "6px" }}>
-                      {recordColumns.map((col, idx) => (
-                        <span
-                          key={col}
-                          style={{
-                            fontSize: "11px",
-                            padding: "2px 8px",
-                            borderRadius: "4px",
-                            background: "rgba(59, 130, 246, 0.12)",
-                            color: "#93c5fd",
-                            border: "1px solid rgba(59, 130, 246, 0.25)"
-                          }}
-                        >
-                          {idx + 1}. {col}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="search-wrap">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </svg>
-                  <input
-                    type="text"
-                    placeholder="Filter my assigned records..."
-                    value={empRecordSearch}
-                    onChange={(e) => setEmpRecordSearch(e.target.value)}
-                    className="search-input"
-                  />
-                </div>
-              </div>
-
-              <div className="custom-table-wrap">
-                <table className="custom-table">
-                  <thead>
-                    <tr>
-                      <th>Record # &amp; ID</th>
-                      {recordColumns.map((colName) => (
-                        <th key={colName}>{colName}</th>
-                      ))}
-                      <th>Assigned Date</th>
-                      <th>Processing Status</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {myAssignedRecords
-                      .filter((rec) => {
-                        const q = empRecordSearch.toLowerCase();
-                        return (
-                          String(rec.recordNumber).includes(q) ||
-                          rec.id?.toLowerCase().includes(q) ||
-                          (rec.data &&
-                            Object.values(rec.data).some((val) =>
-                              String(val ?? "").toLowerCase().includes(q)
-                            ))
-                        );
-                      })
-                      .map((rec) => (
-                        <tr key={rec.id}>
-                          <td>
-                            <strong className="font-mono text-green">#{rec.recordNumber}</strong>
-                            <span className="font-mono text-muted" style={{ display: "block", fontSize: "11px" }}>
-                              {rec.id}
-                            </span>
-                          </td>
-                          {recordColumns.map((colName) => (
-                            <td key={colName}>
-                              {rec.data?.[colName] !== undefined && rec.data?.[colName] !== null && rec.data?.[colName] !== ""
-                                ? String(rec.data[colName])
-                                : rec[colName] !== undefined && rec[colName] !== null && rec[colName] !== ""
-                                ? String(rec[colName])
-                                : "—"}
-                            </td>
-                          ))}
-                          <td>
-                            <span style={{ fontSize: "12px", color: "#cbd5e1" }}>{rec.assignedAt || "Today"}</span>
-                          </td>
-                          <td>
-                            <span
-                              className={`status-pill pill-${rec.recordStatus === "COMPLETED" ? "green" : "gold"}`}
-                            >
-                              {rec.recordStatus || "PENDING"}
-                            </span>
-                          </td>
-                          <td>
-                            <button
-                              className={rec.recordStatus === "COMPLETED" ? "toggle-pass-btn" : "action-btn-approve"}
-                              style={{ fontSize: "12px", padding: "6px 12px" }}
-                              onClick={() => handleToggleRecordStatus(rec.id, rec.recordStatus)}
-                            >
-                              {rec.recordStatus === "COMPLETED" ? "Undo" : "Mark Completed"}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-
-                    {myAssignedRecords.length === 0 && (
-                      <tr>
-                        <td colSpan={recordColumns.length + 4} className="empty-table-cell">
-                          No records have been assigned to your account ({user?.employeeId || "Employee"}) yet.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+        {/* ═══════════════════════════════════════════════════════
+            TAB 7: PROFILE
+        ═══════════════════════════════════════════════════════ */}
+        {activeTab === "profile" && (
+          <MyProfilePage profile={profile} kpiData={kpiData} />
         )}
 
-        {/* ── TAB 5: DOCUMENTS ── */}
+        {/* ═══════════════════════════════════════════════════════
+            TAB 8: DOCUMENTS & SOP
+        ═══════════════════════════════════════════════════════ */}
         {activeTab === "documents" && (
-          <div className="portal-tab-content">
-            <div className="portal-table-container">
-              <div className="table-header-row">
-                <div>
-                  <h3>Official Documents &amp; Payslips</h3>
-                  <p>Download and inspect corporate agreements and monthly salary slips</p>
-                </div>
-              </div>
-
-              <div className="docs-grid">
-                <div className="doc-card">
-                  <div className="doc-icon">📄</div>
-                  <div className="doc-info">
-                    <h4>Employment Agreement</h4>
-                    <p>Signed on 01 Sep 2026 · PDF (1.2 MB)</p>
-                  </div>
-                  <button className="doc-action-btn" onClick={() => alert("Downloading Employment Agreement...")}>
-                    Download
-                  </button>
-                </div>
-
-                <div className="doc-card">
-                  <div className="doc-icon">💼</div>
-                  <div className="doc-info">
-                    <h4>Salary Slip — August 2026</h4>
-                    <p>Disbursed via PayMagic T+0 Payout · PDF (340 KB)</p>
-                  </div>
-                  <button className="doc-action-btn" onClick={() => alert("Downloading Payslip...")}>
-                    Download
-                  </button>
-                </div>
-
-                <div className="doc-card">
-                  <div className="doc-icon">🛡️</div>
-                  <div className="doc-info">
-                    <h4>Non-Disclosure Agreement (NDA)</h4>
-                    <p>Corporate Compliance Document · PDF (850 KB)</p>
-                  </div>
-                  <button className="doc-action-btn" onClick={() => alert("Downloading NDA...")}>
-                    Download
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <RegulatorySopPage />
         )}
       </main>
+
+      {/* ── MODALS ── */}
+
+      {/* Feature 1: Calling Modal with Live Timer & Mandatory Outcome */}
+      {showCallingModal && callingCase && (
+        <CallingModal
+          caseData={callingCase}
+          isOpen={showCallingModal}
+          onClose={() => {
+            setShowCallingModal(false);
+            setCallingCase(null);
+          }}
+          onCallCompleted={(outcomeResult) => {
+            setSuccessMsg("Call outcome saved & case status updated in transaction audit trail!");
+            loadMyCases();
+            loadMyCalls();
+            loadEmployeeDashboard();
+          }}
+        />
+      )}
+
+      {/* Feature 5: Record Recovery Payment Modal */}
+      {showPaymentModal && paymentCase && (
+        <PaymentModal
+          caseData={paymentCase}
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setPaymentCase(null);
+          }}
+          onPaymentRecorded={(data) => {
+            setSuccessMsg(`Payment of ₹${data.payment?.amount?.toLocaleString()} recorded successfully!`);
+            loadMyCases();
+            loadEmployeeDashboard();
+          }}
+        />
+      )}
+
+      {/* Feature 4: Audio Evidence Player Modal */}
+      {showAudioModal && audioCall && (
+        <AudioPlayerModal
+          callData={audioCall}
+          isOpen={showAudioModal}
+          currentUser={user}
+          onClose={() => {
+            setShowAudioModal(false);
+            setAudioCall(null);
+          }}
+        />
+      )}
+
+      {/* Feature 3: Case Details & Status History Modal */}
+      {showTimelineModal && timelineCaseId && (
+        <CaseDetailModal
+          caseId={timelineCaseId}
+          isOpen={showTimelineModal}
+          onClose={() => {
+            setShowTimelineModal(false);
+            setTimelineCaseId(null);
+          }}
+          onUpdate={() => {
+            loadMyCases();
+            loadEmployeeDashboard();
+          }}
+        />
+      )}
+
+      {/* Module D: Authorized Field Visit & GPS Modal */}
+      {showFieldVisitModal && fieldVisitCase && (
+        <FieldVisitModal
+          loanCase={fieldVisitCase}
+          onClose={() => {
+            setShowFieldVisitModal(false);
+            setFieldVisitCase(null);
+          }}
+          onSuccess={() => {
+            setSuccessMsg("Field visit and outcome recorded with verified GPS coordinates!");
+            loadFieldVisits();
+            loadMyRoute();
+            loadMyCases();
+            loadProductivity();
+            loadEmployeeDashboard();
+          }}
+        />
+      )}
+
+      {/* Module E: Cash Handover Modal */}
+      {showCashHandoverModal && (
+        <CashHandoverModal
+          isOpen={showCashHandoverModal}
+          cashInHand={myRouteData?.agent?.cash_in_hand || 8500}
+          onClose={() => setShowCashHandoverModal(false)}
+          onSuccess={(msg) => {
+            setSuccessMsg(msg);
+            loadMyRoute();
+            loadFieldVisits();
+          }}
+        />
+      )}
+
+      {/* Module E: Digital Receipt Modal */}
+      {showReceiptModal && selectedReceiptRef && (
+        <DigitalReceiptModal
+          isOpen={showReceiptModal}
+          receiptNumber={selectedReceiptRef}
+          onClose={() => {
+            setShowReceiptModal(false);
+            setSelectedReceiptRef(null);
+          }}
+        />
+      )}
+
+      {/* Floating WebPhone Dialer for Telecaller Voice Recovery */}
+      <WebPhoneDialer
+        user={user}
+        cases={myCases}
+        onCallCase={(loanCase) => {
+          setCallingCase(loanCase);
+          setShowCallingModal(true);
+        }}
+      />
     </div>
   );
 }

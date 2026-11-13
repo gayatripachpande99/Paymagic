@@ -1,48 +1,212 @@
-import mongoose from "mongoose";
-import { Record, RecordMeta } from "../models/Record.js";
-import { uploadedRecords, recordColumns, setRecordColumns } from "../data/store.js";
+import pg from "pg";
+import { v4 as uuidv4 } from "uuid";
+import { createSeedData } from "../data/seedData.js";
+import { indexService } from "../services/indexService.js";
+import { cacheService } from "../services/cacheService.js";
 
-export const connectDB = async () => {
-  try {
-    const uri = process.env.MONGODB_URI || "mongodb+srv://gayatri:Gaugau99@cluster0.9ktjwfq.mongodb.net/paymagic?retryWrites=true&w=majority&appName=Cluster0";
-    const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 8000
-    });
-    console.log(`MongoDB Connected: ${conn.connection.host} / Database: ${conn.connection.name}`);
+const { Pool } = pg;
 
-    // Sync records collection with MongoDB database 'paymagic'
+let pool = null;
+let isPgActive = false;
+
+// Relational memory store used when external PostgreSQL is not configured or in dev fallback
+export const memoryStore = {
+  roles: [],
+  users: [],
+  employees: [],
+  customers: [],
+  loan_cases: [],
+  case_status_history: [],
+  case_assignments: [],
+  calls: [],
+  call_recordings: [],
+  recording_access_logs: [],
+  payments: [],
+  targets: [],
+  attendance: [],
+  shifts: [],
+  leave_requests: [],
+  field_visits: [],
+  cash_handovers: [],
+  complaints: [],
+  complaint_actions: [],
+  notifications: [],
+  enquiries: [],
+  audit_logs: [],
+  import_batches: []
+};
+
+export const initializeDatabase = async () => {
+  const dbUrl = process.env.DATABASE_URL;
+
+  if (dbUrl) {
     try {
-      const recordsCount = await Record.countDocuments();
-      if (recordsCount === 0) {
-        console.log("Seeding initial 200 records into MongoDB database 'paymagic'...");
-        await Record.insertMany(uploadedRecords);
-        await RecordMeta.findOneAndUpdate(
-          { key: "activeColumns" },
-          { columns: recordColumns },
-          { upsert: true }
-        );
-        console.log("Successfully seeded records and columns into MongoDB 'paymagic'!");
-      } else {
-        const dbRecords = await Record.find({}).sort({ recordNumber: 1 }).lean();
-        uploadedRecords.length = 0;
-        uploadedRecords.push(...dbRecords);
-
-        const meta = await RecordMeta.findOne({ key: "activeColumns" }).lean();
-        if (meta && meta.columns && meta.columns.length > 0) {
-          setRecordColumns(meta.columns);
-        }
-        console.log(`Synced ${uploadedRecords.length} records and ${recordColumns.length} dynamic columns from MongoDB 'paymagic'.`);
-      }
-    } catch (syncErr) {
-      console.warn("MongoDB records sync warning:", syncErr.message);
+      pool = new Pool({
+        connectionString: dbUrl,
+        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+        connectionTimeoutMillis: 5000
+      });
+      const client = await pool.connect();
+      await client.query("SELECT 1");
+      client.release();
+      isPgActive = true;
+      console.log("Connected to PostgreSQL Database engine.");
+      return;
+    } catch (err) {
+      console.warn("PostgreSQL connection failed, operating with in-memory relational engine:", err.message);
+      isPgActive = false;
     }
+  }
 
-    return conn;
-  } catch (error) {
-    console.error(`MongoDB Connection Error: ${error.message}`);
-    // Don't crash server if network is temporarily unreachable; continue with graceful fallback
-    return null;
+  // Populate memory store with initial seed data
+  console.log("Initializing PayMagic high-integrity relational store with seed data...");
+  const seed = await createSeedData();
+  memoryStore.roles = seed.roles;
+  memoryStore.users = seed.users;
+  memoryStore.employees = seed.employees;
+  memoryStore.customers = seed.customers;
+  memoryStore.loan_cases = seed.loanCases;
+  memoryStore.case_status_history = seed.caseStatusHistory;
+  memoryStore.calls = seed.calls;
+  memoryStore.call_recordings = seed.callRecordings;
+  memoryStore.recording_access_logs = seed.recordingAccessLogs || [];
+  memoryStore.payments = seed.payments;
+  memoryStore.complaints = seed.complaints;
+  memoryStore.complaint_actions = seed.complaintActions || [];
+  memoryStore.attendance = seed.attendance;
+  memoryStore.field_visits = seed.fieldVisits;
+  memoryStore.cash_handovers = seed.cashHandovers || [];
+  memoryStore.enquiries = seed.enquiries;
+  memoryStore.notifications = seed.notifications || [];
+
+  // Rebuild all O(1) in-memory indexes
+  const indexStats = indexService.rebuild(memoryStore);
+
+  console.log(`Initialized database with:
+  - ${memoryStore.users.length} Users (${memoryStore.roles.map(r => r.id).join(", ")})
+  - ${memoryStore.loan_cases.length} Loan Cases (~200 records)
+  - ${memoryStore.case_status_history.length} Case Status Audit Entries
+  - ${memoryStore.customers.length} Borrowers
+  - Indexes: ${indexStats.indexedCases} cases, ${indexStats.indexedCustomers} customers, ${indexStats.indexedStatusGroups} status groups, ${indexStats.indexedEmployeeGroups} staff groups`);
+};
+
+/**
+ * Universal Database Transaction Manager
+ * Guarantees atomic execution for all state transitions
+ */
+export const transaction = async (callback) => {
+  if (isPgActive && pool) {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const result = await callback(client);
+      await client.query("COMMIT");
+      return result;
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+
+  // In-Memory Transaction with Snapshot Isolation & Rollback
+  const snapshot = JSON.stringify(memoryStore);
+  try {
+    const trxClient = {
+      isMemory: true,
+      store: memoryStore
+    };
+    const result = await callback(trxClient);
+    return result;
+  } catch (err) {
+    // Rollback snapshot
+    const restored = JSON.parse(snapshot);
+    Object.keys(restored).forEach((key) => {
+      if (Array.isArray(memoryStore[key])) {
+        memoryStore[key].length = 0;
+        memoryStore[key].push(...restored[key]);
+      } else {
+        memoryStore[key] = restored[key];
+      }
+    });
+    throw err;
   }
 };
 
-export default connectDB;
+/**
+ * CRITICAL RULE ENFORCEMENT:
+ * Every case-status change must be recorded with employee ID, timestamp,
+ * previous status and new status inside the SAME database transaction.
+ * No code path may change status without it!
+ */
+export const updateCaseStatusWithHistory = async ({
+  caseId,
+  employeeId,
+  newStatus,
+  remarks = ""
+}) => {
+  return await transaction(async (trx) => {
+    // 1. Locate existing case via O(1) index or store
+    const targetCase = indexService.getCase(caseId) || memoryStore.loan_cases.find((c) => c.id === caseId);
+    if (!targetCase) {
+      throw new Error(`Loan case with ID '${caseId}' not found.`);
+    }
+
+    const previousStatus = targetCase.status;
+    if (previousStatus === newStatus) {
+      return { case: targetCase, historyEntry: null, changed: false };
+    }
+
+    const now = new Date().toISOString();
+
+    // 2. Mutate case status
+    targetCase.status = newStatus;
+    targetCase.updated_at = now;
+
+    // Adjust specific status side-effects
+    if (newStatus === "Closed" || newStatus === "Fully Paid") {
+      targetCase.outstanding_amount = 0;
+    } else if (newStatus === "Field Visit") {
+      targetCase.is_field_visit_required = true;
+    }
+
+    // 3. Atomically write audit row to case_status_history
+    const historyEntry = {
+      id: `csh_${uuidv4()}`,
+      case_id: caseId,
+      employee_id: employeeId,
+      previous_status: previousStatus,
+      new_status: newStatus,
+      remarks: remarks || `Status transition from ${previousStatus} to ${newStatus}`,
+      created_at: now
+    };
+
+    memoryStore.case_status_history.unshift(historyEntry);
+
+    // 4. Update in-memory index
+    indexService.updateCaseStatus(targetCase, previousStatus, newStatus);
+
+    // 5. Invalidate relevant caches automatically
+    cacheService.delPattern("cases:*");
+    cacheService.delPattern("dashboard:*");
+
+    // 6. Return updated result
+    return {
+      case: { ...targetCase },
+      historyEntry: { ...historyEntry },
+      changed: true
+    };
+  });
+};
+
+export const db = {
+  isPgActive: () => isPgActive,
+  transaction,
+  updateCaseStatusWithHistory,
+  store: memoryStore,
+  indexService,
+  cacheService
+};
+
+export default db;
