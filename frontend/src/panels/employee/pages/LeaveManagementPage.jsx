@@ -23,14 +23,14 @@ export default function LeaveManagementPage({
           </div>
         </div>
 
-        <form onSubmit={handleApplyLeave} className="p-6 space-y-4">
+        <form onSubmit={handleApplyLeave} className="space-y-4 pt-2">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Leave Type</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Leave Type</label>
               <select
                 value={leaveType}
                 onChange={(e) => setLeaveType(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs"
+                className="w-full px-3.5 py-2.5 min-h-[42px] rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none"
               >
                 <option value="Casual Leave">Casual Leave</option>
                 <option value="Sick Leave">Sick Leave</option>
@@ -39,41 +39,44 @@ export default function LeaveManagementPage({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">From Date</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">From Date</label>
               <input
                 type="date"
                 required
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs"
+                className="w-full px-3.5 py-2.5 min-h-[42px] rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">To Date</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">To Date</label>
               <input
                 type="date"
                 required
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs"
+                className="w-full px-3.5 py-2.5 min-h-[42px] rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Reason for Leave</label>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">Reason for Leave</label>
             <textarea
-              rows={2}
+              rows={3}
               required
               value={leaveReason}
               onChange={(e) => setLeaveReason(e.target.value)}
               placeholder="Provide reason for absence..."
-              className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs resize-none"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white text-xs resize-none focus:ring-1 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
 
-          <button type="submit" className="primary-btn" style={{ padding: "8px 20px" }}>
+          <button
+            type="submit"
+            className="primary-btn inline-flex items-center justify-center min-h-[44px] px-6 py-2.5 rounded-xl text-xs sm:text-sm font-semibold"
+          >
             Submit Leave Request
           </button>
         </form>

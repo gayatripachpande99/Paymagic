@@ -24,26 +24,26 @@ export default function FieldVisitsAgentPage({
     <div className="portal-tab-content">
       {/* Field Agent Daily Operations Banner */}
       <div className="portal-card mb-6">
-        <div className="flex justify-between items-center flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <Compass className="w-6 h-6" />
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+              <Compass className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h4 className="font-extrabold text-white text-base">Field Enforcement Itinerary &amp; Route</h4>
                 <span className="badge badge-success text-[10px]">ZONE: PUNE METRO</span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 mt-0.5 truncate">
                 Sequential ground route, statutory GPS check-in, dynamic UPI spot collections &amp; cash reconciliation
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center flex-wrap gap-2.5 sm:gap-3">
             {/* Cash In Hand Ticker */}
-            <div className="px-3.5 py-1.5 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center gap-2.5">
-              <Building2 className="w-4 h-4 text-emerald-400" />
+            <div className="px-3.5 py-2 min-h-[42px] rounded-xl bg-slate-950/70 border border-slate-800 flex items-center gap-2.5">
+              <Building2 className="w-4 h-4 text-emerald-400 shrink-0" />
               <div>
                 <span className="text-[9px] text-slate-400 uppercase font-semibold block leading-tight">Cash In Hand</span>
                 <span className="font-mono font-bold text-xs text-emerald-400">
@@ -55,7 +55,7 @@ export default function FieldVisitsAgentPage({
             <button
               type="button"
               onClick={() => setShowCashHandoverModal(true)}
-              className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 flex items-center gap-1.5 transition"
+              className="px-3.5 py-2.5 min-h-[42px] rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 flex items-center gap-1.5 transition active:scale-98 cursor-pointer"
             >
               <Building2 className="w-3.5 h-3.5" />
               <span>Deposit Cash</span>
@@ -71,8 +71,8 @@ export default function FieldVisitsAgentPage({
                   setErrorMsg("No assigned cases available to initiate a visit.");
                 }
               }}
-              className="primary-btn"
-              style={{ padding: "8px 16px", fontSize: "12px", background: "linear-gradient(135deg, #d97706, #b45309)" }}
+              className="primary-btn min-h-[42px] px-4 py-2.5 text-xs font-semibold inline-flex items-center justify-center cursor-pointer"
+              style={{ background: "linear-gradient(135deg, #d97706, #b45309)" }}
             >
               <Plus className="w-3.5 h-3.5 mr-1" />
               <span>New Visit</span>

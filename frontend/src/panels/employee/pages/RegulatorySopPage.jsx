@@ -13,7 +13,7 @@ export default function RegulatorySopPage() {
           <span className="badge badge-success">RBI Fair Practices Enforced</span>
         </div>
 
-        <div className="p-6 space-y-4 text-xs text-slate-300 leading-relaxed">
+        <div className="pt-2 space-y-4 text-xs text-slate-300 leading-relaxed">
           <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
             <h5 className="font-bold text-white text-sm mb-2">1. Permissible Calling Hours</h5>
             <p>

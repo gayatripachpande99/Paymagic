@@ -576,7 +576,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
       <main className="portal-main">
         {/* Top Header */}
         <header className="portal-topbar">
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div className="topbar-left">
             <button
               className="portal-mobile-toggle-btn"
               onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}

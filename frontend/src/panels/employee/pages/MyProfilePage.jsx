@@ -12,7 +12,7 @@ export default function MyProfilePage({ profile = {}, kpiData = {} }) {
           </div>
         </div>
 
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="pt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50">
             <span className="text-xs text-slate-400 block mb-1">Full Legal Name</span>
             <span className="font-bold text-white text-base">{profile?.fullName || "Operations Executive"}</span>

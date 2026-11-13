@@ -22,23 +22,24 @@ export default function MyRecoveryCasesPage({
   return (
     <div className="portal-tab-content">
       {/* Filter toolbar */}
-      <div className="portal-card" style={{ marginBottom: "20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-          <div className="search-box" style={{ flex: "1 1 240px", minWidth: "200px" }}>
-            <Search className="search-icon w-4 h-4" />
+      <div className="portal-card mb-5 p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="search-box relative flex-1 min-w-[220px]">
+            <Search className="search-icon w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search customer name, account, loan case #..."
               value={caseSearchTerm}
               onChange={(e) => setCaseSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 min-h-[42px] bg-slate-800/80 border border-slate-700/80 rounded-xl text-white text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
 
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <div className="flex items-center gap-2">
             <select
               value={caseFilterStatus}
               onChange={(e) => setCaseFilterStatus(e.target.value)}
-              style={{ padding: "7px 10px", background: "rgba(15, 23, 42, 0.8)", border: "1px solid #334155", borderRadius: "8px", color: "white", fontSize: "12px" }}
+              className="px-3.5 py-2.5 min-h-[42px] bg-slate-800/80 border border-slate-700/80 rounded-xl text-white text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full sm:w-auto"
             >
               <option value="ALL">All Statuses (10)</option>
               {CASE_STATUSES.map((st) => (

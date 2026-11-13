@@ -39,7 +39,7 @@ export default function DailyAttendancePage({
           </span>
         </div>
 
-        <div className="p-6">
+        <div className="pt-2">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
             <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl text-center">
               <span className="text-[11px] text-slate-400 block mb-1">Calls Today</span>
@@ -96,7 +96,7 @@ export default function DailyAttendancePage({
           <span className="badge badge-info">{new Date().toDateString()}</span>
         </div>
 
-        <div className="p-6">
+        <div className="pt-2">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/60 text-center">
               <span className="text-xs text-slate-400 block mb-1">Check In Time</span>
@@ -124,7 +124,7 @@ export default function DailyAttendancePage({
                 type="button"
                 onClick={handleCheckIn}
                 disabled={actionLoading}
-                className="primary-btn w-full py-3"
+                className="primary-btn w-full min-h-[44px] py-3 text-sm font-semibold rounded-xl"
                 style={{ background: "#059669" }}
               >
                 {actionLoading ? "Clocking In..." : "Clock In for Today"}
@@ -134,13 +134,13 @@ export default function DailyAttendancePage({
                 type="button"
                 onClick={handleCheckOut}
                 disabled={actionLoading}
-                className="secondary-btn w-full py-3"
+                className="secondary-btn w-full min-h-[44px] py-3 text-sm font-semibold rounded-xl"
                 style={{ borderColor: "#f43f5e", color: "#f43f5e" }}
               >
                 {actionLoading ? "Checking Out..." : "Check Out & Complete Shift"}
               </button>
             ) : (
-              <div className="w-full py-3 rounded-xl bg-slate-800 text-center text-sm font-semibold text-slate-300">
+              <div className="w-full min-h-[44px] flex items-center justify-center py-3 rounded-xl bg-slate-800 text-center text-sm font-semibold text-slate-300">
                 Attendance completed for today. Great job!
               </div>
             )}
