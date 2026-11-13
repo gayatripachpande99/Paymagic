@@ -3980,3 +3980,79 @@ footer {
     padding: 0 !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   CASE MANAGEMENT & ALLOCATION PAGE RESPONSIVE STYLING (MODULE A)
+══════════════════════════════════════════════════════════════════ */
+.case-allocation-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.case-allocation-page .table-card-wrapper {
+  padding: 0 !important;
+  margin-bottom: 20px !important;
+}
+
+.case-allocation-page .table-card-wrapper .card-header {
+  padding: 16px 20px;
+  margin-bottom: 0;
+}
+
+.case-allocation-page .portal-table-container {
+  margin-bottom: 0;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Touch-optimized horizontal status scroll */
+.case-allocation-page .status-filter-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .case-allocation-page .table-card-wrapper .card-header {
+    padding: 14px 14px 12px;
+  }
+
+  .case-allocation-page select {
+    min-height: 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  .case-allocation-page {
+    padding-bottom: 24px;
+  }
+
+  .case-allocation-page .table-card-wrapper .card-header {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .case-allocation-page .table-card-wrapper .search-box {
+    width: 100% !important;
+  }
+
+  .case-allocation-page .table-card-wrapper .search-box input {
+    width: 100%;
+    font-size: 13px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .case-allocation-page .portal-card {
+    padding: 14px 12px !important;
+  }
+
+  .case-allocation-page .table-card-wrapper {
+    padding: 0 !important;
+  }
+}
