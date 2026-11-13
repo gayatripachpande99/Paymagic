@@ -1079,11 +1079,21 @@ body {
   background: linear-gradient(180deg, #041042 0%, #02092c 100%);
 }
 
+.leadership-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
 .founders-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 30px;
-  max-width: 900px;
+  max-width: 860px;
+  width: 100%;
   margin: auto;
 }
 
@@ -1093,6 +1103,11 @@ body {
   border-radius: var(--radius-lg);
   padding: 36px 30px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
   transition: all var(--transition);
 }
 
@@ -1946,7 +1961,49 @@ footer {
   .trust-bar { gap: 14px; }
 
   .section, .services, .calculator-section, .leadership-section, .testimonials-section, .faqs-section, .cta {
-    padding: 70px 5%;
+    padding: 64px 5%;
+  }
+
+  .leadership-inner {
+    width: 100%;
+  }
+
+  .founders-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    max-width: 420px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .founder-card {
+    padding: 28px 20px;
+    border-radius: 20px;
+    width: 100%;
+  }
+
+  .founder-avatar {
+    width: 64px;
+    height: 64px;
+    font-size: 22px;
+    margin-bottom: 14px;
+  }
+
+  .founder-card h3 {
+    font-size: 20px;
+  }
+
+  .founder-role {
+    font-size: 13.5px;
+    margin-bottom: 14px;
+  }
+
+  .founder-card .admin-login-shortcut {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+    font-size: 14px;
+    min-height: 46px;
   }
 
   .service-grid, .savings-comparison-grid, .testimonial-grid { grid-template-columns: 1fr; }
@@ -1959,6 +2016,40 @@ footer {
 }
 
 @media (max-width: 480px) {
+  .leadership-section {
+    padding: 48px 4%;
+  }
+
+  .founders-grid {
+    gap: 16px;
+    width: 100%;
+  }
+
+  .founder-card {
+    padding: 24px 16px;
+    width: 100%;
+  }
+
+  .founder-avatar {
+    width: 58px;
+    height: 58px;
+    font-size: 20px;
+  }
+
+  .founder-card h3 {
+    font-size: 19px;
+  }
+
+  .founder-role {
+    font-size: 13px;
+  }
+
+  .founder-card .admin-login-shortcut {
+    font-size: 13.5px;
+    min-height: 44px;
+    width: 100%;
+  }
+
   .hero-stats { grid-template-columns: repeat(2, 1fr); }
   .hero-buttons { flex-direction: column; }
   .primary-btn, .secondary-btn { width: 100%; justify-content: center; }

@@ -3,7 +3,7 @@ import React from "react";
 export default function LeadershipPage({ openLogin, handleAdminSelect }) {
   return (
     <section className="leadership-section" id="leadership">
-      <div className="section-inner">
+      <div className="leadership-inner">
         <div className="services-header">
           <h2>Guided by Visionary <span className="gradient-text">Founders &amp; Directors</span></h2>
         </div>
