@@ -4062,16 +4062,11 @@ footer {
   overflow-x: hidden;
 }
 
-/* Card Boxes Margin and Padding */
-.case-allocation-page .portal-card,
-.case-allocation-page .bg-slate-900\/90 {
-  margin-bottom: 20px;
-}
-
 .case-allocation-page .table-card-wrapper {
   padding: 0 !important;
-  margin-bottom: 24px !important;
-  border-radius: 20px !important;
+  border-radius: var(--radius-xl) !important;
+  background: rgba(4, 15, 58, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .case-allocation-page .table-card-wrapper .card-header {
@@ -4088,26 +4083,42 @@ footer {
 }
 
 .case-allocation-page .portal-table th {
-  padding: 14px 18px !important;
+  padding: 14px 16px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #94a3b8 !important;
+  background: rgba(2, 6, 23, 0.6) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  white-space: nowrap;
 }
 
 .case-allocation-page .portal-table td {
-  padding: 14px 18px !important;
+  padding: 14px 16px !important;
+  font-size: 12.5px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  vertical-align: middle;
 }
 
 /* Touch-optimized horizontal status scroll */
-.case-allocation-page .status-filter-scroll {
+.case-allocation-page .status-filter-scroll,
+.case-allocation-page .no-scrollbar {
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  margin-top: 6px;
-  margin-bottom: 14px;
+  scrollbar-width: none;
 }
 
-/* Action button padding */
+.case-allocation-page .no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Action button padding & touch targets */
 .case-allocation-page .primary-btn,
 .case-allocation-page .secondary-btn {
+  min-height: 40px;
   padding: 10px 16px;
   gap: 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all var(--transition);
 }
 
 /* Mobile responsive adjustments */
@@ -4117,13 +4128,13 @@ footer {
   }
 
   .case-allocation-page select {
-    min-height: 34px;
+    min-height: 36px;
   }
 }
 
 @media (max-width: 640px) {
   .case-allocation-page {
-    padding-bottom: 28px;
+    padding-bottom: 32px;
   }
 
   .case-allocation-page .table-card-wrapper .card-header {
@@ -4142,13 +4153,13 @@ footer {
     padding-bottom: 10px;
     padding-left: 38px;
     padding-right: 14px;
+    min-height: 42px;
   }
 }
 
 @media (max-width: 480px) {
   .case-allocation-page .portal-card {
     padding: 16px 14px !important;
-    margin-bottom: 16px;
   }
 
   .case-allocation-page .table-card-wrapper {
