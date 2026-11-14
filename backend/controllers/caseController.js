@@ -1,8 +1,15 @@
 import { v4 as uuidv4 } from "uuid";
-import { memoryStore, updateCaseStatusWithHistory } from "../config/db.js";
+import db, { memoryStore, updateCaseStatusWithHistory } from "../config/db.js";
 import { maskCustomerForRole } from "../middleware/authMiddleware.js";
 import { cacheService } from "../services/cacheService.js";
 import { indexService } from "../services/indexService.js";
+import {
+  caseRepository,
+  customerRepository,
+  uploadRepository,
+  targetRepository,
+  followupRepository
+} from "../repositories/index.js";
 
 const VALID_STATUSES = [
   "New", "Assigned", "Contacted", "Promise to Pay", "Partially Paid",
@@ -16,89 +23,44 @@ const VALID_STATUSES = [
 export const listCases = async (req, res) => {
   try {
     const {
-      status, priority, assignedTo, lender, search,
+      status, priority, assignedTo, lender, search, city,
+      minAmount, maxAmount, dpdMin, dpdMax,
       sortBy = "created_at", sortOrder = "desc",
       page = 1, limit = 20
     } = req.query;
 
-    let cases = [...memoryStore.loan_cases];
-
-    // --- Filters ---
-    if (status) {
-      const statusList = status.split(",").map(s => s.trim());
-      cases = cases.filter(c => statusList.includes(c.status));
-    }
-    if (priority) {
-      const priorityList = priority.split(",").map(p => p.trim().toUpperCase());
-      cases = cases.filter(c => priorityList.includes(c.priority));
-    }
-    if (assignedTo) {
-      cases = cases.filter(c => c.assigned_employee_id === assignedTo);
-    }
-    if (lender) {
-      const lenderLower = lender.toLowerCase();
-      cases = cases.filter(c => c.lender_name.toLowerCase().includes(lenderLower));
+    let targetAssignedTo = assignedTo;
+    if (["CALLER", "FIELD_AGENT"].includes(req.user?.role)) {
+      targetAssignedTo = req.user.id;
     }
 
-    // Role-based visibility: callers/field agents see only their own cases
-    if (["CALLER", "FIELD_AGENT"].includes(req.user.role)) {
-      cases = cases.filter(c => c.assigned_employee_id === req.user.id);
-    }
-
-    // --- Search ---
-    if (search) {
-      const term = search.toLowerCase();
-      cases = cases.filter(c => {
-        const customer = memoryStore.customers.find(cust => cust.id === c.customer_id);
-        const customerName = customer ? customer.full_name.toLowerCase() : "";
-        return (
-          c.case_number.toLowerCase().includes(term) ||
-          customerName.includes(term) ||
-          (c.loan_account_no && c.loan_account_no.toLowerCase().includes(term))
-        );
-      });
-    }
-
-    const totalCount = cases.length;
-
-    // --- Sorting ---
-    const order = sortOrder.toLowerCase() === "asc" ? 1 : -1;
-    cases.sort((a, b) => {
-      let valA = a[sortBy];
-      let valB = b[sortBy];
-      if (typeof valA === "string") valA = valA.toLowerCase();
-      if (typeof valB === "string") valB = valB.toLowerCase();
-      if (valA < valB) return -1 * order;
-      if (valA > valB) return 1 * order;
-      return 0;
-    });
-
-    // --- Pagination ---
-    const pageNum = Math.max(1, parseInt(page, 10) || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
-    const startIdx = (pageNum - 1) * limitNum;
-    const paginatedCases = cases.slice(startIdx, startIdx + limitNum);
-
-    // Enrich with customer name
-    const enriched = paginatedCases.map(c => {
-      const customer = memoryStore.customers.find(cust => cust.id === c.customer_id);
-      return {
-        ...c,
-        customer_name: customer ? customer.full_name : "Unknown",
-        customer_city: customer ? customer.city : null
-      };
+    const result = await caseRepository.findAll({
+      status: status || undefined,
+      priority: priority || undefined,
+      assigned_employee_id: targetAssignedTo || undefined,
+      lender_name: lender || undefined,
+      city: city || undefined,
+      min_amount: minAmount || undefined,
+      max_amount: maxAmount || undefined,
+      dpd_min: dpdMin || undefined,
+      dpd_max: dpdMax || undefined,
+      search: search || undefined,
+      sort_by: sortBy,
+      order: sortOrder,
+      page,
+      limit
     });
 
     return res.status(200).json({
       success: true,
-      message: `Found ${totalCount} case(s).`,
+      message: `Found ${result.total} case(s).`,
       data: {
-        cases: enriched,
+        cases: result.cases,
         pagination: {
-          page: pageNum,
-          limit: limitNum,
-          totalCount,
-          totalPages: Math.ceil(totalCount / limitNum)
+          page: result.page,
+          limit: result.limit,
+          totalCount: result.total,
+          totalPages: result.totalPages
         }
       }
     });
@@ -115,29 +77,16 @@ export const listCases = async (req, res) => {
 export const getCaseById = async (req, res) => {
   try {
     const { caseId } = req.params;
-    if (!caseId || caseId === "undefined" || caseId === "null") {
+    let targetId = caseId;
+    if (!targetId || targetId === "undefined" || targetId === "null") {
       const fallbackCase = memoryStore.loan_cases[0];
       if (!fallbackCase) {
         return res.status(404).json({ success: false, message: "No loan cases available in portfolio." });
       }
-      const rawCustomer = memoryStore.customers.find(c => c.id === fallbackCase.customer_id);
-      const customer = maskCustomerForRole(rawCustomer, req.user?.role || "ADMIN");
-      const statusHistory = memoryStore.case_status_history
-        .filter(h => h.case_id === fallbackCase.id)
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      return res.status(200).json({
-        success: true,
-        data: {
-          ...fallbackCase,
-          customer,
-          status_history: statusHistory,
-          call_logs: [],
-          payments: []
-        }
-      });
+      targetId = fallbackCase.id;
     }
 
-    const loanCase = memoryStore.loan_cases.find(c => c.id === caseId || c.case_number === caseId);
+    const loanCase = await caseRepository.findById(targetId);
 
     if (!loanCase) {
       return res.status(404).json({ success: false, message: `Case '${caseId}' not found.` });
@@ -152,23 +101,24 @@ export const getCaseById = async (req, res) => {
     }
 
     // Customer details (masked by role)
-    const rawCustomer = memoryStore.customers.find(c => c.id === loanCase.customer_id);
-    const customer = maskCustomerForRole(rawCustomer, req.user.role);
+    const rawCustomer = await customerRepository.findById(loanCase.customer_id);
+    const customer = customerRepository.maskCustomer(rawCustomer, req.user.role);
 
     // Status history timeline
-    const statusHistory = memoryStore.case_status_history
-      .filter(h => h.case_id === caseId)
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const statusHistory = await caseRepository.getCaseHistory(loanCase.id);
+
+    // Follow-ups
+    const followups = await followupRepository.getFollowupsForCase(loanCase.id);
 
     // Recent calls
     const calls = memoryStore.calls
-      .filter(c => c.case_id === caseId)
+      .filter(c => c.case_id === loanCase.id)
       .sort((a, b) => new Date(b.started_at) - new Date(a.started_at))
       .slice(0, 20);
 
     // Payments
     const payments = memoryStore.payments
-      .filter(p => p.case_id === caseId)
+      .filter(p => p.case_id === loanCase.id)
       .sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
 
     // Assigned employee info
@@ -177,10 +127,7 @@ export const getCaseById = async (req, res) => {
       : null;
 
     // Case assignments history
-    const assignments = memoryStore.case_assignments
-      ? memoryStore.case_assignments.filter(a => a.case_id === caseId)
-          .sort((a, b) => new Date(b.assigned_at) - new Date(a.assigned_at))
-      : [];
+    const assignments = await caseRepository.getTransferHistory({ caseId: loanCase.id });
 
     return res.status(200).json({
       success: true,
@@ -192,6 +139,7 @@ export const getCaseById = async (req, res) => {
           ? { id: assignedEmployee.id, full_name: assignedEmployee.full_name, role: assignedEmployee.role, employee_id: assignedEmployee.employee_id }
           : null,
         status_history: statusHistory,
+        followups,
         recent_calls: calls,
         payments,
         assignments
@@ -396,6 +344,13 @@ export const previewRuleAllocation = async (req, res) => {
     let candidateCases = memoryStore.loan_cases.filter(
       c => !c.assigned_employee_id || c.status === "New"
     );
+
+    // If no unassigned/New cases exist, allow previewing allocation strategy on active cases
+    if (candidateCases.length === 0) {
+      candidateCases = memoryStore.loan_cases.filter(
+        c => !["Closed", "Fully Paid"].includes(c.status)
+      );
+    }
 
     if (rules.minAmount !== undefined && rules.minAmount !== "") {
       const minA = parseFloat(rules.minAmount);

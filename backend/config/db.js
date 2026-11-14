@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { createSeedData } from "../data/seedData.js";
 import { indexService } from "../services/indexService.js";
 import { cacheService } from "../services/cacheService.js";
+import { runMigrations } from "../scripts/runMigrations.js";
 
 const { Pool } = pg;
 
@@ -18,6 +19,7 @@ export const memoryStore = {
   loan_cases: [],
   case_status_history: [],
   case_assignments: [],
+  case_followups: [],
   calls: [],
   call_recordings: [],
   recording_access_logs: [],
@@ -50,12 +52,19 @@ export const initializeDatabase = async () => {
       await client.query("SELECT 1");
       client.release();
       isPgActive = true;
-      console.log("Connected to PostgreSQL Database engine.");
+      console.log("Connected to PostgreSQL Database engine. Running migrations...");
+      await runMigrations(pool);
       return;
     } catch (err) {
+      if (process.env.NODE_ENV === "production") {
+        console.error("FATAL: PostgreSQL connection failed in production mode:", err.message);
+        throw new Error(`Production database failure: Cannot connect to PostgreSQL: ${err.message}`);
+      }
       console.warn("PostgreSQL connection failed, operating with in-memory relational engine:", err.message);
       isPgActive = false;
     }
+  } else if (process.env.NODE_ENV === "production") {
+    throw new Error("FATAL: DATABASE_URL must be provided in production environment.");
   }
 
   // Populate memory store with initial seed data
@@ -209,6 +218,7 @@ export const updateCaseStatusWithHistory = async ({
 
 export const db = {
   isPgActive: () => isPgActive,
+  getPool: () => pool,
   transaction,
   updateCaseStatusWithHistory,
   store: memoryStore,

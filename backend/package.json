@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "migrate": "node scripts/runMigrations.js",
     "test": "node tests/phase1_verification.js && node tests/phase2_verification.js && node tests/cache_index_verification.js && node tests/all_7_features_verification.js && node tests/module_d_attendance_verification.js && node tests/module_e_field_recovery_verification.js && node tests/module_b_telephony_verification.js && node tests/module_f_evidence_verification.js && node tests/module_g_complaint_verification.js && node tests/module_h_notification_verification.js"
   },
   "dependencies": {
