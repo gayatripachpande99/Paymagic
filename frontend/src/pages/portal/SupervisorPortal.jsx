@@ -54,7 +54,7 @@ export const SupervisorPortal = () => {
         setTeamStats(teamRes.data);
       }
       if (casesRes.success && casesRes.data) {
-        setCases(casesRes.data.cases || []);
+        setCases(Array.isArray(casesRes.data) ? casesRes.data : (casesRes.data.cases || []));
       }
     } catch (err) {
       console.error("Failed to load supervisor data:", err);

@@ -31,3 +31,4 @@ CREATE INDEX IF NOT EXISTS idx_import_batches_uploader ON import_batches(uploade
 CREATE INDEX IF NOT EXISTS idx_import_batches_created_at ON import_batches(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_import_batches_checksum ON import_batches(file_checksum);
 CREATE INDEX IF NOT EXISTS idx_import_batches_expires_at ON import_batches(expires_at) WHERE status = 'PENDING';
+

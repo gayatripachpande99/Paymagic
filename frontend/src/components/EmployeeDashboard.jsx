@@ -189,7 +189,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
       setCasesLoading(true);
       const res = await api.get("/cases?limit=100");
       if (res && res.success && res.data) {
-        setMyCases(res.data.cases || []);
+        setMyCases(Array.isArray(res.data) ? res.data : (res.data.cases || []));
       }
     } catch (err) {
       console.error("My cases fetch error:", err);

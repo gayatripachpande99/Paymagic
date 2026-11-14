@@ -71,7 +71,7 @@ export const CallerPortal = () => {
       ]);
 
       if (casesRes.success && casesRes.data) {
-        setCases(casesRes.data.cases || []);
+        setCases(Array.isArray(casesRes.data) ? casesRes.data : (casesRes.data.cases || []));
       }
       if (kpiRes.success && kpiRes.data) {
         setKpi(kpiRes.data);

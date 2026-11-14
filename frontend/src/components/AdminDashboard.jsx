@@ -193,8 +193,9 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
       }
       const res = await api.get(`/cases?${params.toString()}`);
       if (res && res.success) {
-        setCasesList(res.data.cases || []);
-        setCasesPagination(res.data.pagination || { page, limit: 15, totalCount: 0, totalPages: 1 });
+        const caseList = Array.isArray(res.data) ? res.data : (res.data?.cases || res.cases || []);
+        setCasesList(caseList);
+        setCasesPagination(res.pagination || res.data?.pagination || { page, limit: 15, totalCount: res.pagination?.totalRecords || 0, totalPages: 1 });
         setCasePage(page);
       }
     } catch (err) {
@@ -239,12 +240,13 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
   const handleExportCasesCSV = async () => {
     try {
-      const res = await api.get("/cases?limit=1000");
-      if (!res?.data?.cases || res.data.cases.length === 0) {
+      const res = await api.get("/cases?limit=100");
+      const list = Array.isArray(res?.data) ? res.data : (res?.data?.cases || res?.cases || []);
+      if (!list || list.length === 0) {
         setErrorMsg("No cases available to export.");
         return;
       }
-      const exportData = res.data.cases.map((c) => ({
+      const exportData = list.map((c) => ({
         "Case Number": c.case_number,
         "Customer Name": c.customer_name,
         "Phone": c.phone_masked || c.phone,

@@ -58,11 +58,12 @@ export const RecordComplaintModal = ({
       // Fetch cases
       const casesRes = await api.get("/cases?limit=50");
       if (casesRes && casesRes.success) {
-        setCases(casesRes.data.cases || []);
-        if (casesRes.data.cases?.length > 0) {
-          setSelectedCaseId(casesRes.data.cases[0].id);
-          if (casesRes.data.cases[0].assigned_employee_id) {
-            setReportedEmployeeId(casesRes.data.cases[0].assigned_employee_id);
+        const caseList = Array.isArray(casesRes.data) ? casesRes.data : (casesRes.data?.cases || []);
+        setCases(caseList);
+        if (caseList.length > 0) {
+          setSelectedCaseId(caseList[0].id);
+          if (caseList[0].assigned_employee_id) {
+            setReportedEmployeeId(caseList[0].assigned_employee_id);
           }
         }
       }

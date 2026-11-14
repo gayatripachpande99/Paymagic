@@ -2,6 +2,7 @@ import express from "express";
 import {
   listCases,
   getCaseById,
+  getCaseAssignments,
   updateCaseStatus,
   assignCase,
   bulkAssignCases,
@@ -30,6 +31,10 @@ router.get("/targets", authenticate, listRecoveryTargets);
 router.get("/transfers/history", authenticate, requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"), getTransferHistory);
 router.get("/audit-history", authenticate, getCaseAuditHistory);
 router.get("/audit/history", authenticate, getCaseAuditHistory);
+
+// ── Case Assignments & Transfer History Sub-routes ──
+router.get("/:id/assignments", authenticate, getCaseAssignments);
+router.get("/:caseId/assignments", authenticate, getCaseAssignments);
 
 // ── Rule-Based Allocation Engine ──
 router.post("/allocate/preview", authenticate, requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"), previewRuleAllocation);

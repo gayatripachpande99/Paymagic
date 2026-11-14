@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import db, { memoryStore } from "../config/db.js";
+import { maskCustomerByRole } from "../services/piiMaskingService.js";
 
 /**
  * Customer Repository
@@ -100,26 +101,11 @@ export const customerRepository = {
   },
 
   /**
-   * Apply role-based PII masking
+   * Apply role-based PII masking using centralized PII masking service
    */
-  maskCustomer(customer, userRole) {
+  maskCustomer(customer, userOrRole, caseRecord = null) {
     if (!customer) return null;
-    const canViewRaw = ["ADMIN", "SUPER_ADMIN", "SUPERVISOR"].includes(userRole);
-
-    return {
-      id: customer.id,
-      customer_code: customer.customer_code,
-      full_name: customer.full_name,
-      phone: canViewRaw ? (customer.phone_raw || customer.phone_masked) : customer.phone_masked,
-      phone_masked: customer.phone_masked,
-      alternate_phone: canViewRaw ? customer.alternate_phone : (customer.alternate_phone ? "******" + customer.alternate_phone.slice(-4) : null),
-      email: canViewRaw ? customer.email : (customer.email ? customer.email.replace(/(.{2})(.*)(@.*)/, "$1***$3") : null),
-      current_address: canViewRaw ? customer.current_address : (customer.current_address ? `${customer.city}, ${customer.state}` : ""),
-      city: customer.city,
-      state: customer.state,
-      pincode: customer.pincode,
-      credit_score: customer.credit_score
-    };
+    return maskCustomerByRole(customer, userOrRole, caseRecord);
   }
 };
 

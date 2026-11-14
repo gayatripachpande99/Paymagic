@@ -286,9 +286,9 @@ const CasesTab = () => {
 
       const res = await api.get(`/cases?${params.toString()}`);
       if (res.success) {
-        setCases(res.data?.cases || res.cases || res.data || []);
-        setTotalPages(res.data?.totalPages || res.totalPages || 1);
-        setTotalCount(res.data?.total || res.total || 0);
+        setCases(Array.isArray(res.data) ? res.data : (res.data?.cases || res.cases || []));
+        setTotalPages(res.pagination?.totalPages || res.data?.totalPages || res.totalPages || 1);
+        setTotalCount(res.pagination?.totalRecords || res.data?.total || res.total || 0);
       }
     } catch {
       setCases([]);

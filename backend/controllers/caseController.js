@@ -10,6 +10,7 @@ import {
   targetRepository,
   followupRepository
 } from "../repositories/index.js";
+import { maskCustomerByRole } from "../services/piiMaskingService.js";
 
 const VALID_STATUSES = [
   "New", "Assigned", "Contacted", "Promise to Pay", "Partially Paid",
@@ -18,128 +19,278 @@ const VALID_STATUSES = [
 
 /**
  * GET /api/cases
- * List cases with filtering, search, sorting, and pagination.
+ * List cases with advanced multi-column filtering, multi-column sorting,
+ * deterministic pagination, and role-based customer PII masking.
  */
 export const listCases = async (req, res) => {
   try {
     const {
-      status, priority, assignedTo, lender, search, city,
-      minAmount, maxAmount, dpdMin, dpdMax,
-      sortBy = "created_at", sortOrder = "desc",
-      page = 1, limit = 20
+      case_id, caseId,
+      borrower_name, borrowerName, customer_name, customerName,
+      customer_code, customerCode,
+      loan_account_no, loanAccountNo,
+      lender_name, lenderName, lender,
+      loan_type, loanType,
+      status, caseStatus,
+      priority,
+      dpd_min, dpdMin, minDpd,
+      dpd_max, dpdMax, maxDpd,
+      min_amount, minAmount, minOutstanding,
+      max_amount, maxAmount, maxOutstanding,
+      assigned_employee_id, assignedEmployeeId, assignedTo,
+      supervisor_id, supervisorId, assignedSupervisorId,
+      city, state, pincode,
+      created_from, createdFrom, createdDateFrom,
+      created_to, createdTo, createdDateTo,
+      updated_from, updatedFrom, updatedDateFrom,
+      updated_to, updatedTo, updatedDateTo,
+      search,
+      sortBy, sort_by,
+      sortOrder, order,
+      page = 1,
+      limit = 20
     } = req.query;
 
-    let targetAssignedTo = assignedTo;
+    let targetAssignedTo = assigned_employee_id || assignedEmployeeId || assignedTo;
     if (["CALLER", "FIELD_AGENT"].includes(req.user?.role)) {
       targetAssignedTo = req.user.id;
     }
 
+    const sortExpression = sortBy || sort_by || "created_at";
+    const sortDirection = sortOrder || order || "DESC";
+
     const result = await caseRepository.findAll({
-      status: status || undefined,
+      case_id: case_id || caseId || undefined,
+      borrower_name: borrower_name || borrowerName || customer_name || customerName || undefined,
+      customer_code: customer_code || customerCode || undefined,
+      loan_account_no: loan_account_no || loanAccountNo || undefined,
+      lender_name: lender_name || lenderName || lender || undefined,
+      loan_type: loan_type || loanType || undefined,
+      status: status || caseStatus || undefined,
       priority: priority || undefined,
+      dpd_min: dpd_min !== undefined ? dpd_min : (dpdMin !== undefined ? dpdMin : minDpd),
+      dpd_max: dpd_max !== undefined ? dpd_max : (dpdMax !== undefined ? dpdMax : maxDpd),
+      min_amount: min_amount !== undefined ? min_amount : (minAmount !== undefined ? minAmount : minOutstanding),
+      max_amount: max_amount !== undefined ? max_amount : (maxAmount !== undefined ? maxAmount : maxOutstanding),
       assigned_employee_id: targetAssignedTo || undefined,
-      lender_name: lender || undefined,
+      supervisor_id: supervisor_id || supervisorId || assignedSupervisorId || undefined,
       city: city || undefined,
-      min_amount: minAmount || undefined,
-      max_amount: maxAmount || undefined,
-      dpd_min: dpdMin || undefined,
-      dpd_max: dpdMax || undefined,
+      state: state || undefined,
+      pincode: pincode || undefined,
+      created_from: created_from || createdFrom || createdDateFrom || undefined,
+      created_to: created_to || createdTo || createdDateTo || undefined,
+      updated_from: updated_from || updatedFrom || updatedDateFrom || undefined,
+      updated_to: updated_to || updatedTo || updatedDateTo || undefined,
       search: search || undefined,
-      sort_by: sortBy,
-      order: sortOrder,
+      sort_by: sortExpression,
+      order: sortDirection,
       page,
       limit
+    });
+
+    // Centralized role-based customer PII masking for case listing
+    const maskedCases = result.cases.map(c => {
+      const custObj = {
+        id: c.customer_id,
+        customer_code: c.customer_code,
+        full_name: c.customer_name || c.borrower_name,
+        phone_raw: c.phone_raw,
+        phone_masked: c.phone_masked,
+        alternate_phone: c.alternate_phone,
+        email: c.customer_email || c.email,
+        current_address: c.current_address || c.address,
+        city: c.customer_city || c.city,
+        state: c.customer_state || c.state,
+        pincode: c.customer_pincode || c.pincode,
+        credit_score: c.credit_score
+      };
+      const masked = maskCustomerByRole(custObj, req.user, c);
+      return {
+        ...c,
+        customer_id: c.customer_id,
+        borrower_name: masked.full_name,
+        customer_name: masked.full_name,
+        customer_code: masked.customer_code,
+        phone: masked.phone,
+        phone_masked: masked.phone_masked,
+        phone_raw: masked.phone_raw,
+        alternate_phone: masked.alternate_phone,
+        email: masked.email,
+        customer_email: masked.email,
+        current_address: masked.current_address,
+        address: masked.current_address,
+        city: masked.city,
+        customer_city: masked.city,
+        state: masked.state,
+        customer_state: masked.state,
+        pincode: masked.pincode,
+        customer_pincode: masked.pincode
+      };
     });
 
     return res.status(200).json({
       success: true,
       message: `Found ${result.total} case(s).`,
-      data: {
-        cases: result.cases,
-        pagination: {
-          page: result.page,
-          limit: result.limit,
-          totalCount: result.total,
-          totalPages: result.totalPages
-        }
+      data: maskedCases,
+      cases: maskedCases,
+      pagination: {
+        page: result.page,
+        limit: result.limit,
+        totalRecords: result.total,
+        totalPages: result.totalPages,
+        hasNextPage: result.hasNextPage,
+        hasPreviousPage: result.hasPreviousPage
       }
     });
   } catch (error) {
+    if (
+      error.message &&
+      (error.message.includes("Invalid") ||
+        error.message.includes("Excessive") ||
+        error.message.includes("exceed"))
+    ) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
     console.error("listCases Error:", error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: "Internal server error." });
   }
 };
 
 /**
  * GET /api/cases/:caseId
- * Get single case with customer details, status history, calls, and payments.
+ * Get complete case detail with loan, customer (masked by role), assignment,
+ * status timeline, follow-ups, and audit history.
  */
 export const getCaseById = async (req, res) => {
   try {
-    const { caseId } = req.params;
-    let targetId = caseId;
+    const targetId = req.params.caseId || req.params.id;
     if (!targetId || targetId === "undefined" || targetId === "null") {
-      const fallbackCase = memoryStore.loan_cases[0];
-      if (!fallbackCase) {
-        return res.status(404).json({ success: false, message: "No loan cases available in portfolio." });
-      }
-      targetId = fallbackCase.id;
+      return res.status(404).json({ success: false, message: "Case ID is required." });
     }
 
     const loanCase = await caseRepository.findById(targetId);
 
     if (!loanCase) {
-      return res.status(404).json({ success: false, message: `Case '${caseId}' not found.` });
+      return res.status(404).json({ success: false, message: `Loan case '${targetId}' not found.` });
     }
 
-    // Role-based visibility
+    // Role-based object-level authorization
     if (
-      ["CALLER", "FIELD_AGENT"].includes(req.user.role) &&
+      ["CALLER", "FIELD_AGENT"].includes(req.user?.role) &&
       loanCase.assigned_employee_id !== req.user.id
     ) {
-      return res.status(403).json({ success: false, message: "You are not assigned to this case." });
+      return res.status(403).json({ success: false, message: "Unauthorized case access blocked: You are not assigned to this case." });
     }
 
-    // Customer details (masked by role)
+    // Customer details with role-based PII masking
     const rawCustomer = await customerRepository.findById(loanCase.customer_id);
-    const customer = customerRepository.maskCustomer(rawCustomer, req.user.role);
+    const customer = maskCustomerByRole(rawCustomer, req.user, loanCase);
 
-    // Status history timeline
+    // Status audit history timeline
     const statusHistory = await caseRepository.getCaseHistory(loanCase.id);
 
-    // Follow-ups
+    // Chronological assignment history
+    const assignments = await caseRepository.getCaseAssignments(loanCase.id);
+
+    // Structured Follow-ups
     const followups = await followupRepository.getFollowupsForCase(loanCase.id);
 
-    // Recent calls
-    const calls = memoryStore.calls
+    // Recent calls (memory / DB)
+    const calls = (memoryStore.calls || [])
       .filter(c => c.case_id === loanCase.id)
       .sort((a, b) => new Date(b.started_at) - new Date(a.started_at))
       .slice(0, 20);
 
     // Payments
-    const payments = memoryStore.payments
+    const payments = (memoryStore.payments || [])
       .filter(p => p.case_id === loanCase.id)
       .sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date));
 
-    // Assigned employee info
+    // Assigned employee profile
     const assignedEmployee = loanCase.assigned_employee_id
-      ? memoryStore.users.find(u => u.id === loanCase.assigned_employee_id)
+      ? memoryStore.users.find(u => u.id === loanCase.assigned_employee_id) || {
+          id: loanCase.assigned_employee_id,
+          full_name: loanCase.assigned_employee_name,
+          employee_id: loanCase.assigned_employee_code,
+          role: loanCase.assigned_employee_role
+        }
       : null;
 
-    // Case assignments history
-    const assignments = await caseRepository.getTransferHistory({ caseId: loanCase.id });
+    // Masked case representation
+    const maskedCase = {
+      ...loanCase,
+      customer_id: loanCase.customer_id,
+      borrower_name: customer?.full_name || loanCase.borrower_name,
+      customer_name: customer?.full_name || loanCase.customer_name,
+      customer_code: customer?.customer_code || loanCase.customer_code,
+      phone: customer?.phone,
+      phone_masked: customer?.phone_masked,
+      phone_raw: customer?.phone_raw,
+      alternate_phone: customer?.alternate_phone,
+      email: customer?.email,
+      customer_email: customer?.email,
+      current_address: customer?.current_address,
+      address: customer?.address,
+      city: customer?.city,
+      customer_city: customer?.city,
+      state: customer?.state,
+      customer_state: customer?.state,
+      pincode: customer?.pincode,
+      customer_pincode: customer?.pincode
+    };
 
     return res.status(200).json({
       success: true,
       message: "Case details retrieved.",
       data: {
-        case: loanCase,
+        // Loan details
+        loan_account_no: loanCase.loan_account_no,
+        lender_name: loanCase.lender_name,
+        loan_type: loanCase.loan_type,
+        principal_amount: loanCase.principal_amount,
+        outstanding_amount: loanCase.outstanding_amount,
+        dpd: loanCase.dpd,
+        priority: loanCase.priority,
+        status: loanCase.status,
+        current_status: loanCase.status,
+
+        // Customer details
         customer,
-        assigned_employee: assignedEmployee
-          ? { id: assignedEmployee.id, full_name: assignedEmployee.full_name, role: assignedEmployee.role, employee_id: assignedEmployee.employee_id }
-          : null,
+        borrower_name: customer?.full_name,
+        customer_code: customer?.customer_code,
+        phone: customer?.phone,
+        alternate_phone: customer?.alternate_phone,
+        email: customer?.email,
+        current_address: customer?.current_address,
+        address: customer?.address,
+        city: customer?.city,
+        state: customer?.state,
+        pincode: customer?.pincode,
+
+        // Assignment details
+        assigned_employee: assignedEmployee,
+        assigned_employee_id: loanCase.assigned_employee_id,
+        assigned_employee_name: assignedEmployee?.full_name || loanCase.assigned_employee_name || null,
+        assigned_supervisor_id: loanCase.assigned_supervisor_id || null,
+        assigned_supervisor_name: loanCase.assigned_supervisor_name || null,
+        assigned_at: loanCase.assigned_at,
+        assignment_date: loanCase.assigned_at,
+
+        // Status history
         status_history: statusHistory,
+
+        // Follow-ups
         followups,
+
+        // Audit information
+        audit_information: {
+          created_at: loanCase.created_at,
+          updated_at: loanCase.updated_at,
+          audit_events: statusHistory
+        },
+
+        // Legacy & extended UI compatibility
+        case: maskedCase,
         recent_calls: calls,
         payments,
         assignments
@@ -147,7 +298,45 @@ export const getCaseById = async (req, res) => {
     });
   } catch (error) {
     console.error("getCaseById Error:", error);
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: "Internal server error." });
+  }
+};
+
+/**
+ * GET /api/cases/:caseId/assignments
+ * Retrieve chronological assignment and transfer history for a specific case.
+ */
+export const getCaseAssignments = async (req, res) => {
+  try {
+    const targetId = req.params.caseId || req.params.id;
+    if (!targetId || targetId === "undefined" || targetId === "null") {
+      return res.status(400).json({ success: false, message: "Case ID is required." });
+    }
+
+    const loanCase = await caseRepository.findById(targetId);
+    if (!loanCase) {
+      return res.status(404).json({ success: false, message: `Loan case '${targetId}' not found.` });
+    }
+
+    // Role-based authorization
+    if (
+      ["CALLER", "FIELD_AGENT"].includes(req.user?.role) &&
+      loanCase.assigned_employee_id !== req.user.id
+    ) {
+      return res.status(403).json({ success: false, message: "Unauthorized: You are not assigned to this case." });
+    }
+
+    const assignments = await caseRepository.getCaseAssignments(loanCase.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Case assignment history retrieved.",
+      data: assignments,
+      assignments
+    });
+  } catch (error) {
+    console.error("getCaseAssignments Error:", error);
+    return res.status(500).json({ success: false, message: "Internal server error." });
   }
 };
 
@@ -239,8 +428,16 @@ export const updateCaseStatus = async (req, res) => {
  */
 export const assignCase = async (req, res) => {
   try {
-    const { caseId } = req.params;
-    const { employeeId } = req.body;
+    if (["CALLER", "FIELD_AGENT"].includes(req.user?.role)) {
+      return res.status(403).json({ success: false, message: "Unauthorized: Callers and field agents cannot assign cases." });
+    }
+
+    const caseId = req.params.caseId || req.params.id || req.body.caseId || req.body.case_id;
+    const { employeeId, remarks } = req.body;
+
+    if (!caseId) {
+      return res.status(400).json({ success: false, message: "caseId is required." });
+    }
 
     if (!employeeId) {
       return res.status(400).json({ success: false, message: "employeeId is required." });
@@ -749,6 +946,10 @@ export const bulkAssignCases = async (req, res) => {
  */
 export const transferCase = async (req, res) => {
   try {
+    if (["CALLER", "FIELD_AGENT"].includes(req.user?.role)) {
+      return res.status(403).json({ success: false, message: "Unauthorized: Callers and field agents cannot transfer cases." });
+    }
+
     const caseId = req.params.caseId || req.params.id || req.body.caseId || req.body.case_id;
     const { fromEmployeeId, toEmployeeId, count, reason } = req.body;
 
