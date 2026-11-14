@@ -528,7 +528,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
       const res = await api.post("/admin/employees", newEmployeeForm);
       if (res.success) {
         setSuccessMsg(
-          `Employee ${res.employee.fullName} registered successfully! ID: ${res.employee.employeeId} | Password: ${res.employee.initialPassword}`
+          `Employee ${res.employee.fullName} registered successfully! ID: ${res.employee.employeeId}. Temporary credential invitation sent.`
         );
         setShowAddModal(false);
         setNewEmployeeForm({
@@ -1372,30 +1372,27 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
           </div>
         )}
 
-        {/* ── TAB 2: EMPLOYEES DIRECTORY & PASSWORDS ── */}
+        {/* ── TAB 2: EMPLOYEES DIRECTORY & ACCESS SECURITY ── */}
         {activeTab === "employees" && (
           <div className="portal-tab-content">
             <div className="portal-table-container">
               <div className="table-header-row">
                 <div>
-                  <h3>Staff Credentials &amp; Directory</h3>
-                  <p>View all employee names, unique employee IDs, and access passwords for system login</p>
+                  <h3>Staff Directory &amp; Security Roles</h3>
+                  <p>View registered staff members, assigned portfolios, and role-based access security statuses</p>
                 </div>
 
                 <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-                  <button
-                    className="toggle-pass-btn"
-                    onClick={() => setShowAllPasswords(!showAllPasswords)}
-                  >
-                    {showAllPasswords ? "🙈 Hide Passwords" : "👁️ Reveal All Passwords"}
-                  </button>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>RBAC ENFORCED</span>
+                  </span>
 
                   <button
                     className="primary-btn add-emp-btn"
                     onClick={() => { setShowAddModal(true); setModalError(""); }}
                   >
                     Add New Employee
-
                   </button>
                 </div>
               </div>
@@ -1406,15 +1403,14 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                     <tr>
                       <th>Employee Name</th>
                       <th>Employee ID</th>
-                      <th>Password</th>
+                      <th>Security Status</th>
                       <th>Department &amp; Role</th>
                       <th>Contact Info</th>
-                      <th>Quick Copy</th>
+                      <th>Active Cases</th>
                     </tr>
                   </thead>
                   <tbody>
                     {employeesList.map((emp) => {
-                      const isRevealed = showAllPasswords || visiblePasswords[emp.id];
                       const isCopied = copiedId === emp.id;
 
                       return (
@@ -1448,26 +1444,13 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                             </div>
                           </td>
 
-                          {/* Password */}
+                          {/* Security Status */}
                           <td>
-                            <div className="password-cell">
-                              <span className="font-mono password-badge">
-                                {isRevealed ? emp.password || "Emp@123" : "••••••••"}
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                Bcrypt Encrypted
                               </span>
-                              <button
-                                className="inline-eye-btn"
-                                onClick={() => togglePasswordVisibility(emp.id)}
-                                title={isRevealed ? "Hide Password" : "Show Password"}
-                              >
-                                {isRevealed ? "🙈" : "👁️"}
-                              </button>
-                              <button
-                                className="inline-copy-btn"
-                                onClick={() => copyToClipboard(emp.password || "Emp@123", `${emp.id}-pass`)}
-                                title="Copy Password"
-                              >
-                                {copiedId === `${emp.id}-pass` ? "✓" : "📋"}
-                              </button>
                             </div>
                           </td>
 
@@ -1489,17 +1472,11 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                             </span>
                           </td>
 
-                          {/* Copy Full Credentials */}
+                          {/* Active Cases */}
                           <td>
-                            <button
-                              className="copy-creds-btn"
-                              onClick={() => {
-                                const creds = `PayMagic Login Credentials:\nName: ${emp.fullName}\nEmployee ID: ${emp.employeeId}\nPassword: ${emp.password || "Emp@123"}\nLogin URL: https://paymagic-48er.vercel.app/`;
-                                copyToClipboard(creds, emp.id);
-                              }}
-                            >
-                              {isCopied ? "✓ Copied!" : "Copy Details"}
-                            </button>
+                            <span className="font-mono text-indigo-400 font-bold px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20">
+                              {emp.active_cases_count ?? 0} cases
+                            </span>
                           </td>
                         </tr>
                       );
@@ -1508,7 +1485,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                     {employeesList.length === 0 && (
                       <tr>
                         <td colSpan="6" className="empty-table-cell">
-                          No staff registered yet. Click "+ Add New Employee" to create credentials.
+                          No staff registered yet. Click "+ Add New Employee" to onboard staff.
                         </td>
                       </tr>
                     )}

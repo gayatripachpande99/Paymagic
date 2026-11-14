@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import { users, attendanceRecords, uploadedRecords, recordColumns, setRecordColumns } from "../data/store.js";
 import { Record, RecordMeta } from "../models/Record.js";
 import { memoryStore } from "../config/db.js";
@@ -52,8 +53,11 @@ export const getEmployees = (req, res) => {
       (c) => validIds.has(c.assigned_employee_id)
     ).length;
 
+    // SECURITY P0: Never return plain-text passwords, hashes, or auth tokens
+    const { password, password_hash, refresh_token_hash, initialPassword, ...safeUser } = u;
+
     return {
-      ...u,
+      ...safeUser,
       active_cases_count: assignedCount
     };
   });
@@ -65,7 +69,7 @@ export const getEmployees = (req, res) => {
 
 // @desc    Create/Onboard a new employee
 // @route   POST /api/admin/employees
-export const createEmployee = (req, res) => {
+export const createEmployee = async (req, res) => {
   const { fullName, employeeId, email, phone, department, designation, password, joiningDate } = req.body;
 
   if (!fullName) {
@@ -74,6 +78,7 @@ export const createEmployee = (req, res) => {
 
   const generatedId = employeeId || `PM-EMP-000${users.length + 1}`;
   const initialPassword = password || "Emp@123";
+  const hashedPassword = await bcrypt.hash(initialPassword, 10);
 
   const newEmp = {
     id: `emp-${Date.now()}`,
@@ -85,11 +90,26 @@ export const createEmployee = (req, res) => {
     phone: phone || "+91 9876543210",
     department: department || "Operations",
     designation: designation || "Executive",
-    password: initialPassword,
+    password: hashedPassword,
+    password_hash: hashedPassword,
     joiningDate: joiningDate || new Date().toISOString().split("T")[0]
   };
 
   users.push(newEmp);
+
+  // Sync to memoryStore.users as well for unified lookup
+  memoryStore.users.push({
+    id: newEmp.id,
+    employee_id: newEmp.employeeId,
+    email: newEmp.email,
+    password_hash: hashedPassword,
+    full_name: newEmp.fullName,
+    phone: newEmp.phone,
+    role: "CALLER",
+    department: newEmp.department,
+    designation: newEmp.designation,
+    is_active: true
+  });
 
   // Automatically create a default NOT_MARKED attendance record for today
   const todayStr = new Date().toISOString().split("T")[0];
@@ -107,16 +127,20 @@ export const createEmployee = (req, res) => {
     status: "NOT_MARKED"
   });
 
+  // SECURITY P0: Never return plain-text passwords or hashes in the response
   return res.status(201).json({
     success: true,
-    message: "Employee created successfully",
+    message: "Employee onboarded successfully. Temporary credential workflow initialized.",
     employee: {
       id: newEmp.id,
       fullName: newEmp.fullName,
       employeeId: newEmp.employeeId,
-      initialPassword: newEmp.password,
       department: newEmp.department,
-      designation: newEmp.designation
+      designation: newEmp.designation,
+      email: newEmp.email,
+      phone: newEmp.phone,
+      joiningDate: newEmp.joiningDate,
+      credential_status: "TEMPORARY_CREDENTIALS_GENERATED"
     }
   });
 };

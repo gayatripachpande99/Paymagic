@@ -132,9 +132,26 @@ export const handleWebhook = async (req, res) => {
       signature
     } = req.body;
 
-    // Basic signature verification (mock)
-    if (!telephonyProvider.verifyWebhookSignature(req.body, signature || "mock-valid")) {
-      return res.status(401).json({ success: false, message: "Invalid webhook signature." });
+    // SECURITY P0: Verify incoming webhook HMAC signature from header or payload
+    const headerSig =
+      req.headers["x-telephony-signature"] ||
+      req.headers["x-provider-signature"] ||
+      req.headers["x-exotel-signature"] ||
+      req.headers["x-twilio-signature"];
+    const webhookSignature = headerSig || signature;
+
+    if (!webhookSignature) {
+      return res.status(401).json({
+        success: false,
+        message: "Missing webhook signature. Incoming telephony webhooks must include a valid provider HMAC signature."
+      });
+    }
+
+    if (!telephonyProvider.verifyWebhookSignature(req.body, webhookSignature, req.headers)) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or forged webhook signature. Event rejected."
+      });
     }
 
     if (!telephony_call_id) {

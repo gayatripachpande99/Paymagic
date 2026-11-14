@@ -117,9 +117,10 @@ export const checkCallingHours = (req, res, next) => {
   const startHour = parseInt(process.env.CALLING_HOURS_START || "8", 10);
   const endHour = parseInt(process.env.CALLING_HOURS_END || "19", 10);
 
-  // If outside 08:00 to 19:00 IST, block outgoing calls (allow bypass for testing/demo if explicitly requested)
-  const bypass = req.headers["x-bypass-hours"] === "true" || req.query.bypassHours === "true" || process.env.ALLOW_OFF_HOURS_CALLING === "true";
-  if (!bypass && (istHour < startHour || (istHour >= endHour && istMinute > 0))) {
+  // SECURITY: Fair Practice Calling Hours (08:00 - 19:00 IST) enforced strictly.
+  // Client headers/query params (e.g. x-bypass-hours) are rejected.
+  const isOffHoursAllowed = process.env.ALLOW_OFF_HOURS_CALLING === "true";
+  if (!isOffHoursAllowed && (istHour < startHour || (istHour >= endHour && istMinute > 0))) {
     return res.status(403).json({
       success: false,
       message: `Calling outside permissible recovery hours (${startHour}:00 - ${endHour}:00 IST) is strictly prohibited under ethical recovery regulations.`

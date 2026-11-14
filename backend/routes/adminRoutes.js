@@ -7,18 +7,21 @@ import {
   uploadRecords,
   assignRecordsRange
 } from "../controllers/adminController.js";
-import { protect } from "../middleware/authMiddleware.js";
+import { protect, requireRoles } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/attendance/today", protect, getAdminTodayAttendance);
-router.get("/employees", protect, getEmployees);
-router.post("/employees", protect, createEmployee);
+// Strict RBAC: All Admin routes require authenticated ADMIN or SUPER_ADMIN role
+router.use(protect);
+router.use(requireRoles("ADMIN", "SUPER_ADMIN"));
+
+router.get("/attendance/today", getAdminTodayAttendance);
+router.get("/employees", getEmployees);
+router.post("/employees", createEmployee);
 
 // Records Management Workflow Routes
-router.get("/records", protect, getAllRecords);
-router.post("/records/upload", protect, uploadRecords);
-router.post("/records/assign", protect, assignRecordsRange);
+router.get("/records", getAllRecords);
+router.post("/records/upload", uploadRecords);
+router.post("/records/assign", assignRecordsRange);
 
 export default router;
-
