@@ -4167,3 +4167,18 @@ footer {
     border-radius: 16px !important;
   }
 }
+
+/* Custom styled selects & row transitions in case allocation table */
+.case-allocation-page select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  background-size: 14px 14px;
+  padding-right: 28px !important;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.case-allocation-page .portal-table tr:hover td {
+  background: rgba(30, 58, 138, 0.08);
+}

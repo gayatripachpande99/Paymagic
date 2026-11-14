@@ -18,10 +18,67 @@ import {
   ArrowUpRight,
   FileCheck,
   X,
-  Loader2
+  Loader2,
+  Wallet,
+  PieChart,
+  Activity,
+  PhoneCall,
+  ArrowRight,
+  Phone,
+  Building2,
+  Flame,
+  Check,
+  SlidersHorizontal,
+  FileText
 } from "lucide-react";
 import api, { API_URL } from "../../../services/api";
 import ImportLoansModal from "../../../components/portal/ImportLoansModal";
+
+const STATUS_DOT_COLORS = {
+  "ALL": "bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.8)]",
+  "New": "bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)]",
+  "Assigned": "bg-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.8)]",
+  "Contacted": "bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.8)]",
+  "Promise to Pay": "bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]",
+  "Partially Paid": "bg-orange-400 shadow-[0_0_8px_rgba(249,115,22,0.8)]",
+  "Fully Paid": "bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]",
+  "Disputed": "bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.8)]",
+  "Not Reachable": "bg-slate-400 shadow-[0_0_8px_rgba(148,163,184,0.6)]",
+  "Field Visit": "bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]",
+  "Closed": "bg-zinc-400 shadow-[0_0_8px_rgba(161,161,170,0.6)]"
+};
+
+const getDpdBadge = (dpd) => {
+  const num = Number(dpd || 0);
+  if (num >= 90) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 whitespace-nowrap shadow-sm">
+        <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+        {num} DPD &bull; Critical
+      </span>
+    );
+  }
+  if (num >= 60) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 whitespace-nowrap shadow-sm">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+        {num} DPD &bull; High
+      </span>
+    );
+  }
+  if (num >= 30) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 whitespace-nowrap">
+        {num} DPD &bull; Standard
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 whitespace-nowrap">
+      {num} DPD &bull; Early
+    </span>
+  );
+};
 
 export default function CaseAllocationPage({
   adminOverview,
@@ -206,37 +263,73 @@ export default function CaseAllocationPage({
       ══════════════════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-5 w-full">
         {/* Card A: Outstanding Amount Summary (xl:col-span-3) */}
-        <div className="xl:col-span-3 p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800/90 backdrop-blur-md shadow-xl flex flex-col justify-between hover:border-slate-700/80 transition-all">
+        <div className="xl:col-span-3 p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08] hover:border-blue-500/30 shadow-2xl flex flex-col justify-between transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent pointer-events-none" />
           <div>
             <div className="flex items-center justify-between mb-3 gap-2">
-              <span className="text-xs font-semibold text-slate-400 tracking-wide uppercase">
-                Outstanding Amount
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shadow-inner">
+                  <Wallet className="w-4 h-4" />
+                </div>
+                <span className="text-[11px] font-bold text-slate-300 tracking-wider uppercase">
+                  Total Outstanding
+                </span>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/25 whitespace-nowrap shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                 LIVE PORTFOLIO
               </span>
             </div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight my-2 break-words">
-              ₹{Number(totalOutstanding).toLocaleString("en-IN")}.00
+
+            <div className="my-2">
+              <div className="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight break-words flex items-baseline gap-1">
+                <span className="text-amber-400 font-sans font-bold text-xl sm:text-2xl">₹</span>
+                <span>{Number(totalOutstanding).toLocaleString("en-IN")}</span>
+                <span className="text-slate-500 text-sm font-normal">.00</span>
+              </div>
+            </div>
+
+            {/* Visual Segmented Progress Ratio Bar */}
+            <div className="mt-3 mb-2.5">
+              <div className="flex justify-between text-[10px] text-slate-400 font-medium mb-1.5">
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                  Standard Due (65%)
+                </span>
+                <span className="flex items-center gap-1 text-rose-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                  Critical Overdue (35%)
+                </span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-slate-800/80 p-0.5 overflow-hidden flex border border-slate-700/50">
+                <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-l-full transition-all" style={{ width: "65%" }} />
+                <div className="h-full bg-gradient-to-r from-rose-500 to-red-500 rounded-r-full transition-all" style={{ width: "35%" }} />
+              </div>
             </div>
           </div>
 
-          <div className="pt-4 mt-auto border-t border-slate-800/80 space-y-2.5 text-xs">
-            <div className="flex justify-between items-center gap-2 py-0.5">
-              <span className="text-slate-400">Due (Standard Arrears):</span>
+          <div className="pt-3.5 mt-auto border-t border-slate-800/90 space-y-2 text-xs">
+            <div className="flex justify-between items-center gap-2">
+              <span className="text-slate-400 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                Due (Standard Arrears):
+              </span>
               <span className="font-mono text-slate-200 font-semibold text-right">
                 ₹{Number(standardDue).toLocaleString("en-IN")}.00
               </span>
             </div>
-            <div className="flex justify-between items-center gap-2 py-0.5">
-              <span className="text-slate-400">Overdue (Critical Delinquency):</span>
+            <div className="flex justify-between items-center gap-2">
+              <span className="text-slate-400 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                Overdue (Critical Delinquency):
+              </span>
               <span className="font-mono text-rose-400 font-bold text-right">
                 ₹{Number(criticalOverdue).toLocaleString("en-IN")}.00
               </span>
             </div>
-            <div className="flex justify-between items-center gap-2 py-0.5">
+            <div className="flex justify-between items-center gap-2 pt-1 border-t border-slate-800/60">
               <span className="text-slate-400">Accounts Managed:</span>
-              <span className="font-mono text-indigo-400 font-bold text-right">
+              <span className="font-mono text-indigo-400 font-bold text-right px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20">
                 {totalCasesCount} Accounts
               </span>
             </div>
@@ -244,103 +337,119 @@ export default function CaseAllocationPage({
         </div>
 
         {/* Card B: Accounts Status Donut Chart & Distribution (xl:col-span-3) */}
-        <div className="xl:col-span-3 p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800/90 backdrop-blur-md shadow-xl flex flex-col justify-between hover:border-slate-700/80 transition-all">
-          <div className="flex items-center justify-between mb-2 gap-2">
-            <span className="text-xs font-semibold text-slate-400 tracking-wide uppercase truncate">
-              Accounts Status Distribution
-            </span>
-            <span className="text-[11px] text-indigo-400 font-semibold shrink-0">
-              10 Statuses
-            </span>
-          </div>
-
-          {/* Donut Chart & Legend Representation */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-2">
-            <div className="relative w-22 h-22 sm:w-24 sm:h-24 flex items-center justify-center shrink-0">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#1e293b" strokeWidth="12" />
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#3b82f6" strokeWidth="12" strokeDasharray="50 188" strokeDashoffset="0" />
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#6366f1" strokeWidth="12" strokeDasharray="40 198" strokeDashoffset="-50" />
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#f59e0b" strokeWidth="12" strokeDasharray="35 203" strokeDashoffset="-90" />
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" strokeWidth="12" strokeDasharray="45 193" strokeDashoffset="-125" />
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#f43f5e" strokeWidth="12" strokeDasharray="25 213" strokeDashoffset="-170" />
-                <circle cx="50" cy="50" r="38" fill="none" stroke="#a855f7" strokeWidth="12" strokeDasharray="20 218" strokeDashoffset="-195" />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                <span className="text-base sm:text-lg font-black text-white leading-none">
-                  {totalCasesCount}
+        <div className="xl:col-span-3 p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08] hover:border-blue-500/30 shadow-2xl flex flex-col justify-between transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent pointer-events-none" />
+          <div>
+            <div className="flex items-center justify-between mb-2 gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center shadow-inner">
+                  <PieChart className="w-4 h-4" />
+                </div>
+                <span className="text-[11px] font-bold text-slate-300 tracking-wider uppercase truncate">
+                  Status Distribution
                 </span>
-                <span className="text-[9px] text-slate-400 font-medium mt-1">Accounts</span>
               </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 shrink-0">
+                10 Statuses
+              </span>
             </div>
 
-            {/* Status Legend */}
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-1 text-[11px] text-slate-300 w-full sm:w-auto">
-              <div className="flex items-center gap-1.5 min-w-0 py-0.5">
-                <span className="w-2 h-2 rounded-full bg-blue-500 inline-block shrink-0" />
-                <span className="truncate">Assigned ({adminOverview?.cases_by_status?.Assigned || 35})</span>
+            {/* Modern Donut Chart & Legend */}
+            <div className="flex flex-row items-center justify-between gap-3 py-2">
+              <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
+                <svg className="w-full h-full transform -rotate-90 drop-shadow-md" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="#1e293b" strokeWidth="10" />
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="#3b82f6" strokeWidth="10" strokeDasharray="50 188" strokeDashoffset="0" strokeLinecap="round" />
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="#6366f1" strokeWidth="10" strokeDasharray="40 198" strokeDashoffset="-50" strokeLinecap="round" />
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="#f59e0b" strokeWidth="10" strokeDasharray="35 203" strokeDashoffset="-90" strokeLinecap="round" />
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" strokeWidth="10" strokeDasharray="45 193" strokeDashoffset="-125" strokeLinecap="round" />
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="#f43f5e" strokeWidth="10" strokeDasharray="25 213" strokeDashoffset="-170" strokeLinecap="round" />
+                  <circle cx="50" cy="50" r="38" fill="none" stroke="#a855f7" strokeWidth="10" strokeDasharray="20 218" strokeDashoffset="-195" strokeLinecap="round" />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                  <span className="text-xl font-black text-white leading-none font-mono">
+                    {totalCasesCount}
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-semibold tracking-wider mt-1 uppercase">
+                    Accounts
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 min-w-0 py-0.5">
-                <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block shrink-0" />
-                <span className="truncate">Contacted ({adminOverview?.cases_by_status?.Contacted || 40})</span>
-              </div>
-              <div className="flex items-center gap-1.5 min-w-0 py-0.5">
-                <span className="w-2 h-2 rounded-full bg-amber-500 inline-block shrink-0" />
-                <span className="truncate">PTP ({adminOverview?.cases_by_status?.["Promise to Pay"] || 22})</span>
-              </div>
-              <div className="flex items-center gap-1.5 min-w-0 py-0.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0" />
-                <span className="truncate">Paid ({adminOverview?.cases_by_status?.["Fully Paid"] || 28})</span>
-              </div>
-              <div className="flex items-center gap-1.5 min-w-0 py-0.5">
-                <span className="w-2 h-2 rounded-full bg-rose-500 inline-block shrink-0" />
-                <span className="truncate">Disputed ({adminOverview?.cases_by_status?.Disputed || 12})</span>
-              </div>
-              <div className="flex items-center gap-1.5 min-w-0 py-0.5">
-                <span className="w-2 h-2 rounded-full bg-purple-500 inline-block shrink-0" />
-                <span className="truncate">Field Visit ({adminOverview?.cases_by_status?.["Field Visit"] || 15})</span>
+
+              {/* Status Legend Grid */}
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-[11px] text-slate-300 flex-1">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0 shadow-[0_0_6px_rgba(59,130,246,0.5)]" />
+                  <span className="truncate">Assigned ({adminOverview?.cases_by_status?.Assigned || 35})</span>
+                </div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0 shadow-[0_0_6px_rgba(99,102,241,0.5)]" />
+                  <span className="truncate">Contacted ({adminOverview?.cases_by_status?.Contacted || 40})</span>
+                </div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.5)]" />
+                  <span className="truncate">PTP ({adminOverview?.cases_by_status?.["Promise to Pay"] || 22})</span>
+                </div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
+                  <span className="truncate">Paid ({adminOverview?.cases_by_status?.["Fully Paid"] || 28})</span>
+                </div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0 shadow-[0_0_6px_rgba(244,63,94,0.5)]" />
+                  <span className="truncate">Disputed ({adminOverview?.cases_by_status?.Disputed || 12})</span>
+                </div>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0 shadow-[0_0_6px_rgba(168,85,247,0.5)]" />
+                  <span className="truncate">Field ({adminOverview?.cases_by_status?.["Field Visit"] || 15})</span>
+                </div>
               </div>
             </div>
           </div>
 
           <div className="pt-2.5 mt-auto border-t border-slate-800 text-[11px] text-slate-400 flex justify-between gap-1">
-            <span>New: <strong className="text-slate-200">{adminOverview?.cases_by_status?.New || 18}</strong></span>
-            <span>Partial: <strong className="text-yellow-400">{adminOverview?.cases_by_status?.["Partially Paid"] || 16}</strong></span>
-            <span>Unreachable: <strong className="text-slate-300">{adminOverview?.cases_by_status?.["Not Reachable"] || 14}</strong></span>
+            <span>New: <strong className="text-cyan-400 font-mono">{adminOverview?.cases_by_status?.New || 18}</strong></span>
+            <span>Partial: <strong className="text-orange-400 font-mono">{adminOverview?.cases_by_status?.["Partially Paid"] || 16}</strong></span>
+            <span>Unreachable: <strong className="text-slate-400 font-mono">{adminOverview?.cases_by_status?.["Not Reachable"] || 14}</strong></span>
           </div>
         </div>
 
         {/* Card C: Critical Tasks, Follow-ups, Disputes (xl:col-span-3) */}
-        <div className="xl:col-span-3 p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800/90 backdrop-blur-md shadow-xl flex flex-col justify-between hover:border-slate-700/80 transition-all">
+        <div className="xl:col-span-3 p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08] hover:border-blue-500/30 shadow-2xl flex flex-col justify-between transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rose-500/40 to-transparent pointer-events-none" />
           <div>
             <div className="flex items-center justify-between mb-3 gap-2">
-              <span className="text-xs font-semibold text-slate-400 tracking-wide uppercase">
-                Operational Priorities
-              </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shadow-inner">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+                <span className="text-[11px] font-bold text-slate-300 tracking-wider uppercase">
+                  Operational Priorities
+                </span>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
                 ACTION QUEUE
               </span>
             </div>
 
-            {/* 3 Metric Priority Cards */}
-            <div className="grid grid-cols-3 gap-2.5 my-3">
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-center">
-                <span className="text-[10px] text-rose-300 font-semibold block mb-1 truncate">
-                  Critical Tasks
+            {/* 3 Metric Cards */}
+            <div className="grid grid-cols-3 gap-2.5 my-2.5">
+              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-center flex flex-col justify-center shadow-sm">
+                <span className="text-[10px] text-rose-300 font-semibold block truncate">
+                  Critical
                 </span>
-                <span className="font-extrabold text-xl font-mono text-rose-400">10</span>
+                <span className="font-black text-xl font-mono text-rose-400 mt-0.5">10</span>
               </div>
-              <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-center">
-                <span className="text-[10px] text-indigo-300 font-semibold block mb-1 truncate">
+              <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/25 text-center flex flex-col justify-center shadow-sm">
+                <span className="text-[10px] text-indigo-300 font-semibold block truncate">
                   Follow-ups
                 </span>
-                <span className="font-extrabold text-xl font-mono text-indigo-400">18</span>
+                <span className="font-black text-xl font-mono text-indigo-400 mt-0.5">18</span>
               </div>
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
-                <span className="text-[10px] text-amber-300 font-semibold block mb-1 truncate">
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-center flex flex-col justify-center shadow-sm">
+                <span className="text-[10px] text-amber-300 font-semibold block truncate">
                   Disputes
                 </span>
-                <span className="font-extrabold text-xl font-mono text-amber-400">4</span>
+                <span className="font-black text-xl font-mono text-amber-400 mt-0.5">4</span>
               </div>
             </div>
           </div>
@@ -348,30 +457,43 @@ export default function CaseAllocationPage({
           <div className="pt-3 mt-auto border-t border-slate-800 space-y-2 text-xs">
             <div className="flex justify-between items-center text-slate-400">
               <span>Follow-ups due today:</span>
-              <span className="text-white font-mono font-bold">18 cases</span>
+              <span className="text-white font-mono font-bold bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-700/60">
+                18 cases
+              </span>
             </div>
-            <div className="flex justify-between items-center text-slate-400">
-              <span>Resolution SLA target:</span>
-              <span className="text-emerald-400 font-mono font-bold">94.2% on-time</span>
+            <div>
+              <div className="flex justify-between items-center text-slate-400 mb-1">
+                <span>Resolution SLA target:</span>
+                <span className="text-emerald-400 font-mono font-bold">94.2% on-time</span>
+              </div>
+              <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full" style={{ width: "94.2%" }} />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Card D: Active Calling Specialists & Workload (xl:col-span-3) */}
-        <div className="xl:col-span-3 p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800/90 backdrop-blur-md shadow-xl flex flex-col justify-between hover:border-slate-700/80 transition-all">
+        <div className="xl:col-span-3 p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08] hover:border-blue-500/30 shadow-2xl flex flex-col justify-between transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent pointer-events-none" />
           <div>
             <div className="flex items-center justify-between mb-3 gap-2">
-              <span className="text-xs font-semibold text-slate-400 tracking-wide uppercase">
-                Active Calling Specialists
-              </span>
-              <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center shadow-inner">
+                  <Users className="w-4 h-4" />
+                </div>
+                <span className="text-[11px] font-bold text-slate-300 tracking-wider uppercase">
+                  Calling Specialists
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] text-emerald-400 font-bold bg-emerald-500/15 border border-emerald-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>ONLINE</span>
               </div>
             </div>
 
-            {/* Specialist Avatars - Evenly Distributed */}
-            <div className="grid grid-cols-4 sm:grid-cols-4 gap-2 py-1 my-1">
+            {/* Specialist Avatars */}
+            <div className="grid grid-cols-4 gap-2 py-1 my-1">
               {(employeesList.length > 0 ? employeesList.slice(0, 4) : [
                 { id: "emp_1", fullName: "Rahul Sharma", active_cases_count: 35 },
                 { id: "emp_2", fullName: "Vikram Singh", active_cases_count: 42 },
@@ -380,15 +502,15 @@ export default function CaseAllocationPage({
               ]).map((emp) => (
                 <div
                   key={emp.employeeId || emp.id}
-                  className="flex flex-col items-center text-center p-1.5 rounded-xl bg-slate-800/40 border border-slate-700/40 hover:border-indigo-500/40 transition-all"
+                  className="flex flex-col items-center text-center p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-indigo-500/50 hover:bg-slate-800/90 transition-all group/emp"
                 >
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-xs flex items-center justify-center border-2 border-slate-800 shadow">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-[11px] flex items-center justify-center border border-slate-700 shadow-md group-hover/emp:scale-105 transition-transform">
                     {emp.fullName?.slice(0, 2).toUpperCase() || "OP"}
                   </div>
                   <span className="text-[10px] text-slate-200 font-medium truncate w-full mt-1.5">
                     {emp.fullName?.split(" ")[0]}
                   </span>
-                  <span className="text-[9px] text-indigo-400 font-mono">
+                  <span className="text-[9px] text-indigo-400 font-mono font-semibold">
                     {emp.active_cases_count || 35} accts
                   </span>
                 </div>
@@ -401,9 +523,14 @@ export default function CaseAllocationPage({
               <span>Avg Handling Time:</span>
               <span className="text-indigo-400 font-mono font-semibold">4m 52s</span>
             </div>
-            <div className="flex justify-between items-center text-slate-400">
-              <span>Team Connection Rate:</span>
-              <span className="text-emerald-400 font-mono font-bold">78.4%</span>
+            <div>
+              <div className="flex justify-between items-center text-slate-400 mb-1">
+                <span>Team Connection Rate:</span>
+                <span className="text-emerald-400 font-mono font-bold">78.4%</span>
+              </div>
+              <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" style={{ width: "78.4%" }} />
+              </div>
             </div>
           </div>
         </div>
@@ -412,50 +539,58 @@ export default function CaseAllocationPage({
       {/* ══════════════════════════════════════════════════════════════════
           2. ADMIN OPERATIONS TOOLBAR (Excel Upload, Rule Allocation, Transfer, Target, Export)
       ══════════════════════════════════════════════════════════════════ */}
-      <div className="portal-card operations-toolbar-card w-full rounded-2xl bg-slate-900/90 border border-slate-800/90 backdrop-blur-md shadow-xl p-5 sm:p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-1">
+      <div className="portal-card operations-toolbar-card w-full rounded-2xl bg-gradient-to-r from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08] shadow-2xl p-5 sm:p-6 relative overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent pointer-events-none" />
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
+          <div className="space-y-1.5 max-w-xl">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0 shadow-inner">
                 <FileSpreadsheet className="w-4 h-4" />
               </div>
-              <h4 className="font-bold text-white text-base tracking-tight">
-                Module A: Admin Case Management Operations
-              </h4>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/25 tracking-wider uppercase">
+                    Operations Control
+                  </span>
+                  <h4 className="font-bold text-white text-base tracking-tight">
+                    Case Management Operations
+                  </h4>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
-              Excel/CSV bulk upload with schema validation, rule-based portfolio allocation, case transfers, target tracking &amp; atomic status audits.
+            <p className="text-xs text-slate-400 leading-relaxed pl-10">
+              Upload loan datasets, run rule-based portfolio allocations, transfer accounts, set recovery targets, and export reporting data.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap items-center gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
-            
-            {/* 1. Upload Loan Data (Opens Pre-Validation Modal) */}
+          {/* Button Controls */}
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+            {/* 1. Import Loan Data */}
             <button
               type="button"
               onClick={() => setShowImportModal(true)}
-              className="primary-btn cursor-pointer inline-flex items-center justify-center gap-2 text-xs py-2.5 px-4 col-span-2 sm:col-span-1 md:flex-initial min-h-[42px] bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold shadow-md shadow-blue-600/25 transition active:scale-98"
+              className="inline-flex items-center justify-center gap-2 text-xs py-2.5 px-4 min-h-[40px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl font-semibold shadow-lg shadow-blue-600/30 transition-all active:scale-98 cursor-pointer"
             >
               <FileSpreadsheet className="w-4 h-4 shrink-0" />
-              <span className="font-semibold">Import Customer Loans</span>
+              <span>Import Customer Loans</span>
             </button>
 
-            {/* 2. Download Template (.xlsx) */}
+            {/* 2. Download Template */}
             <button
               type="button"
               onClick={() => handleDownloadTemplate("xlsx")}
-              className="secondary-btn inline-flex items-center justify-center gap-2 text-xs py-2.5 px-3 bg-slate-800/90 hover:bg-slate-700/90 text-slate-300 border border-slate-700/80 min-h-[42px] rounded-xl font-semibold transition active:scale-98 cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 text-xs py-2.5 px-3.5 min-h-[40px] bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/80 rounded-xl font-semibold transition-all active:scale-98 cursor-pointer shadow-sm"
               title="Download official loan import template"
             >
               <Download className="w-4 h-4 text-slate-400 shrink-0" />
               <span>Template</span>
             </button>
 
-            {/* 3. Rule-Based Allocation */}
+            {/* 3. Rule Allocation */}
             <button
               type="button"
               onClick={() => setShowBulkAllocateModal(true)}
-              className="primary-btn inline-flex items-center justify-center gap-2 text-xs py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white col-span-1 md:flex-initial min-h-[42px] rounded-xl font-semibold shadow-md shadow-indigo-600/25 transition active:scale-98 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 text-xs py-2.5 px-4 min-h-[40px] bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl font-semibold shadow-lg shadow-indigo-600/30 transition-all active:scale-98 cursor-pointer"
             >
               <Sparkles className="w-4 h-4 shrink-0 text-amber-300" />
               <span>Rule Allocation</span>
@@ -465,7 +600,7 @@ export default function CaseAllocationPage({
             <button
               type="button"
               onClick={() => setShowTransferModal(true)}
-              className="secondary-btn inline-flex items-center justify-center gap-2 text-xs py-2.5 px-4 bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 border border-slate-700/80 col-span-1 md:flex-initial min-h-[42px] rounded-xl font-semibold transition active:scale-98 cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 text-xs py-2.5 px-3.5 min-h-[40px] bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/80 rounded-xl font-semibold transition-all active:scale-98 cursor-pointer shadow-sm"
             >
               <ArrowRightLeft className="w-4 h-4 text-indigo-400 shrink-0" />
               <span>Transfer Cases</span>
@@ -475,7 +610,7 @@ export default function CaseAllocationPage({
             <button
               type="button"
               onClick={() => setShowTargetModal(true)}
-              className="secondary-btn inline-flex items-center justify-center gap-2 text-xs py-2.5 px-4 bg-slate-800/90 hover:bg-slate-700/90 text-emerald-300 border border-emerald-500/30 col-span-1 md:flex-initial min-h-[42px] rounded-xl font-semibold transition active:scale-98 cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 text-xs py-2.5 px-3.5 min-h-[40px] bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 rounded-xl font-semibold transition-all active:scale-98 cursor-pointer shadow-sm"
             >
               <Calendar className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>Set Target</span>
@@ -485,8 +620,8 @@ export default function CaseAllocationPage({
             <button
               type="button"
               onClick={handleExportCasesCSV}
-              className="secondary-btn inline-flex items-center justify-center gap-2 text-xs py-2.5 px-4 bg-slate-800/90 hover:bg-slate-700/90 text-amber-300 border border-amber-500/30 col-span-1 md:flex-initial min-h-[42px] rounded-xl font-semibold transition active:scale-98 cursor-pointer"
-              title="Export complete case dataset with status history"
+              className="inline-flex items-center justify-center gap-1.5 text-xs py-2.5 px-3.5 min-h-[40px] bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-xl font-semibold transition-all active:scale-98 cursor-pointer shadow-sm"
+              title="Export complete case dataset"
             >
               <Download className="w-4 h-4 text-amber-400 shrink-0" />
               <span>Export Cases</span>
@@ -499,20 +634,21 @@ export default function CaseAllocationPage({
           3. CASE STATUS NAVIGATION TABS (ALL 10 STATUSES + ALL CASES)
       ══════════════════════════════════════════════════════════════════ */}
       <div className="w-full max-w-full overflow-hidden my-3">
-        <div className="flex items-center gap-2 overflow-x-auto p-1.5 bg-slate-900/90 border border-slate-800/90 rounded-2xl shadow-inner scrollbar-none no-scrollbar touch-pan-x">
+        <div className="flex items-center gap-2 overflow-x-auto p-2 bg-gradient-to-r from-slate-900/95 via-slate-900/85 to-slate-950/95 border border-white/[0.08] rounded-2xl shadow-xl scrollbar-none no-scrollbar touch-pan-x">
           <button
             type="button"
             onClick={() => setCaseFilterStatus("ALL")}
-            className={`shrink-0 inline-flex items-center gap-2 px-4 py-2 min-h-[38px] rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+            className={`shrink-0 inline-flex items-center gap-2 px-4 py-2 min-h-[40px] rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
               caseFilterStatus === "ALL"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-1 ring-blue-400/50"
-                : "text-slate-400 hover:text-white hover:bg-slate-800/70"
+                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 ring-1 ring-blue-400/50"
+                : "bg-slate-900/70 hover:bg-slate-800/80 text-slate-300 border border-slate-800/80 hover:border-slate-700/80"
             }`}
           >
+            <span className={`w-2 h-2 rounded-full ${STATUS_DOT_COLORS["ALL"]}`} />
             <span>All Cases</span>
             <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
-                caseFilterStatus === "ALL" ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400"
+              className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                caseFilterStatus === "ALL" ? "bg-white/20 text-white" : "bg-slate-800 text-slate-400 border border-slate-700/50"
               }`}
             >
               {casesPagination.totalCount || casesList.length}
@@ -520,22 +656,24 @@ export default function CaseAllocationPage({
           </button>
           {CASE_STATUSES.map((st) => {
             const count = adminOverview?.cases_by_status?.[st];
+            const dotClass = STATUS_DOT_COLORS[st] || "bg-slate-400";
             return (
               <button
                 key={st}
                 type="button"
                 onClick={() => setCaseFilterStatus(st)}
-                className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[38px] rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                className={`shrink-0 inline-flex items-center gap-2 px-3.5 py-2 min-h-[40px] rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
                   caseFilterStatus === st
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/30 ring-1 ring-blue-400/50"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800/70"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 ring-1 ring-blue-400/50"
+                    : "bg-slate-900/70 hover:bg-slate-800/80 text-slate-300 border border-slate-800/80 hover:border-slate-700/80"
                 }`}
               >
+                <span className={`w-2 h-2 rounded-full ${dotClass}`} />
                 <span>{st}</span>
                 {count !== undefined && (
                   <span
-                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                      caseFilterStatus === st ? "bg-white/20 text-white" : "bg-slate-800 text-slate-500"
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                      caseFilterStatus === st ? "bg-white/20 text-white" : "bg-slate-800/90 text-slate-400 border border-slate-700/50"
                     }`}
                   >
                     {count}
@@ -553,45 +691,103 @@ export default function CaseAllocationPage({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full items-start my-2">
         {/* LEFT COLUMN: Customer Case Management Table (8 cols) */}
         <div className="col-span-1 lg:col-span-8 space-y-4 w-full min-w-0">
-          <div className="portal-card table-card-wrapper relative w-full overflow-hidden rounded-2xl shadow-xl bg-slate-900/90 border border-slate-800/90">
+          <div className="portal-card table-card-wrapper relative w-full overflow-hidden rounded-2xl shadow-2xl bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08]">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent pointer-events-none" />
+
             {/* Table Header Bar */}
             <div className="card-header flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3.5 p-5 sm:p-6 border-b border-slate-800/80">
               <div className="header-left flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center shrink-0">
-                  <Layers className="w-4 h-4 text-indigo-400" />
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0 shadow-inner">
+                  <Layers className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-white text-sm sm:text-base tracking-tight">
-                    Customer Case Management &amp; Delinquent Accounts
-                  </h4>
-                  <p className="text-xs text-slate-400">
-                    Showing {casesList.length} accounts &bull; Rule-allocated &amp; tracked
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-white text-sm sm:text-base tracking-tight">
+                      Customer Case Management &amp; Delinquent Accounts
+                    </h4>
+                    <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                      {casesPagination.totalCount || casesList.length} Accounts
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Live delinquent portfolio tracking &bull; Rule-allocated &bull; Atomic status audits
                   </p>
                 </div>
               </div>
 
               {/* Search Box */}
-              <div className="search-box w-full sm:w-72 relative">
+              <div className="search-box w-full sm:w-80 relative">
                 <Search className="search-icon w-4 h-4 absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="Search borrower or loan account..."
+                  placeholder="Search borrower, loan account, lender..."
                   value={caseSearchTerm}
                   onChange={(e) => setCaseSearchTerm(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") loadCases(1);
                   }}
-                  className="w-full pl-10 pr-4 py-2.5 min-h-[40px] bg-slate-950/80 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition shadow-inner"
+                  className="w-full pl-10 pr-9 py-2.5 min-h-[40px] bg-slate-950/80 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition shadow-inner"
                 />
+                {caseSearchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCaseSearchTerm("");
+                      if (loadCases) loadCases(1);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
 
+            {/* In-Card Quick Batch Actions Bar (when cases are selected) */}
+            {selectedCaseIds.length > 0 && (
+              <div className="mx-5 my-3 p-3 px-4 rounded-xl bg-indigo-950/60 border border-indigo-500/40 shadow-lg flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2 text-indigo-200 font-semibold">
+                  <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+                  <span>{selectedCaseIds.length} case(s) selected on page</span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <select
+                    value={selectedBulkEmp}
+                    onChange={(e) => setSelectedBulkEmp(e.target.value)}
+                    className="bg-slate-900 border border-indigo-500/50 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none"
+                  >
+                    <option value="">Reassign to Specialist...</option>
+                    {employeesList.map((emp) => (
+                      <option key={emp.employeeId || emp.id} value={emp.employeeId || emp.id}>
+                        {emp.fullName?.split(" ")[0]} ({emp.employeeId || emp.id})
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    disabled={!selectedBulkEmp || bulkAssignLoading}
+                    onClick={handleAssignSelectedCases}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow transition cursor-pointer"
+                  >
+                    {bulkAssignLoading ? "Assigning..." : "Apply Assignment"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCaseIds([])}
+                    className="text-xs text-slate-400 hover:text-white px-2 py-1"
+                  >
+                    Deselect
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* DESKTOP & TABLET VIEW: Scrollable Responsive Table (hidden on mobile < 768px) */}
             <div className="hidden md:block portal-table-container relative w-full overflow-x-auto">
-              <table className="portal-table min-w-[850px] w-full text-left">
+              <table className="portal-table min-w-[950px] w-full text-left">
                 <thead>
-                  <tr className="bg-slate-950/70 border-b border-slate-800/80">
-                    <th className="py-3.5 px-3 text-center w-10">
+                  <tr className="bg-slate-950/80 border-b border-slate-800/80">
+                    <th className="py-3.5 px-3 text-center w-12">
                       <input
                         type="checkbox"
                         checked={casesList.length > 0 && selectedCaseIds.length === casesList.length}
@@ -600,25 +796,25 @@ export default function CaseAllocationPage({
                         title="Select All on page"
                       />
                     </th>
-                    <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider min-w-[220px]">
                       Borrower Details
                     </th>
-                    <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider min-w-[130px]">
                       Priority Amount
                     </th>
-                    <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider min-w-[120px]">
                       Upcoming Task
                     </th>
-                    <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider min-w-[140px]">
                       Days Outstanding
                     </th>
-                    <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider min-w-[145px]">
                       Status (Audit)
                     </th>
-                    <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider min-w-[145px]">
                       Assigned Caller
                     </th>
-                    <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider text-right">
+                    <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider text-right min-w-[130px]">
                       Actions
                     </th>
                   </tr>
@@ -627,7 +823,10 @@ export default function CaseAllocationPage({
                   {casesLoading ? (
                     <tr>
                       <td colSpan="8" style={{ textAlign: "center", padding: "36px" }}>
-                        Loading recovery accounts...
+                        <div className="flex items-center justify-center gap-2 text-slate-400 text-xs">
+                          <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                          <span>Loading recovery accounts...</span>
+                        </div>
                       </td>
                     </tr>
                   ) : casesList.length === 0 ? (
@@ -640,7 +839,7 @@ export default function CaseAllocationPage({
                     casesList.map((item) => (
                       <tr
                         key={item.id}
-                        className={`hover:bg-slate-800/40 transition-colors ${
+                        className={`hover:bg-slate-800/50 transition-colors ${
                           selectedCaseIds.includes(item.id) ? "bg-indigo-950/30" : ""
                         }`}
                       >
@@ -653,28 +852,39 @@ export default function CaseAllocationPage({
                           />
                         </td>
                         <td className="py-3.5 px-4">
-                          <div className="font-bold text-white text-xs truncate max-w-[200px]">
-                            {item.customer_name || "Borrower"}
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500/20 to-blue-500/20 text-indigo-300 font-bold text-xs flex items-center justify-center border border-indigo-500/30 shrink-0 shadow-sm">
+                              {item.customer_name ? item.customer_name.slice(0, 2).toUpperCase() : "PM"}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-bold text-white text-xs truncate max-w-[190px]">
+                                {item.customer_name || "Borrower"}
+                              </div>
+                              <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1 mt-0.5">
+                                <Phone className="w-2.5 h-2.5 text-slate-500 shrink-0" />
+                                <span>{item.phone_masked || item.phone || "+91 98*** 12345"}</span>
+                              </div>
+                              <div className="text-[10px] text-slate-500 font-mono mt-0.5 flex items-center gap-1">
+                                <span className="bg-slate-800/90 px-1.5 py-0.2 rounded text-slate-400 border border-slate-700/50">
+                                  {item.loan_account_no}
+                                </span>
+                                <span>&bull;</span>
+                                <span className="truncate max-w-[90px]">{item.lender_name}</span>
+                              </div>
+                            </div>
                           </div>
-                          <span className="text-[11px] text-slate-400 font-mono mt-0.5 block">
-                            {item.phone_masked || item.phone || "+91 98*** 12345"}
-                          </span>
-                          <span className="text-[10px] text-slate-500 font-mono block">
-                            {item.loan_account_no} &bull; {item.lender_name}
-                          </span>
                         </td>
                         <td className="py-3.5 px-4 font-mono text-amber-400 font-bold text-xs whitespace-nowrap">
                           ₹{Number(item.outstanding_amount || 0).toLocaleString("en-IN")}
                         </td>
                         <td className="py-3.5 px-4 whitespace-nowrap">
-                          <span className="text-xs text-slate-300 font-mono">
+                          <span className="inline-flex items-center gap-1.5 text-xs text-slate-300 font-mono bg-slate-800/70 border border-slate-700/60 px-2.5 py-1 rounded-lg shadow-sm">
+                            <Calendar className="w-3 h-3 text-slate-400" />
                             {item.follow_up_date || "Today"}
                           </span>
                         </td>
                         <td className="py-3.5 px-4 whitespace-nowrap">
-                          <span className="text-xs text-rose-400 font-mono font-semibold">
-                            {item.dpd} days late
-                          </span>
+                          {getDpdBadge(item.dpd)}
                         </td>
                         <td className="py-3.5 px-4 whitespace-nowrap">
                           <select
@@ -714,10 +924,11 @@ export default function CaseAllocationPage({
                               setSelectedCaseId(item.id);
                               setShowCaseDetailModal(true);
                             }}
-                            className="px-3 py-1.5 min-h-[34px] rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-[11px] font-semibold transition cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[34px] rounded-lg bg-indigo-600/20 hover:bg-indigo-600/35 text-indigo-300 hover:text-white border border-indigo-500/30 hover:border-indigo-500/50 text-[11px] font-semibold transition cursor-pointer shadow-sm"
                             title="View case details and status history timeline"
                           >
-                            Timeline &amp; Details
+                            <span>Timeline</span>
+                            <ArrowRight className="w-3 h-3" />
                           </button>
                         </td>
                       </tr>
@@ -758,21 +969,22 @@ export default function CaseAllocationPage({
                           <div className="font-bold text-white text-xs truncate">
                             {item.customer_name || "Borrower"}
                           </div>
-                          <div className="text-[11px] text-slate-400 font-mono mt-0.5">
-                            {item.phone_masked || item.phone || "+91 98*** 12345"}
+                          <div className="text-[11px] text-slate-400 font-mono mt-0.5 flex items-center gap-1">
+                            <Phone className="w-2.5 h-2.5 text-slate-500 shrink-0" />
+                            <span>{item.phone_masked || item.phone || "+91 98*** 12345"}</span>
                           </div>
-                          <div className="text-[10px] text-slate-500 font-mono">
-                            {item.loan_account_no}
+                          <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                            {item.loan_account_no} &bull; {item.lender_name}
                           </div>
                         </div>
                       </div>
-                      <div className="text-right shrink-0">
+                      <div className="text-right shrink-0 space-y-1">
                         <div className="font-mono text-amber-400 font-bold text-xs">
                           ₹{Number(item.outstanding_amount || 0).toLocaleString("en-IN")}
                         </div>
-                        <span className="text-[10px] text-rose-400 font-mono font-semibold block mt-0.5">
-                          {item.dpd} days late
-                        </span>
+                        <div>
+                          {getDpdBadge(item.dpd)}
+                        </div>
                       </div>
                     </div>
 
@@ -883,24 +1095,28 @@ export default function CaseAllocationPage({
             5. RIGHT COLUMN: RECENT ACTIVITY & AUDIT TRAIL (case_status_history)
         ══════════════════════════════════════════════════════════════════ */}
         <div className="col-span-1 lg:col-span-4 space-y-4 w-full relative lg:sticky lg:top-4 self-start">
-          <div className="p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800/90 backdrop-blur-md shadow-xl">
+          <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08] shadow-2xl relative overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent pointer-events-none" />
             <div className="flex items-center justify-between mb-3.5 gap-2 flex-wrap sm:flex-nowrap">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-7 h-7 rounded-lg bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center shrink-0">
-                  <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0 shadow-inner">
+                  <Activity className="w-4 h-4" />
                 </div>
-                <h4 className="font-bold text-white text-xs sm:text-sm truncate">
-                  Recent Activity (case_status_history)
-                </h4>
+                <div>
+                  <h4 className="font-bold text-white text-sm tracking-tight truncate">
+                    Audit Trail &amp; Activity
+                  </h4>
+                  <span className="text-[10px] text-slate-400">Live immutable case event stream</span>
+                </div>
               </div>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shrink-0">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shrink-0 shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>LIVE AUDIT</span>
               </span>
             </div>
 
-            <p className="text-[11px] text-slate-400 mb-4 pb-1 leading-relaxed">
-              CRITICAL RULE: Every case-status transition is immutably recorded with employee ID, timestamp, previous status &amp; new status in the database transaction.
+            <p className="text-[11px] text-slate-400 mb-4 pb-2 leading-relaxed border-b border-slate-800/80">
+              Captures every status transition, employee allocation, target modification, and debt resolution milestone.
             </p>
 
             {/* Activity Feed List */}
@@ -908,34 +1124,39 @@ export default function CaseAllocationPage({
               {(adminOverview?.recent_status_history || []).map((act, idx) => (
                 <div
                   key={act.id || idx}
-                  className="p-3.5 sm:p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs space-y-2 transition hover:border-slate-500/80 shadow-sm"
+                  className="p-3.5 sm:p-4 rounded-xl bg-slate-800/50 hover:bg-slate-800/70 border border-slate-700/60 text-xs space-y-2 transition-all duration-200 shadow-sm hover:border-indigo-500/40"
                 >
                   <div className="flex justify-between items-start gap-2">
-                    <span className="font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 text-[11px]">
+                    <span className="font-mono font-bold text-indigo-400 bg-indigo-500/15 px-2 py-0.5 rounded-md border border-indigo-500/25 text-[11px]">
                       {act.case_number}
                     </span>
-                    <span className="text-[10px] text-slate-500 font-mono shrink-0">
+                    <span className="text-[10px] text-slate-400 font-mono shrink-0 bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-800">
                       {new Date(act.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-1.5 font-medium text-slate-200 flex-wrap py-0.5">
-                    <span className="truncate">{act.customer_name}</span>
+                    <span className="truncate font-semibold text-white">{act.customer_name}</span>
                     <span className="text-slate-500">&bull;</span>
-                    <span className="text-[11px] text-indigo-300 font-semibold break-words">
-                      {act.previous_status} &rarr; {act.new_status}
+                    <span className="text-[11px] text-indigo-300 font-semibold break-words flex items-center gap-1">
+                      <span>{act.previous_status}</span>
+                      <ArrowRight className="w-2.5 h-2.5 text-indigo-400" />
+                      <span className="text-white">{act.new_status}</span>
                     </span>
                   </div>
 
-                  <p className="text-[11px] text-slate-400 leading-snug break-words bg-slate-900/60 p-2 rounded-lg border border-slate-800/70">
-                    {act.remarks}
+                  <p className="text-[11px] text-slate-300 leading-snug break-words bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80 italic font-sans">
+                    "{act.remarks || "Status transition recorded."}"
                   </p>
 
-                  <div className="pt-2 mt-2 flex items-center justify-between gap-1 text-[10px] text-slate-500 border-t border-slate-700/50 flex-wrap">
+                  <div className="pt-2 mt-2 flex items-center justify-between gap-1 text-[10px] text-slate-400 border-t border-slate-700/50 flex-wrap">
                     <span className="truncate">
-                      By: <strong className="text-slate-400">{act.employee_name || act.employee_id}</strong>
+                      By: <strong className="text-slate-300">{act.employee_name || act.employee_id}</strong>
                     </span>
-                    <span className="font-mono text-emerald-400 shrink-0 font-medium">AUDIT VERIFIED</span>
+                    <span className="inline-flex items-center gap-1 font-mono text-emerald-400 shrink-0 font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                      <ShieldCheck className="w-2.5 h-2.5" />
+                      <span>AUDIT VERIFIED</span>
+                    </span>
                   </div>
                 </div>
               ))}
@@ -950,9 +1171,10 @@ export default function CaseAllocationPage({
                     setShowCaseDetailModal(true);
                   }
                 }}
-                className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold py-2.5 px-4 inline-block rounded-xl hover:bg-indigo-950/40 border border-indigo-500/20 transition shadow-sm w-full sm:w-auto cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 text-xs text-indigo-300 hover:text-white font-semibold py-2.5 px-4 rounded-xl bg-indigo-950/40 hover:bg-indigo-900/50 border border-indigo-500/30 hover:border-indigo-500/50 transition-all shadow-sm w-full cursor-pointer"
               >
-                View Complete Case Timeline &rarr;
+                <span>View Complete Case Timeline</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
