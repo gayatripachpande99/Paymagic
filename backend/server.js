@@ -1,8 +1,8 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import dotenv from "dotenv";
 import { initializeDatabase } from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
@@ -19,8 +19,6 @@ import fieldRecoveryRoutes from "./routes/fieldRecoveryRoutes.js";
 import complaintRoutes from "./routes/complaintRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import { schedulerService } from "./services/schedulerService.js";
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

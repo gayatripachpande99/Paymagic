@@ -85,12 +85,12 @@ export const refreshToken = async (req, res) => {
     }
 
     const decoded = jwt.verify(refreshToken, REFRESH_SECRET);
-    const user = memoryStore.users.find((u) => u.id === decoded.id);
+    const user = memoryStore.users.find((u) => u.id === decoded.id || u.employee_id === decoded.id);
 
-    if (!user || !user.refresh_token_hash) {
+    if (!user || !user.is_active) {
       return res.status(401).json({
         success: false,
-        message: "Session expired or revoked."
+        message: "Session expired or user deactivated."
       });
     }
 

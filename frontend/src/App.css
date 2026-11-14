@@ -4182,3 +4182,109 @@ footer {
 .case-allocation-page .portal-table tr:hover td {
   background: rgba(30, 58, 138, 0.08);
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   MODULE A: RECOVERY CASE ALLOCATION BOX CONTENT STYLES
+   Explicit margins, paddings, sizing, and responsive hierarchy
+   ══════════════════════════════════════════════════════════════════ */
+.case-allocation-page {
+  width: 100%;
+  max-width: 100%;
+  padding-bottom: 48px;
+}
+
+/* 1. KPI Cards Grid & Uniform Box Sizing */
+.case-allocation-page .case-kpi-grid {
+  display: grid;
+  margin-bottom: 24px;
+}
+
+.case-allocation-page .case-kpi-card {
+  background: linear-gradient(180deg, rgba(8, 20, 52, 0.95) 0%, rgba(4, 12, 38, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.case-allocation-page .case-kpi-card:hover {
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.1);
+  transform: translateY(-2px);
+}
+
+/* 2. Operations Toolbar Box */
+.case-allocation-page .case-operations-box {
+  background: linear-gradient(180deg, rgba(10, 24, 60, 0.95) 0%, rgba(5, 14, 42, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 18px;
+  padding: 22px 26px;
+  margin-top: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+.case-allocation-page .case-operations-box button {
+  min-height: 42px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+}
+
+/* 3. Status Tabs Box */
+.case-allocation-page .case-status-tabs-box {
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+.case-allocation-page .case-status-tabs-box button {
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* 4. Delinquent Case Table Card & Audit Feed */
+.case-allocation-page .case-table-card {
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(8, 20, 52, 0.95) 0%, rgba(4, 12, 38, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+.case-allocation-page .case-table-card .portal-table th {
+  padding: 14px 16px;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.case-allocation-page .case-table-card .portal-table td {
+  padding: 14px 16px;
+  vertical-align: middle;
+}
+
+.case-allocation-page .case-audit-box {
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(8, 20, 52, 0.95) 0%, rgba(4, 12, 38, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  padding: 22px 24px;
+}
+
+@media (max-width: 768px) {
+  .case-allocation-page .case-kpi-card {
+    padding: 18px 18px;
+  }
+  .case-allocation-page .case-operations-box {
+    padding: 18px;
+  }
+  .case-allocation-page .case-audit-box {
+    padding: 18px;
+  }
+}
+
