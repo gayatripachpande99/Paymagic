@@ -20,3 +20,4 @@ CREATE INDEX IF NOT EXISTS idx_customers_city_state ON customers(city, state);
 CREATE INDEX IF NOT EXISTS idx_customers_pincode ON customers(pincode);
 CREATE INDEX IF NOT EXISTS idx_customers_full_name ON customers(full_name);
 CREATE INDEX IF NOT EXISTS idx_customers_customer_code ON customers(customer_code);
+

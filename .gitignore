@@ -7,15 +7,19 @@ Paymagic-main.zip
 *.mp4
 
 # External tools & agent configurations (keep only frontend and backend in Git)
-.agent/
-.agents/
-.gemini/
-.gsd/
-adapters/
-scripts/
-scratch/
-GSD-STYLE.md
-PROJECT_RULES.md
-VERSION
-model_capabilities.yaml
+/.agent/
+/.agents/
+/.gemini/
+/.gsd/
+/adapters/
+/scripts/
+/scratch/
+/GSD-STYLE.md
+/PROJECT_RULES.md
+/VERSION
+/model_capabilities.yaml
+
+# Explicitly ensure backend scripts are tracked
+!/backend/scripts/
+!/backend/scripts/**
 
