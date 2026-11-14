@@ -708,30 +708,17 @@ export default function CaseAllocationPage({
                           </select>
                         </td>
                         <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedCaseId(item.id);
-                                setShowCaseDetailModal(true);
-                              }}
-                              className="px-2.5 py-1.5 min-h-[34px] rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-[11px] font-semibold transition cursor-pointer"
-                              title="View animated case_status_history timeline"
-                            >
-                              Timeline
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedPaymentCase(item);
-                                setShowPaymentModal(true);
-                              }}
-                              className="px-2.5 py-1.5 min-h-[34px] rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-[11px] font-semibold transition cursor-pointer"
-                              title="Record payment settlement"
-                            >
-                              +Pay
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedCaseId(item.id);
+                              setShowCaseDetailModal(true);
+                            }}
+                            className="px-3 py-1.5 min-h-[34px] rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-[11px] font-semibold transition cursor-pointer"
+                            title="View case details and status history timeline"
+                          >
+                            Timeline &amp; Details
+                          </button>
                         </td>
                       </tr>
                     ))
@@ -840,20 +827,9 @@ export default function CaseAllocationPage({
                             setShowCaseDetailModal(true);
                           }}
                           className="px-3 py-1.5 min-h-[34px] rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-[11px] font-semibold transition cursor-pointer"
-                          title="View case timeline"
+                          title="View case timeline and details"
                         >
-                          Timeline
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedPaymentCase(item);
-                            setShowPaymentModal(true);
-                          }}
-                          className="px-3 py-1.5 min-h-[34px] rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-[11px] font-semibold transition cursor-pointer"
-                          title="Record payment settlement"
-                        >
-                          +Pay
+                          Timeline &amp; Details
                         </button>
                       </div>
                     </div>
