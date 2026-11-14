@@ -13,7 +13,7 @@ import {
   RotateCcw,
   FileCheck
 } from "lucide-react";
-import api from "../../services/api";
+import api, { API_URL } from "../../services/api";
 
 export const ImportLoansModal = ({
   isOpen,
@@ -37,7 +37,7 @@ export const ImportLoansModal = ({
 
   const handleDownloadTemplate = (format = "xlsx") => {
     const token = localStorage.getItem("paymagic_token");
-    const downloadUrl = `/api/upload/template?format=${format}`;
+    const downloadUrl = `${API_URL}/upload/template?format=${format}`;
     
     // Trigger download with browser
     fetch(downloadUrl, {
@@ -76,7 +76,7 @@ export const ImportLoansModal = ({
       formData.append("file", selectedFile);
 
       const token = localStorage.getItem("paymagic_token");
-      const res = await fetch("/api/upload/preview", {
+      const res = await fetch(`${API_URL}/upload/preview`, {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData
@@ -127,7 +127,7 @@ export const ImportLoansModal = ({
   const handleDownloadErrors = (format = "csv") => {
     if (!previewData?.preview_batch_id) return;
     const token = localStorage.getItem("paymagic_token");
-    const downloadUrl = `/api/upload/errors/${previewData.preview_batch_id}?format=${format}`;
+    const downloadUrl = `${API_URL}/upload/errors/${previewData.preview_batch_id}?format=${format}`;
 
     fetch(downloadUrl, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}

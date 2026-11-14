@@ -188,7 +188,8 @@ export const getCaseById = async (req, res) => {
 export const updateCaseStatus = async (req, res) => {
   try {
     const { caseId } = req.params;
-    const { newStatus, remarks, follow_up_date, payment_ref } = req.body;
+    const newStatus = req.body.newStatus || req.body.status;
+    const { remarks, follow_up_date, payment_ref } = req.body;
 
     if (!newStatus) {
       return res.status(400).json({ success: false, message: "newStatus is required." });
@@ -452,6 +453,26 @@ export const previewRuleAllocation = async (req, res) => {
           employeeBuckets[roundRobinIdx % employeeBuckets.length].assigned_cases.push(lc);
           roundRobinIdx++;
         }
+      }
+    } else if (strategy === "PRIORITY_BASED" || strategy === "PRIORITY") {
+      // Priority-weighted: CRITICAL -> HIGH -> MEDIUM -> LOW, then DPD descending
+      const priorityWeight = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+      const sortedCases = [...selectedCases].sort((a, b) => {
+        const pwA = priorityWeight[a.priority?.toUpperCase()] || 0;
+        const pwB = priorityWeight[b.priority?.toUpperCase()] || 0;
+        if (pwB !== pwA) return pwB - pwA;
+        return (b.dpd || 0) - (a.dpd || 0);
+      });
+      for (let i = 0; i < sortedCases.length; i++) {
+        const bucketIdx = i % employeeBuckets.length;
+        employeeBuckets[bucketIdx].assigned_cases.push(sortedCases[i]);
+      }
+    } else if (strategy === "OVERDUE_BUCKET" || strategy === "STAGE") {
+      // Overdue bucket / delinquency stage: 90+ DPD (NPA) down to B1
+      const sortedCases = [...selectedCases].sort((a, b) => (b.dpd || 0) - (a.dpd || 0));
+      for (let i = 0; i < sortedCases.length; i++) {
+        const bucketIdx = i % employeeBuckets.length;
+        employeeBuckets[bucketIdx].assigned_cases.push(sortedCases[i]);
       }
     } else {
       // Default: EQUAL distribution (Round-Robin)
@@ -940,16 +961,53 @@ export const setRecoveryTarget = async (req, res) => {
       return res.status(400).json({ success: false, message: "target_amount must be non-negative." });
     }
 
-    const employee = memoryStore.users.find(u => u.id === employeeId);
+    const now = new Date().toISOString();
+
+    // Support team-level target setting for all active calling specialists
+    if (employeeId === "ALL" || employeeId === "TEAM") {
+      const eligibleEmployees = memoryStore.users.filter(
+        u => ["CALLER", "FIELD_AGENT", "SUPERVISOR", "EMPLOYEE"].includes(u.role) && u.is_active
+      );
+      const updatedTargets = [];
+      for (const emp of eligibleEmployees) {
+        let existingTarget = memoryStore.targets.find(
+          t => (t.employee_id === emp.id || t.employee_id === emp.employee_id) && t.month === month && t.year === year
+        );
+        if (existingTarget) {
+          existingTarget.target_amount = target_amount;
+          existingTarget.updated_at = now;
+          updatedTargets.push(existingTarget);
+        } else {
+          const newTarget = {
+            id: `tgt_${uuidv4()}`,
+            employee_id: emp.id,
+            month,
+            year,
+            target_amount,
+            achieved_amount: 0,
+            achievement_percentage: 0,
+            created_at: now,
+            updated_at: now
+          };
+          memoryStore.targets.push(newTarget);
+          updatedTargets.push(newTarget);
+        }
+      }
+      return res.status(200).json({
+        success: true,
+        message: `Recovery target of ₹${Number(target_amount).toLocaleString("en-IN")} set for all ${eligibleEmployees.length} active recovery specialists (${month}/${year}).`,
+        data: { targets: updatedTargets }
+      });
+    }
+
+    const employee = memoryStore.users.find(u => u.id === employeeId || u.employee_id === employeeId);
     if (!employee) {
       return res.status(404).json({ success: false, message: `Employee '${employeeId}' not found.` });
     }
 
-    const now = new Date().toISOString();
-
     // Check if target already exists for this employee/month/year
     const existingTarget = memoryStore.targets.find(
-      t => t.employee_id === employeeId && t.month === month && t.year === year
+      t => (t.employee_id === employee.id || t.employee_id === employee.employee_id) && t.month === month && t.year === year
     );
 
     if (existingTarget) {

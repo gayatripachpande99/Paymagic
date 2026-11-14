@@ -207,6 +207,42 @@ export const BulkAllocateModal = ({
                     Strictly equal number of cases distributed across team members
                   </p>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAllocationRule("PRIORITY_BASED")}
+                  className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 ${
+                    allocationRule === "PRIORITY_BASED"
+                      ? "bg-indigo-600/20 border-indigo-500 text-white shadow-md shadow-indigo-600/10"
+                      : "bg-slate-800/60 border-slate-700/60 text-slate-400 hover:border-slate-600"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-semibold text-xs text-indigo-300">
+                    <AlertTriangle className="w-4 h-4 text-rose-400" />
+                    <span>Priority &amp; Risk-Weighted</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-tight">
+                    Critical and High severity overdue accounts allocated first
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAllocationRule("OVERDUE_BUCKET")}
+                  className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 ${
+                    allocationRule === "OVERDUE_BUCKET"
+                      ? "bg-indigo-600/20 border-indigo-500 text-white shadow-md shadow-indigo-600/10"
+                      : "bg-slate-800/60 border-slate-700/60 text-slate-400 hover:border-slate-600"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-semibold text-xs text-indigo-300">
+                    <ShieldCheck className="w-4 h-4 text-teal-400" />
+                    <span>Overdue Bucket / DPD Stage</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-tight">
+                    Distributes by delinquency stage from 90+ DPD (NPA) to B1
+                  </p>
+                </button>
               </div>
             </div>
 

@@ -20,7 +20,7 @@ import {
   X,
   Loader2
 } from "lucide-react";
-import api from "../../../services/api";
+import api, { API_URL } from "../../../services/api";
 import ImportLoansModal from "../../../components/portal/ImportLoansModal";
 
 export default function CaseAllocationPage({
@@ -152,7 +152,7 @@ export default function CaseAllocationPage({
   // Download official template directly
   const handleDownloadTemplate = (format = "xlsx") => {
     const token = localStorage.getItem("paymagic_token");
-    const downloadUrl = `/api/upload/template?format=${format}`;
+    const downloadUrl = `${API_URL}/upload/template?format=${format}`;
     fetch(downloadUrl, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     })

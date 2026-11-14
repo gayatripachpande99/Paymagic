@@ -140,6 +140,9 @@ export const SetTargetModal = ({
                   onChange={(e) => setSelectedEmpId(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
+                  <option value="ALL" className="font-semibold text-emerald-400">
+                    &bull; All Active Recovery Specialists (Team-wide Target)
+                  </option>
                   {employees.map((emp) => (
                     <option key={emp.employeeId || emp.id} value={emp.employeeId || emp.id}>
                       {emp.fullName || emp.full_name} ({emp.employeeId || emp.id})

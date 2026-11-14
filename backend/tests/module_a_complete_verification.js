@@ -226,6 +226,17 @@ const runModuleATests = async () => {
   assert.strictEqual(executeRes.data.data.total_assigned, allocData.total_cases_selected, "All previewed cases must be assigned");
   console.log("✓ Rule-based allocation executed atomically across team members.");
 
+  // Test PRIORITY_BASED and OVERDUE_BUCKET strategies
+  const priorityPreviewRes = mockRes();
+  await previewRuleAllocation(mockReq({ body: { strategy: "PRIORITY_BASED", limit: 5 } }), priorityPreviewRes);
+  assert.strictEqual(priorityPreviewRes.statusCode, 200, "Priority-based preview must return 200");
+  assert(priorityPreviewRes.data.data.allocations.length > 0, "Priority allocation must have allocations");
+
+  const overduePreviewRes = mockRes();
+  await previewRuleAllocation(mockReq({ body: { strategy: "OVERDUE_BUCKET", limit: 5 } }), overduePreviewRes);
+  assert.strictEqual(overduePreviewRes.statusCode, 200, "Overdue bucket preview must return 200");
+  console.log("✓ Priority-Based and Overdue Bucket allocation strategies verified.");
+
   // 8. Test Case Transfer Between Employees
   console.log("\n🧪 7. Testing Case Transfer & Transfer History...");
   const targetSupervisor = memoryStore.users.find(u => u.role === "SUPERVISOR");
@@ -280,6 +291,15 @@ const runModuleATests = async () => {
   assert(callerTargetEntry.remaining_target !== undefined, "Remaining target must be calculated");
   assert(callerTargetEntry.achievement_percentage !== undefined, "Achievement percentage must be calculated");
   console.log("✓ Recovery target successfully set and verified in team target roster.");
+
+  // Test Team-wide target setting
+  const teamTargetRes = mockRes();
+  await setRecoveryTarget(mockReq({
+    body: { employeeId: "ALL", month: currentMonth, year: currentYear, target_amount: 200000 }
+  }), teamTargetRes);
+  assert.strictEqual(teamTargetRes.statusCode, 200, "Team target setting must succeed");
+  assert(teamTargetRes.data.data.targets.length > 0, "Team targets must be set for all active staff");
+  console.log(`✓ Team-wide recovery target set across all ${teamTargetRes.data.data.targets.length} active specialists.`);
 
   // 10. Test Follow-up Scheduling
   console.log("\n🧪 9. Testing Follow-up Date Scheduling...");

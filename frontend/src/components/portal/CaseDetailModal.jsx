@@ -109,6 +109,10 @@ export const CaseDetailModal = ({ caseId, isOpen, onClose, onUpdate }) => {
 
   const handleStatusChange = async () => {
     if (!newStatus) return;
+    if (["Disputed", "Closed", "Not Reachable"].includes(newStatus) && (!statusRemarks || statusRemarks.trim().length < 3)) {
+      setError(`Remarks are mandatory for '${newStatus}' status (minimum 3 characters).`);
+      return;
+    }
     setStatusChanging(true);
     try {
       const res = await api.patch(`/cases/${caseId}/status`, {

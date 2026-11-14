@@ -164,7 +164,57 @@ const COLUMN_MAPPINGS = {
   "credit score": "credit_score",
   "credit_score": "credit_score",
   "cibil": "credit_score",
-  "cibil score": "credit_score"
+  "cibil score": "credit_score",
+
+  // Extended banking recovery fields
+  "disbursed date": "disbursed_date",
+  "disbursement date": "disbursed_date",
+  "disbursed_date": "disbursed_date",
+
+  "principal outstanding": "principal_outstanding",
+  "principal_outstanding": "principal_outstanding",
+
+  "interest outstanding": "interest_outstanding",
+  "interest_outstanding": "interest_outstanding",
+
+  "penalty": "penalty_amount",
+  "late fees": "penalty_amount",
+  "penalty amount": "penalty_amount",
+  "penalty_amount": "penalty_amount",
+
+  "emi due date": "emi_due_date",
+  "due date": "emi_due_date",
+  "emi_due_date": "emi_due_date",
+
+  "bucket": "bucket",
+  "stage": "bucket",
+  "overdue bucket": "bucket",
+
+  "branch": "branch_name",
+  "branch name": "branch_name",
+  "branch_name": "branch_name",
+
+  "co-borrower name": "co_borrower_name",
+  "co borrower name": "co_borrower_name",
+  "co_borrower_name": "co_borrower_name",
+
+  "co-borrower phone": "co_borrower_phone",
+  "co borrower phone": "co_borrower_phone",
+  "co_borrower_phone": "co_borrower_phone",
+
+  "guarantor details": "guarantor_details",
+  "guarantor": "guarantor_details",
+
+  "collateral details": "collateral_details",
+  "collateral": "collateral_details",
+
+  "risk category": "risk_category",
+  "customer risk category": "risk_category",
+  "risk_category": "risk_category",
+
+  "remarks": "remarks",
+  "notes": "remarks",
+  "case remarks": "remarks"
 };
 
 /**
