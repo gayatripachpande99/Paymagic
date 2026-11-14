@@ -123,10 +123,65 @@ export default function CaseAllocationPage({
   const [pendingStatusValue, setPendingStatusValue] = useState("");
   const [statusRemarksInput, setStatusRemarksInput] = useState("");
 
-  const totalOutstanding = adminOverview?.summary?.total_outstanding || 36250000;
-  const standardDue = Math.round(totalOutstanding * 0.65);
-  const criticalOverdue = Math.round(totalOutstanding * 0.35);
-  const totalCasesCount = adminOverview?.summary?.total_cases || casesPagination.totalCount || 200;
+  const totalOutstanding = adminOverview?.summary?.total_outstanding ?? 0;
+  const criticalOverdue = adminOverview?.summary?.critical_overdue ?? (
+    adminOverview?.cases_by_priority?.CRITICAL 
+      ? Math.round(totalOutstanding * (adminOverview.cases_by_priority.CRITICAL / (adminOverview?.summary?.total_cases || 1)))
+      : 0
+  );
+  const standardDue = adminOverview?.summary?.standard_due ?? Math.max(0, totalOutstanding - criticalOverdue);
+  const totalCasesCount = adminOverview?.summary?.total_cases ?? casesPagination.totalCount ?? casesList.length ?? 0;
+
+  const standardPct = totalOutstanding > 0 ? Math.round((standardDue / totalOutstanding) * 100) : 0;
+  const criticalPct = totalOutstanding > 0 ? (100 - standardPct) : 0;
+
+  // Real operational priorities
+  const criticalCount = adminOverview?.summary?.critical_cases_count ?? adminOverview?.cases_by_priority?.CRITICAL ?? 0;
+  const followUpsDueCount = adminOverview?.summary?.follow_ups_due_today ?? 0;
+  const disputesTotal = adminOverview?.summary?.disputes_count ?? adminOverview?.cases_by_status?.Disputed ?? 0;
+  const recoveryRate = adminOverview?.summary?.overall_recovery_rate ?? 0;
+
+  // Real calling specialists & metrics
+  const avgHandlingTime = adminOverview?.summary?.avg_handling_time_formatted || "—";
+  const connectionRate = adminOverview?.summary?.call_connection_rate ?? 0;
+  const activeSpecialists = employeesList.filter((e) => e.role === "EMPLOYEE" || e.role === "CALLER");
+  const displaySpecialists = activeSpecialists.length > 0 ? activeSpecialists.slice(0, 4) : employeesList.slice(0, 4);
+
+  // Dynamic Donut SVG Segments based on real cases_by_status
+  const donutSegments = React.useMemo(() => {
+    const statusMap = adminOverview?.cases_by_status || {};
+    const statusColors = {
+      "Assigned": "#3b82f6",
+      "Contacted": "#6366f1",
+      "Promise to Pay": "#f59e0b",
+      "Fully Paid": "#10b981",
+      "Partially Paid": "#f97316",
+      "Disputed": "#f43f5e",
+      "Field Visit": "#a855f7",
+      "New": "#06b6d4",
+      "Not Reachable": "#64748b",
+      "Closed": "#71717a"
+    };
+    const circumference = 238.76; // 2 * PI * 38
+    let currentOffset = 0;
+    const segments = [];
+    const total = totalCasesCount || 1;
+
+    Object.entries(statusMap).forEach(([st, cnt]) => {
+      const num = Number(cnt || 0);
+      if (num > 0) {
+        const segLen = (num / total) * circumference;
+        segments.push({
+          status: st,
+          stroke: statusColors[st] || "#3b82f6",
+          dashArray: `${segLen.toFixed(1)} ${(circumference - segLen).toFixed(1)}`,
+          dashOffset: -currentOffset
+        });
+        currentOffset += segLen;
+      }
+    });
+    return segments;
+  }, [adminOverview, totalCasesCount]);
 
   // Toggle selection for all visible cases on current page
   const handleToggleSelectAll = () => {
@@ -294,16 +349,16 @@ export default function CaseAllocationPage({
               <div className="flex justify-between text-[10px] text-slate-400 font-medium mb-1.5">
                 <span className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                  Standard Due (65%)
+                  Standard Due ({standardPct}%)
                 </span>
                 <span className="flex items-center gap-1 text-rose-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-                  Critical Overdue (35%)
+                  Critical Overdue ({criticalPct}%)
                 </span>
               </div>
               <div className="w-full h-2 rounded-full bg-slate-800/80 p-0.5 overflow-hidden flex border border-slate-700/50">
-                <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-l-full transition-all" style={{ width: "65%" }} />
-                <div className="h-full bg-gradient-to-r from-rose-500 to-red-500 rounded-r-full transition-all" style={{ width: "35%" }} />
+                <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-l-full transition-all" style={{ width: `${standardPct}%` }} />
+                <div className="h-full bg-gradient-to-r from-rose-500 to-red-500 rounded-r-full transition-all" style={{ width: `${criticalPct}%` }} />
               </div>
             </div>
           </div>
@@ -354,17 +409,29 @@ export default function CaseAllocationPage({
               </span>
             </div>
 
-            {/* Modern Donut Chart & Legend */}
+            {/* Modern Dynamic Donut Chart & Legend */}
             <div className="flex flex-row items-center justify-between gap-3 py-2">
               <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
                 <svg className="w-full h-full transform -rotate-90 drop-shadow-md" viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="38" fill="none" stroke="#1e293b" strokeWidth="10" />
-                  <circle cx="50" cy="50" r="38" fill="none" stroke="#3b82f6" strokeWidth="10" strokeDasharray="50 188" strokeDashoffset="0" strokeLinecap="round" />
-                  <circle cx="50" cy="50" r="38" fill="none" stroke="#6366f1" strokeWidth="10" strokeDasharray="40 198" strokeDashoffset="-50" strokeLinecap="round" />
-                  <circle cx="50" cy="50" r="38" fill="none" stroke="#f59e0b" strokeWidth="10" strokeDasharray="35 203" strokeDashoffset="-90" strokeLinecap="round" />
-                  <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" strokeWidth="10" strokeDasharray="45 193" strokeDashoffset="-125" strokeLinecap="round" />
-                  <circle cx="50" cy="50" r="38" fill="none" stroke="#f43f5e" strokeWidth="10" strokeDasharray="25 213" strokeDashoffset="-170" strokeLinecap="round" />
-                  <circle cx="50" cy="50" r="38" fill="none" stroke="#a855f7" strokeWidth="10" strokeDasharray="20 218" strokeDashoffset="-195" strokeLinecap="round" />
+                  {donutSegments.length > 0 ? (
+                    donutSegments.map((seg) => (
+                      <circle
+                        key={seg.status}
+                        cx="50"
+                        cy="50"
+                        r="38"
+                        fill="none"
+                        stroke={seg.stroke}
+                        strokeWidth="10"
+                        strokeDasharray={seg.dashArray}
+                        strokeDashoffset={seg.dashOffset}
+                        strokeLinecap="round"
+                      />
+                    ))
+                  ) : (
+                    <circle cx="50" cy="50" r="38" fill="none" stroke="#3b82f6" strokeWidth="10" strokeDasharray="238.8 0" strokeDashoffset="0" strokeLinecap="round" />
+                  )}
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
                   <span className="text-xl font-black text-white leading-none font-mono">
@@ -380,36 +447,36 @@ export default function CaseAllocationPage({
               <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-[11px] text-slate-300 flex-1">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0 shadow-[0_0_6px_rgba(59,130,246,0.5)]" />
-                  <span className="truncate">Assigned ({adminOverview?.cases_by_status?.Assigned || 35})</span>
+                  <span className="truncate">Assigned ({adminOverview?.cases_by_status?.Assigned ?? 0})</span>
                 </div>
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0 shadow-[0_0_6px_rgba(99,102,241,0.5)]" />
-                  <span className="truncate">Contacted ({adminOverview?.cases_by_status?.Contacted || 40})</span>
+                  <span className="truncate">Contacted ({adminOverview?.cases_by_status?.Contacted ?? 0})</span>
                 </div>
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 shadow-[0_0_6px_rgba(245,158,11,0.5)]" />
-                  <span className="truncate">PTP ({adminOverview?.cases_by_status?.["Promise to Pay"] || 22})</span>
+                  <span className="truncate">PTP ({adminOverview?.cases_by_status?.["Promise to Pay"] ?? 0})</span>
                 </div>
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
-                  <span className="truncate">Paid ({adminOverview?.cases_by_status?.["Fully Paid"] || 28})</span>
+                  <span className="truncate">Paid ({adminOverview?.cases_by_status?.["Fully Paid"] ?? 0})</span>
                 </div>
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0 shadow-[0_0_6px_rgba(244,63,94,0.5)]" />
-                  <span className="truncate">Disputed ({adminOverview?.cases_by_status?.Disputed || 12})</span>
+                  <span className="truncate">Disputed ({adminOverview?.cases_by_status?.Disputed ?? 0})</span>
                 </div>
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0 shadow-[0_0_6px_rgba(168,85,247,0.5)]" />
-                  <span className="truncate">Field ({adminOverview?.cases_by_status?.["Field Visit"] || 15})</span>
+                  <span className="truncate">Field ({adminOverview?.cases_by_status?.["Field Visit"] ?? 0})</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="pt-2.5 mt-auto border-t border-slate-800 text-[11px] text-slate-400 flex justify-between gap-1">
-            <span>New: <strong className="text-cyan-400 font-mono">{adminOverview?.cases_by_status?.New || 18}</strong></span>
-            <span>Partial: <strong className="text-orange-400 font-mono">{adminOverview?.cases_by_status?.["Partially Paid"] || 16}</strong></span>
-            <span>Unreachable: <strong className="text-slate-400 font-mono">{adminOverview?.cases_by_status?.["Not Reachable"] || 14}</strong></span>
+            <span>New: <strong className="text-cyan-400 font-mono">{adminOverview?.cases_by_status?.New ?? 0}</strong></span>
+            <span>Partial: <strong className="text-orange-400 font-mono">{adminOverview?.cases_by_status?.["Partially Paid"] ?? 0}</strong></span>
+            <span>Unreachable: <strong className="text-slate-400 font-mono">{adminOverview?.cases_by_status?.["Not Reachable"] ?? 0}</strong></span>
           </div>
         </div>
 
@@ -437,19 +504,19 @@ export default function CaseAllocationPage({
                 <span className="text-[10px] text-rose-300 font-semibold block truncate">
                   Critical
                 </span>
-                <span className="font-black text-xl font-mono text-rose-400 mt-0.5">10</span>
+                <span className="font-black text-xl font-mono text-rose-400 mt-0.5">{criticalCount}</span>
               </div>
               <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/25 text-center flex flex-col justify-center shadow-sm">
                 <span className="text-[10px] text-indigo-300 font-semibold block truncate">
                   Follow-ups
                 </span>
-                <span className="font-black text-xl font-mono text-indigo-400 mt-0.5">18</span>
+                <span className="font-black text-xl font-mono text-indigo-400 mt-0.5">{followUpsDueCount}</span>
               </div>
               <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-center flex flex-col justify-center shadow-sm">
                 <span className="text-[10px] text-amber-300 font-semibold block truncate">
                   Disputes
                 </span>
-                <span className="font-black text-xl font-mono text-amber-400 mt-0.5">4</span>
+                <span className="font-black text-xl font-mono text-amber-400 mt-0.5">{disputesTotal}</span>
               </div>
             </div>
           </div>
@@ -458,16 +525,16 @@ export default function CaseAllocationPage({
             <div className="flex justify-between items-center text-slate-400">
               <span>Follow-ups due today:</span>
               <span className="text-white font-mono font-bold bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-700/60">
-                18 cases
+                {followUpsDueCount} cases
               </span>
             </div>
             <div>
               <div className="flex justify-between items-center text-slate-400 mb-1">
                 <span>Resolution SLA target:</span>
-                <span className="text-emerald-400 font-mono font-bold">94.2% on-time</span>
+                <span className="text-emerald-400 font-mono font-bold">{recoveryRate > 0 ? `${recoveryRate}%` : "94.2% on-time"}</span>
               </div>
               <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full" style={{ width: "94.2%" }} />
+                <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full" style={{ width: `${recoveryRate > 0 ? Math.min(100, recoveryRate) : 94.2}%` }} />
               </div>
             </div>
           </div>
@@ -494,24 +561,23 @@ export default function CaseAllocationPage({
 
             {/* Specialist Avatars */}
             <div className="grid grid-cols-4 gap-2 py-1 my-1">
-              {(employeesList.length > 0 ? employeesList.slice(0, 4) : [
-                { id: "emp_1", fullName: "Rahul Sharma", active_cases_count: 35 },
-                { id: "emp_2", fullName: "Vikram Singh", active_cases_count: 42 },
-                { id: "emp_3", fullName: "Priya Patel", active_cases_count: 28 },
-                { id: "emp_4", fullName: "Aarav Mehta", active_cases_count: 31 }
+              {(displaySpecialists.length > 0 ? displaySpecialists : [
+                { id: "emp_1", fullName: "Rahul Sharma", active_cases_count: 0 },
+                { id: "emp_2", fullName: "Priya Patel", active_cases_count: 0 },
+                { id: "emp_3", fullName: "Vikram Singh", active_cases_count: 0 }
               ]).map((emp) => (
                 <div
                   key={emp.employeeId || emp.id}
                   className="flex flex-col items-center text-center p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-indigo-500/50 hover:bg-slate-800/90 transition-all group/emp"
                 >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-[11px] flex items-center justify-center border border-slate-700 shadow-md group-hover/emp:scale-105 transition-transform">
-                    {emp.fullName?.slice(0, 2).toUpperCase() || "OP"}
+                    {emp.fullName?.slice(0, 2).toUpperCase() || "SP"}
                   </div>
-                  <span className="text-[10px] text-slate-200 font-medium truncate w-full mt-1.5">
+                  <span className="text-[10px] text-slate-200 font-medium truncate w-full mt-1.5" title={emp.fullName}>
                     {emp.fullName?.split(" ")[0]}
                   </span>
                   <span className="text-[9px] text-indigo-400 font-mono font-semibold">
-                    {emp.active_cases_count || 35} accts
+                    {emp.active_cases_count ?? 0} accts
                   </span>
                 </div>
               ))}
@@ -521,15 +587,15 @@ export default function CaseAllocationPage({
           <div className="pt-3 mt-auto border-t border-slate-800 space-y-1.5 text-xs">
             <div className="flex justify-between items-center text-slate-400">
               <span>Avg Handling Time:</span>
-              <span className="text-indigo-400 font-mono font-semibold">4m 52s</span>
+              <span className="text-indigo-400 font-mono font-semibold">{avgHandlingTime}</span>
             </div>
             <div>
               <div className="flex justify-between items-center text-slate-400 mb-1">
                 <span>Team Connection Rate:</span>
-                <span className="text-emerald-400 font-mono font-bold">78.4%</span>
+                <span className="text-emerald-400 font-mono font-bold">{connectionRate}%</span>
               </div>
               <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" style={{ width: "78.4%" }} />
+                <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" style={{ width: `${Math.min(100, Math.max(0, connectionRate))}%` }} />
               </div>
             </div>
           </div>

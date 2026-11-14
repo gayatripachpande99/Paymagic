@@ -173,6 +173,20 @@ export const createSeedData = async () => {
     "Closed"
   ];
 
+  // 200 cases distributed realistically across lifecycle statuses
+  const statusDistribution = [
+    ...Array(8).fill("New"),
+    ...Array(38).fill("Assigned"),
+    ...Array(44).fill("Contacted"),
+    ...Array(26).fill("Promise to Pay"),
+    ...Array(20).fill("Partially Paid"),
+    ...Array(24).fill("Fully Paid"),
+    ...Array(12).fill("Disputed"),
+    ...Array(10).fill("Not Reachable"),
+    ...Array(14).fill("Field Visit"),
+    ...Array(4).fill("Closed")
+  ];
+
   const firstNames = ["Amit", "Rohit", "Sneha", "Kavita", "Sachin", "Deepak", "Anjali", "Suresh", "Pooja", "Manoj", "Kiran", "Gaurav", "Nisha", "Sunil", "Rajesh", "Prakash", "Anita", "Vinay", "Meera", "Santosh"];
   const lastNames = ["Deshmukh", "Kulkarni", "Patil", "Jadhav", "More", "Shinde", "Pawar", "Bhosale", "Chavan", "Gaekwad", "Kadam", "Sawant", "Gokhale", "Thorat", "Salunkhe", "Wagh", "Kamble", "Tambe", "Gupte", "Bapat"];
 
@@ -207,7 +221,7 @@ export const createSeedData = async () => {
       credit_score: 550 + (i % 230)
     });
 
-    const status = statuses[i % statuses.length];
+    const status = statusDistribution[i - 1] || "Contacted";
     const principal = Math.round((25000 + (i * 2450)) / 100) * 100;
     const recovered = status === "Fully Paid" ? principal : status === "Partially Paid" ? Math.round(principal * 0.4) : (status === "Promise to Pay" && i % 3 === 0 ? 5000 : 0);
     const outstanding = Math.max(0, principal - recovered);
@@ -216,10 +230,12 @@ export const createSeedData = async () => {
     if (status !== "New") {
       if (status === "Field Visit") {
         assignedEmp = "usr_field_1";
-      } else if (i % 2 === 0) {
+      } else if (i % 3 === 0) {
         assignedEmp = "usr_caller_1";
-      } else {
+      } else if (i % 3 === 1) {
         assignedEmp = "usr_caller_2";
+      } else {
+        assignedEmp = "emp-1";
       }
     }
 

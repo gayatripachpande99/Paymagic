@@ -1,5 +1,6 @@
 import { users, attendanceRecords, uploadedRecords, recordColumns, setRecordColumns } from "../data/store.js";
 import { Record, RecordMeta } from "../models/Record.js";
+import { memoryStore } from "../config/db.js";
 
 // @desc    Get live admin dashboard attendance summary & logs
 // @route   GET /api/admin/attendance/today
@@ -29,12 +30,36 @@ export const getAdminTodayAttendance = (req, res) => {
   });
 };
 
-// @desc    Get all employees list with credentials
+// @desc    Get all employees list with credentials and live assigned case counts
 // @route   GET /api/admin/employees
 export const getEmployees = (req, res) => {
+  const employeesWithCaseCounts = users.map((u) => {
+    // Map user against memoryStore.users to find any system aliases
+    const memUser = memoryStore.users.find(
+      (mu) =>
+        mu.id === u.id ||
+        mu.employee_id === u.employeeId ||
+        (mu.full_name && u.fullName && mu.full_name.trim().toLowerCase() === u.fullName.trim().toLowerCase())
+    );
+
+    const validIds = new Set([u.id, u.employeeId]);
+    if (memUser) {
+      if (memUser.id) validIds.add(memUser.id);
+      if (memUser.employee_id) validIds.add(memUser.employee_id);
+    }
+
+    const assignedCount = memoryStore.loan_cases.filter(
+      (c) => validIds.has(c.assigned_employee_id)
+    ).length;
+
+    return {
+      ...u,
+      active_cases_count: assignedCount
+    };
+  });
   return res.status(200).json({
     success: true,
-    employees: users
+    employees: employeesWithCaseCounts
   });
 };
 

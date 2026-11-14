@@ -476,6 +476,17 @@ export const getAdminOverview = async (req, res) => {
       ? Math.round((answeredCalls / totalCalls) * 10000) / 100
       : 0;
 
+    // Arrears & priority breakdown
+    const criticalOverdue = allCases
+      .filter(c => c.priority === "CRITICAL" || c.dpd >= 90)
+      .reduce((sum, c) => sum + (c.outstanding_amount || 0), 0);
+    const standardDue = Math.max(0, totalOutstanding - criticalOverdue);
+    const criticalCasesCount = allCases.filter(c => c.priority === "CRITICAL" || c.dpd >= 90).length;
+    const followUpsDueToday = allCases.filter(c => c.follow_up_date && (c.follow_up_date === todayStr || new Date(c.follow_up_date) <= new Date())).length;
+    const disputesCount = allCases.filter(c => c.status === "Disputed").length;
+    const avgHandlingTimeSeconds = totalCalls > 0 ? Math.round(totalTalkTime / totalCalls) : 0;
+    const avgHandlingTimeFormatted = formatDuration(avgHandlingTimeSeconds);
+
     // Recent status history enriched for audit feed
     const recentStatusHistory = memoryStore.case_status_history.slice(0, 15).map(h => {
       const targetCase = memoryStore.loan_cases.find(c => c.id === h.case_id);
@@ -501,11 +512,18 @@ export const getAdminOverview = async (req, res) => {
           total_principal: totalPrincipal,
           total_outstanding: totalOutstanding,
           total_recovered: totalRecovered,
+          standard_due: standardDue,
+          critical_overdue: criticalOverdue,
+          critical_cases_count: criticalCasesCount,
+          follow_ups_due_today: followUpsDueToday,
+          disputes_count: disputesCount,
           overall_recovery_rate: overallRecoveryRate,
           total_calls: totalCalls,
           answered_calls: answeredCalls,
           unanswered_calls: unansweredCalls,
           call_connection_rate: callConnectionRate,
+          avg_handling_time_seconds: avgHandlingTimeSeconds,
+          avg_handling_time_formatted: avgHandlingTimeFormatted,
           total_talk_time_seconds: totalTalkTime,
           total_talk_time_formatted: formatDuration(totalTalkTime),
           open_complaints: openComplaints,
