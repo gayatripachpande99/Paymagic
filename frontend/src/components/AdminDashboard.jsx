@@ -2,9 +2,41 @@ import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import api from "../services/api";
 import WebPhoneDialer from "./portal/WebPhoneDialer";
+import CaseAllocationPage from "../panels/admin/pages/CaseAllocationPage";
+import BulkAllocateModal from "./portal/BulkAllocateModal";
+import TransferCasesModal from "./portal/TransferCasesModal";
+import SetTargetModal from "./portal/SetTargetModal";
+import CaseDetailModal from "./portal/CaseDetailModal";
+import PaymentModal from "./portal/PaymentModal";
+
+const CASE_STATUSES = [
+  "New",
+  "Assigned",
+  "Contacted",
+  "Promise to Pay",
+  "Partially Paid",
+  "Fully Paid",
+  "Disputed",
+  "Not Reachable",
+  "Field Visit",
+  "Closed"
+];
+
+const STATUS_PILL_CLASSES = {
+  New: "bg-slate-500/10 text-slate-400 border border-slate-500/20",
+  Assigned: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+  Contacted: "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20",
+  "Promise to Pay": "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+  "Partially Paid": "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
+  "Fully Paid": "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  Disputed: "bg-rose-500/10 text-rose-400 border border-rose-500/20",
+  "Not Reachable": "bg-slate-500/10 text-slate-400 border border-slate-500/20",
+  "Field Visit": "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+  Closed: "bg-green-500/10 text-green-400 border border-green-500/20"
+};
 
 export default function AdminDashboard({ user, onLogout, onBackToHome }) {
-  const [activeTab, setActiveTab] = useState("attendance");
+  const [activeTab, setActiveTab] = useState("cases");
   const [attendanceData, setAttendanceData] = useState([]);
   const [employeesList, setEmployeesList] = useState([]);
   const [summary, setSummary] = useState({
@@ -22,6 +54,24 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [deptFilter, setDeptFilter] = useState("ALL");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // ── Module A: Case Allocation & Management State ──
+  const [adminOverview, setAdminOverview] = useState(null);
+  const [casesList, setCasesList] = useState([]);
+  const [casesLoading, setCasesLoading] = useState(false);
+  const [casePage, setCasePage] = useState(1);
+  const [casesPagination, setCasesPagination] = useState({ page: 1, limit: 15, totalCount: 0, totalPages: 1 });
+  const [caseFilterStatus, setCaseFilterStatus] = useState("ALL");
+  const [caseSearchTerm, setCaseSearchTerm] = useState("");
+
+  // Modals for Module A
+  const [showBulkAllocateModal, setShowBulkAllocateModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showTargetModal, setShowTargetModal] = useState(false);
+  const [showCaseDetailModal, setShowCaseDetailModal] = useState(false);
+  const [selectedCaseId, setSelectedCaseId] = useState(null);
+  const [selectedPaymentCase, setSelectedPaymentCase] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
 
   // Show/Hide password states
@@ -118,9 +168,122 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
     }
   };
 
+  const loadAdminOverview = async () => {
+    try {
+      const res = await api.get("/dashboard/admin-overview");
+      if (res && res.success) {
+        setAdminOverview(res.data);
+      }
+    } catch (err) {
+      console.error("loadAdminOverview Error:", err);
+    }
+  };
+
+  const loadCases = async (page = casePage) => {
+    try {
+      setCasesLoading(true);
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: "15"
+      });
+      if (caseFilterStatus && caseFilterStatus !== "ALL") {
+        params.append("status", caseFilterStatus);
+      }
+      if (caseSearchTerm) {
+        params.append("search", caseSearchTerm);
+      }
+      const res = await api.get(`/cases?${params.toString()}`);
+      if (res && res.success) {
+        setCasesList(res.data.cases || []);
+        setCasesPagination(res.data.pagination || { page, limit: 15, totalCount: 0, totalPages: 1 });
+        setCasePage(page);
+      }
+    } catch (err) {
+      console.error("loadCases Error:", err);
+    } finally {
+      setCasesLoading(false);
+    }
+  };
+
+  const handleQuickStatusChange = async (caseId, newStatus, remarks = "") => {
+    try {
+      const res = await api.patch(`/cases/${caseId}/status`, {
+        newStatus,
+        remarks: remarks || `Status transitioned to ${newStatus}`
+      });
+      if (res && res.success) {
+        setSuccessMsg(`Status updated to '${newStatus}'.`);
+        loadCases(casePage);
+        loadAdminOverview();
+      }
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to update status.");
+    }
+  };
+
+  const handleInlineAssign = async (caseId, employeeId) => {
+    if (!employeeId) return;
+    try {
+      const res = await api.post(`/cases/assign`, {
+        caseId,
+        employeeId
+      });
+      if (res && res.success) {
+        setSuccessMsg("Case assigned successfully.");
+        loadCases(casePage);
+        loadAdminOverview();
+      }
+    } catch (err) {
+      setErrorMsg(err.message || "Failed to assign case.");
+    }
+  };
+
+  const handleExportCasesCSV = async () => {
+    try {
+      const res = await api.get("/cases?limit=1000");
+      if (!res?.data?.cases || res.data.cases.length === 0) {
+        setErrorMsg("No cases available to export.");
+        return;
+      }
+      const exportData = res.data.cases.map((c) => ({
+        "Case Number": c.case_number,
+        "Customer Name": c.customer_name,
+        "Phone": c.phone_masked || c.phone,
+        "Loan Account": c.loan_account_no,
+        "Lender": c.lender_name,
+        "Principal Amount": c.principal_amount,
+        "Outstanding Amount": c.outstanding_amount,
+        "Priority": c.priority,
+        "Status": c.status,
+        "DPD": c.dpd,
+        "Follow-up Date": c.follow_up_date || "N/A"
+      }));
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const csv = XLSX.utils.sheet_to_csv(ws);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `paymagic_cases_export_${new Date().toISOString().split("T")[0]}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setErrorMsg("Failed to export cases.");
+    }
+  };
+
   useEffect(() => {
     loadAdminAttendance();
+    loadAdminOverview();
+    loadCases(1);
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "cases") {
+      loadCases(1);
+      loadAdminOverview();
+    }
+  }, [caseFilterStatus, activeTab]);
 
   const handleAssignRangeSubmit = async (e) => {
     e.preventDefault();
@@ -474,6 +637,18 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
         <nav className="portal-nav">
           <button
+            className={`portal-nav-item ${activeTab === "cases" ? "active" : ""}`}
+            onClick={() => { setActiveTab("cases"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+              <path d="M9 14l2 2 4-4" />
+            </svg>
+            <span>Recovery Case Allocation</span>
+          </button>
+
+          <button
             className={`portal-nav-item ${activeTab === "attendance" ? "active" : ""}`}
             onClick={() => { setActiveTab("attendance"); setErrorMsg(""); setMobileSidebarOpen(false); }}
           >
@@ -563,26 +738,57 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             </button>
             <div className="topbar-welcome">
               <h2>
-                Admin Command Center · <span className="gradient-text">Staff &amp; Credentials</span>
+                Admin Command Center · <span className="gradient-text">
+                  {activeTab === "cases" && "Recovery Case Management & Allocation"}
+                  {activeTab === "attendance" && "Live Staff Attendance Roster"}
+                  {activeTab === "employees" && "Staff Directory & Security Passwords"}
+                  {activeTab === "records" && "Customer Records & File Allocation"}
+                  {activeTab === "leave-approvals" && "HR Leave Approval Desk"}
+                </span>
               </h2>
               <p className="topbar-subtitle">
-                Live Employee Operations, Biometric Attendance &amp; Credential Management
+                {activeTab === "cases" && "Module A: Customer Loan Data Import, Rule Allocation, Case Transfer, Targets & Status Audits"}
+                {activeTab === "attendance" && "Live Employee Operations, Biometric Attendance & Shift Management"}
+                {activeTab === "employees" && "Staff Directory, Onboarding & Security Credential Management"}
+                {activeTab === "records" && "Dynamic Column Customer Records & Batch Range Allocation"}
+                {activeTab === "leave-approvals" && "HR Pending Employee Leave Desk & Quota Approvals"}
               </p>
             </div>
           </div>
 
-
           <div className="topbar-right">
+            {activeTab === "cases" && (
+              <button
+                className="primary-btn add-emp-btn"
+                onClick={() => setShowBulkAllocateModal(true)}
+              >
+                <span>Rule Allocation</span>
+              </button>
+            )}
+
             {/* Prominent Add Employee Button */}
+            {activeTab !== "cases" && (
+              <button
+                className="primary-btn add-emp-btn"
+                onClick={() => { setShowAddModal(true); setModalError(""); }}
+              >
+                <span>Add New Employee</span>
+              </button>
+            )}
+
             <button
-              className="primary-btn add-emp-btn"
-              onClick={() => { setShowAddModal(true); setModalError(""); }}
+              className="refresh-btn"
+              onClick={() => {
+                if (activeTab === "cases") {
+                  loadCases(casePage);
+                  loadAdminOverview();
+                } else {
+                  loadAdminAttendance();
+                }
+              }}
+              title="Refresh Live Data"
+              disabled={loading || casesLoading}
             >
-              <span>Add New Employee</span>
-
-            </button>
-
-            <button className="refresh-btn" onClick={loadAdminAttendance} title="Refresh Live Data" disabled={loading}>
               <svg
                 width="16"
                 height="16"
@@ -590,7 +796,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className={loading ? "spin-icon" : ""}
+                className={loading || casesLoading ? "spin-icon" : ""}
               >
                 <path d="M23 4v6h-6" />
                 <path d="M1 20v-6h6" />
@@ -617,6 +823,37 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             </svg>
             <span>{successMsg}</span>
           </div>
+        )}
+
+        {/* ── TAB: MODULE A RECOVERY CASE ALLOCATION ── */}
+        {activeTab === "cases" && (
+          <CaseAllocationPage
+            adminOverview={adminOverview}
+            casesPagination={casesPagination}
+            employeesList={employeesList}
+            fileUploadLoading={fileUploadLoading}
+            setShowBulkAllocateModal={setShowBulkAllocateModal}
+            setShowTransferModal={setShowTransferModal}
+            setShowTargetModal={setShowTargetModal}
+            handleExportCasesCSV={handleExportCasesCSV}
+            caseFilterStatus={caseFilterStatus}
+            setCaseFilterStatus={setCaseFilterStatus}
+            CASE_STATUSES={CASE_STATUSES}
+            STATUS_PILL_CLASSES={STATUS_PILL_CLASSES}
+            caseSearchTerm={caseSearchTerm}
+            setCaseSearchTerm={setCaseSearchTerm}
+            loadCases={loadCases}
+            casesLoading={casesLoading}
+            casesList={casesList}
+            handleQuickStatusChange={handleQuickStatusChange}
+            handleInlineAssign={handleInlineAssign}
+            setSelectedCaseId={setSelectedCaseId}
+            setShowCaseDetailModal={setShowCaseDetailModal}
+            setSelectedPaymentCase={setSelectedPaymentCase}
+            setShowPaymentModal={setShowPaymentModal}
+            casePage={casePage}
+            setCasePage={setCasePage}
+          />
         )}
 
         {/* ── TAB 1: LIVE ATTENDANCE MONITORING ── */}
@@ -1503,6 +1740,78 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
           </div>
         </div>
       )}
+      {/* ── Module A Modals ── */}
+      {showBulkAllocateModal && (
+        <BulkAllocateModal
+          employees={employeesList}
+          isOpen={showBulkAllocateModal}
+          onClose={() => setShowBulkAllocateModal(false)}
+          onSuccess={(msg) => {
+            setSuccessMsg(msg);
+            loadCases(casePage);
+            loadAdminOverview();
+          }}
+        />
+      )}
+
+      {showTransferModal && (
+        <TransferCasesModal
+          employees={employeesList}
+          cases={casesList}
+          isOpen={showTransferModal}
+          onClose={() => setShowTransferModal(false)}
+          onSuccess={(msg) => {
+            setSuccessMsg(msg);
+            loadCases(casePage);
+            loadAdminOverview();
+          }}
+        />
+      )}
+
+      {showTargetModal && (
+        <SetTargetModal
+          employees={employeesList}
+          cases={casesList}
+          isOpen={showTargetModal}
+          onClose={() => setShowTargetModal(false)}
+          onSuccess={(msg) => {
+            setSuccessMsg(msg);
+            loadAdminOverview();
+          }}
+        />
+      )}
+
+      {showCaseDetailModal && selectedCaseId && (
+        <CaseDetailModal
+          caseId={selectedCaseId}
+          isOpen={showCaseDetailModal}
+          onClose={() => {
+            setShowCaseDetailModal(false);
+            setSelectedCaseId(null);
+          }}
+          onUpdate={() => {
+            loadCases(casePage);
+            loadAdminOverview();
+          }}
+        />
+      )}
+
+      {showPaymentModal && selectedPaymentCase && (
+        <PaymentModal
+          loanCase={selectedPaymentCase}
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setSelectedPaymentCase(null);
+          }}
+          onSuccess={(msg) => {
+            setSuccessMsg(msg);
+            loadCases(casePage);
+            loadAdminOverview();
+          }}
+        />
+      )}
+
       {/* Floating WebPhone Dialer Widget */}
       <WebPhoneDialer user={user} />
     </div>

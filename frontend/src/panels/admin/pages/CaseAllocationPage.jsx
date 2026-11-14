@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   FileSpreadsheet,
   Sparkles,
@@ -15,15 +15,19 @@ import {
   Users,
   ShieldCheck,
   TrendingUp,
-  ArrowUpRight
+  ArrowUpRight,
+  FileCheck,
+  X,
+  Loader2
 } from "lucide-react";
+import api from "../../../services/api";
+import ImportLoansModal from "../../../components/portal/ImportLoansModal";
 
 export default function CaseAllocationPage({
   adminOverview,
   casesPagination = { page: 1, limit: 15, totalCount: 0, totalPages: 1 },
   employeesList = [],
   fileUploadLoading = false,
-  handleFileUploadInput,
   setShowBulkAllocateModal,
   setShowTransferModal,
   setShowTargetModal,
@@ -46,13 +50,157 @@ export default function CaseAllocationPage({
   casePage = 1,
   setCasePage
 }) {
+  // Multi-case Checkbox Selection State
+  const [selectedCaseIds, setSelectedCaseIds] = useState([]);
+  const [selectedBulkEmp, setSelectedBulkEmp] = useState("");
+  const [bulkAssignLoading, setBulkAssignLoading] = useState(false);
+  const [actionSuccessMsg, setActionSuccessMsg] = useState("");
+  const [actionErrorMsg, setActionErrorMsg] = useState("");
+
+  // Import Modal State
+  const [showImportModal, setShowImportModal] = useState(false);
+
+  // Mandatory Remarks Modal for Sensitive Statuses
+  const [remarksModalOpen, setRemarksModalOpen] = useState(false);
+  const [pendingStatusCaseId, setPendingStatusCaseId] = useState(null);
+  const [pendingStatusValue, setPendingStatusValue] = useState("");
+  const [statusRemarksInput, setStatusRemarksInput] = useState("");
+
   const totalOutstanding = adminOverview?.summary?.total_outstanding || 36250000;
   const standardDue = Math.round(totalOutstanding * 0.65);
   const criticalOverdue = Math.round(totalOutstanding * 0.35);
   const totalCasesCount = adminOverview?.summary?.total_cases || casesPagination.totalCount || 200;
 
+  // Toggle selection for all visible cases on current page
+  const handleToggleSelectAll = () => {
+    if (selectedCaseIds.length === casesList.length) {
+      setSelectedCaseIds([]);
+    } else {
+      setSelectedCaseIds(casesList.map((c) => c.id));
+    }
+  };
+
+  // Toggle single case selection
+  const handleToggleSelectCase = (caseId) => {
+    setSelectedCaseIds((prev) =>
+      prev.includes(caseId) ? prev.filter((id) => id !== caseId) : [...prev, caseId]
+    );
+  };
+
+  // Execute bulk manual assignment to chosen staff member
+  const handleAssignSelectedCases = async () => {
+    if (!selectedBulkEmp || selectedCaseIds.length === 0) return;
+    try {
+      setBulkAssignLoading(true);
+      setActionErrorMsg("");
+      setActionSuccessMsg("");
+
+      const res = await api.post("/cases/bulk-assign", {
+        mode: "manual",
+        caseIds: selectedCaseIds,
+        employeeId: selectedBulkEmp
+      });
+
+      if (res && res.success) {
+        setActionSuccessMsg(res.message || `Successfully assigned ${selectedCaseIds.length} case(s).`);
+        setSelectedCaseIds([]);
+        setSelectedBulkEmp("");
+        if (loadCases) loadCases(casePage);
+      } else {
+        setActionErrorMsg(res?.message || "Failed to assign selected cases.");
+      }
+    } catch (err) {
+      console.error("Bulk assign selected error:", err);
+      setActionErrorMsg(err.message || "Failed to assign selected cases.");
+    } finally {
+      setBulkAssignLoading(false);
+    }
+  };
+
+  // Intercept sensitive status changes to ensure mandatory remarks
+  const onStatusSelectChange = (caseId, newStatus) => {
+    if (["Disputed", "Closed", "Not Reachable"].includes(newStatus)) {
+      setPendingStatusCaseId(caseId);
+      setPendingStatusValue(newStatus);
+      setStatusRemarksInput("");
+      setRemarksModalOpen(true);
+    } else {
+      handleQuickStatusChange(caseId, newStatus);
+    }
+  };
+
+  const handleConfirmRemarksStatusChange = async (e) => {
+    e.preventDefault();
+    if (!statusRemarksInput.trim()) {
+      setActionErrorMsg("Remarks are required for this status transition.");
+      return;
+    }
+
+    try {
+      if (pendingStatusCaseId && pendingStatusValue) {
+        await handleQuickStatusChange(pendingStatusCaseId, pendingStatusValue, statusRemarksInput.trim());
+        setRemarksModalOpen(false);
+        setPendingStatusCaseId(null);
+        setPendingStatusValue("");
+        setStatusRemarksInput("");
+      }
+    } catch (err) {
+      setActionErrorMsg(err.message || "Status change failed.");
+    }
+  };
+
+  // Download official template directly
+  const handleDownloadTemplate = (format = "xlsx") => {
+    const token = localStorage.getItem("paymagic_token");
+    const downloadUrl = `/api/upload/template?format=${format}`;
+    fetch(downloadUrl, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Failed to download template");
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `PayMagic_Loan_Import_Template.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch((err) => {
+        console.error("Template download error:", err);
+      });
+  };
+
   return (
     <div className="portal-tab-content case-allocation-page relative w-full space-y-6 pb-12">
+      
+      {/* ── Action Notifications ── */}
+      {actionSuccessMsg && (
+        <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between gap-2 shadow-lg">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{actionSuccessMsg}</span>
+          </div>
+          <button onClick={() => setActionSuccessMsg("")} className="text-emerald-400 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {actionErrorMsg && (
+        <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between gap-2 shadow-lg">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>{actionErrorMsg}</span>
+          </div>
+          <button onClick={() => setActionErrorMsg("")} className="text-rose-400 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* ══════════════════════════════════════════════════════════════════
           1. TOP SUMMARY DASHBOARD (4-CARD BALANCED ENTERPRISE COMPOSITION)
       ══════════════════════════════════════════════════════════════════ */}
@@ -248,23 +396,23 @@ export default function CaseAllocationPage({
             </div>
           </div>
 
-          <div className="pt-3 mt-auto border-t border-slate-800 text-[11px] text-slate-400 flex justify-between items-center gap-2">
-            <span className="truncate">Balanced workload active</span>
-            <button
-              type="button"
-              onClick={() => setShowTransferModal(true)}
-              className="text-indigo-400 hover:text-indigo-300 font-semibold shrink-0 py-0.5"
-            >
-              Rebalance &rarr;
-            </button>
+          <div className="pt-3 mt-auto border-t border-slate-800 space-y-1.5 text-xs">
+            <div className="flex justify-between items-center text-slate-400">
+              <span>Avg Handling Time:</span>
+              <span className="text-indigo-400 font-mono font-semibold">4m 52s</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-400">
+              <span>Team Connection Rate:</span>
+              <span className="text-emerald-400 font-mono font-bold">78.4%</span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════
-          2. ADMIN OPERATIONS TOOLBAR (MODULE A: 6 CORE CONTROLS)
+          2. ADMIN OPERATIONS TOOLBAR (Excel Upload, Rule Allocation, Transfer, Target, Export)
       ══════════════════════════════════════════════════════════════════ */}
-      <div className="relative w-full p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800/90 backdrop-blur-md shadow-xl my-4">
+      <div className="portal-card operations-toolbar-card w-full rounded-2xl bg-slate-900/90 border border-slate-800/90 backdrop-blur-md shadow-xl p-5 sm:p-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
@@ -276,25 +424,34 @@ export default function CaseAllocationPage({
               </h4>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
-              Excel/CSV bulk upload, rule-based portfolio allocation, case transfers, target tracking &amp; atomic status audits.
+              Excel/CSV bulk upload with schema validation, rule-based portfolio allocation, case transfers, target tracking &amp; atomic status audits.
             </p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-wrap items-center gap-2.5 sm:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
-            {/* 1. Upload Loan Data (Full width on mobile grid, auto on desktop) */}
-            <label className="primary-btn cursor-pointer inline-flex items-center justify-center gap-2 text-xs py-2.5 px-4 col-span-2 sm:col-span-1 md:flex-initial min-h-[42px] bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold shadow-md shadow-blue-600/25 transition active:scale-98">
+            
+            {/* 1. Upload Loan Data (Opens Pre-Validation Modal) */}
+            <button
+              type="button"
+              onClick={() => setShowImportModal(true)}
+              className="primary-btn cursor-pointer inline-flex items-center justify-center gap-2 text-xs py-2.5 px-4 col-span-2 sm:col-span-1 md:flex-initial min-h-[42px] bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold shadow-md shadow-blue-600/25 transition active:scale-98"
+            >
               <FileSpreadsheet className="w-4 h-4 shrink-0" />
-              <span className="font-semibold">{fileUploadLoading ? "Uploading..." : "Upload Excel/CSV"}</span>
-              <input
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                onChange={handleFileUploadInput}
-                disabled={fileUploadLoading}
-                style={{ display: "none" }}
-              />
-            </label>
+              <span className="font-semibold">Import Customer Loans</span>
+            </button>
 
-            {/* 2. Rule-Based Allocation */}
+            {/* 2. Download Template (.xlsx) */}
+            <button
+              type="button"
+              onClick={() => handleDownloadTemplate("xlsx")}
+              className="secondary-btn inline-flex items-center justify-center gap-2 text-xs py-2.5 px-3 bg-slate-800/90 hover:bg-slate-700/90 text-slate-300 border border-slate-700/80 min-h-[42px] rounded-xl font-semibold transition active:scale-98 cursor-pointer"
+              title="Download official loan import template"
+            >
+              <Download className="w-4 h-4 text-slate-400 shrink-0" />
+              <span>Template</span>
+            </button>
+
+            {/* 3. Rule-Based Allocation */}
             <button
               type="button"
               onClick={() => setShowBulkAllocateModal(true)}
@@ -304,7 +461,7 @@ export default function CaseAllocationPage({
               <span>Rule Allocation</span>
             </button>
 
-            {/* 3. Transfer Cases */}
+            {/* 4. Transfer Cases */}
             <button
               type="button"
               onClick={() => setShowTransferModal(true)}
@@ -314,7 +471,7 @@ export default function CaseAllocationPage({
               <span>Transfer Cases</span>
             </button>
 
-            {/* 4. Set Target */}
+            {/* 5. Set Target */}
             <button
               type="button"
               onClick={() => setShowTargetModal(true)}
@@ -324,7 +481,7 @@ export default function CaseAllocationPage({
               <span>Set Target</span>
             </button>
 
-            {/* 5. Export Cases */}
+            {/* 6. Export Cases */}
             <button
               type="button"
               onClick={handleExportCasesCSV}
@@ -434,6 +591,15 @@ export default function CaseAllocationPage({
               <table className="portal-table min-w-[850px] w-full text-left">
                 <thead>
                   <tr className="bg-slate-950/70 border-b border-slate-800/80">
+                    <th className="py-3.5 px-3 text-center w-10">
+                      <input
+                        type="checkbox"
+                        checked={casesList.length > 0 && selectedCaseIds.length === casesList.length}
+                        onChange={handleToggleSelectAll}
+                        className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        title="Select All on page"
+                      />
+                    </th>
                     <th className="py-3.5 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                       Borrower Details
                     </th>
@@ -460,25 +626,41 @@ export default function CaseAllocationPage({
                 <tbody className="divide-y divide-slate-800/60">
                   {casesLoading ? (
                     <tr>
-                      <td colSpan="7" style={{ textAlign: "center", padding: "36px" }}>
+                      <td colSpan="8" style={{ textAlign: "center", padding: "36px" }}>
                         Loading recovery accounts...
                       </td>
                     </tr>
                   ) : casesList.length === 0 ? (
                     <tr>
-                      <td colSpan="7" style={{ textAlign: "center", padding: "36px", color: "#94a3b8" }}>
+                      <td colSpan="8" style={{ textAlign: "center", padding: "36px", color: "#94a3b8" }}>
                         No matching cases found for criteria.
                       </td>
                     </tr>
                   ) : (
                     casesList.map((item) => (
-                      <tr key={item.id} className="hover:bg-slate-800/40 transition-colors">
+                      <tr
+                        key={item.id}
+                        className={`hover:bg-slate-800/40 transition-colors ${
+                          selectedCaseIds.includes(item.id) ? "bg-indigo-950/30" : ""
+                        }`}
+                      >
+                        <td className="py-3.5 px-3 text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedCaseIds.includes(item.id)}
+                            onChange={() => handleToggleSelectCase(item.id)}
+                            className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          />
+                        </td>
                         <td className="py-3.5 px-4">
                           <div className="font-bold text-white text-xs truncate max-w-[200px]">
                             {item.customer_name || "Borrower"}
                           </div>
                           <span className="text-[11px] text-slate-400 font-mono mt-0.5 block">
                             {item.phone_masked || item.phone || "+91 98*** 12345"}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-mono block">
+                            {item.loan_account_no} &bull; {item.lender_name}
                           </span>
                         </td>
                         <td className="py-3.5 px-4 font-mono text-amber-400 font-bold text-xs whitespace-nowrap">
@@ -497,7 +679,7 @@ export default function CaseAllocationPage({
                         <td className="py-3.5 px-4 whitespace-nowrap">
                           <select
                             value={item.status}
-                            onChange={(e) => handleQuickStatusChange(item.id, e.target.value)}
+                            onChange={(e) => onStatusSelectChange(item.id, e.target.value)}
                             className={`text-[11px] font-semibold px-2.5 py-1.5 min-h-[34px] rounded-lg cursor-pointer border shadow-sm transition-all focus:ring-1 focus:ring-indigo-500 ${
                               STATUS_PILL_CLASSES[item.status] || "bg-slate-800 text-slate-300 border-slate-700"
                             }`}
@@ -570,15 +752,31 @@ export default function CaseAllocationPage({
                 </div>
               ) : (
                 casesList.map((item) => (
-                  <div key={item.id} className="p-4 sm:p-5 space-y-3 bg-slate-900/40 hover:bg-slate-800/30 transition">
-                    {/* Top Row: Borrower Info & Priority Amount */}
+                  <div
+                    key={item.id}
+                    className={`p-4 sm:p-5 space-y-3 transition ${
+                      selectedCaseIds.includes(item.id) ? "bg-indigo-950/40" : "bg-slate-900/40 hover:bg-slate-800/30"
+                    }`}
+                  >
+                    {/* Top Row: Checkbox, Borrower Info & Priority Amount */}
                     <div className="flex justify-between items-start gap-2.5">
-                      <div className="min-w-0 flex-1">
-                        <div className="font-bold text-white text-xs truncate">
-                          {item.customer_name || "Borrower"}
-                        </div>
-                        <div className="text-[11px] text-slate-400 font-mono mt-0.5">
-                          {item.phone_masked || item.phone || "+91 98*** 12345"}
+                      <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                        <input
+                          type="checkbox"
+                          checked={selectedCaseIds.includes(item.id)}
+                          onChange={() => handleToggleSelectCase(item.id)}
+                          className="mt-1 w-4 h-4 rounded border-slate-700 bg-slate-900 text-blue-600 cursor-pointer"
+                        />
+                        <div className="min-w-0">
+                          <div className="font-bold text-white text-xs truncate">
+                            {item.customer_name || "Borrower"}
+                          </div>
+                          <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                            {item.phone_masked || item.phone || "+91 98*** 12345"}
+                          </div>
+                          <div className="text-[10px] text-slate-500 font-mono">
+                            {item.loan_account_no}
+                          </div>
                         </div>
                       </div>
                       <div className="text-right shrink-0">
@@ -600,7 +798,7 @@ export default function CaseAllocationPage({
                       <div>
                         <select
                           value={item.status}
-                          onChange={(e) => handleQuickStatusChange(item.id, e.target.value)}
+                          onChange={(e) => onStatusSelectChange(item.id, e.target.value)}
                           className={`text-[11px] font-semibold px-2.5 py-1.5 min-h-[34px] rounded-lg cursor-pointer border ${
                             STATUS_PILL_CLASSES[item.status] || "bg-slate-800 text-slate-300 border-slate-700"
                           }`}
@@ -731,52 +929,7 @@ export default function CaseAllocationPage({
 
             {/* Activity Feed List */}
             <div className="space-y-3 max-h-[500px] sm:max-h-[560px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-700">
-              {(adminOverview?.recent_status_history || [
-                {
-                  id: "csh_01",
-                  case_number: "LON-864812",
-                  customer_name: "Wandy Griffin",
-                  employee_name: "Onkar Holkar",
-                  employee_id: "PM-SADM-0001",
-                  previous_status: "Contacted",
-                  new_status: "Promise to Pay",
-                  remarks: "Customer scheduled a payment extension of ₹15,000 for Friday",
-                  created_at: new Date(Date.now() - 10 * 60000).toISOString()
-                },
-                {
-                  id: "csh_02",
-                  case_number: "LON-864812",
-                  customer_name: "Jeremy Wilson",
-                  employee_name: "Bhushan Gaikwad",
-                  employee_id: "PM-ADM-0001",
-                  previous_status: "New",
-                  new_status: "Assigned",
-                  remarks: "Assigned to Rahul Sharma based on high debt prioritization",
-                  created_at: new Date(Date.now() - 25 * 60000).toISOString()
-                },
-                {
-                  id: "csh_03",
-                  case_number: "LON-771920",
-                  customer_name: "Paul Smith",
-                  employee_name: "Rahul Sharma",
-                  employee_id: "PM-EMP-0001",
-                  previous_status: "Promise to Pay",
-                  new_status: "Partially Paid",
-                  remarks: "Received online installment payment of ₹12,000 via UPI",
-                  created_at: new Date(Date.now() - 65 * 60000).toISOString()
-                },
-                {
-                  id: "csh_04",
-                  case_number: "LON-552011",
-                  customer_name: "Guy Hawkins",
-                  employee_name: "Amit Verma",
-                  employee_id: "PM-CLR-0001",
-                  previous_status: "Disputed",
-                  new_status: "Contacted",
-                  remarks: "Supervisor reviewed dispute statement; customer verified account",
-                  created_at: new Date(Date.now() - 120 * 60000).toISOString()
-                }
-              ]).map((act, idx) => (
+              {(adminOverview?.recent_status_history || []).map((act, idx) => (
                 <div
                   key={act.id || idx}
                   className="p-3.5 sm:p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs space-y-2 transition hover:border-slate-500/80 shadow-sm"
@@ -829,6 +982,117 @@ export default function CaseAllocationPage({
           </div>
         </div>
       </div>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          6. FLOATING BATCH SELECTION ACTION BAR (when cases are selected)
+      ══════════════════════════════════════════════════════════════════ */}
+      {selectedCaseIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 w-11/12 max-w-2xl p-4 rounded-2xl bg-slate-900/95 border border-indigo-500/50 backdrop-blur-md shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-white animate-in slide-in-from-bottom duration-200">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <span className="font-bold text-xs sm:text-sm">
+              {selectedCaseIds.length} Case{selectedCaseIds.length > 1 ? "s" : ""} Selected
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <select
+              value={selectedBulkEmp}
+              onChange={(e) => setSelectedBulkEmp(e.target.value)}
+              className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
+            >
+              <option value="">Assign to Specialist...</option>
+              {employeesList.map((emp) => (
+                <option key={emp.employeeId || emp.id} value={emp.employeeId || emp.id}>
+                  {emp.fullName || emp.name} ({emp.employeeId || emp.id})
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={handleAssignSelectedCases}
+              disabled={!selectedBulkEmp || bulkAssignLoading}
+              className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md transition disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+            >
+              {bulkAssignLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Users className="w-3.5 h-3.5" />}
+              <span>Assign</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedCaseIds([])}
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs transition cursor-pointer"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Import Customer Loans Modal ── */}
+      <ImportLoansModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onSuccess={(msg) => {
+          setActionSuccessMsg(msg);
+          if (loadCases) loadCases(1);
+        }}
+      />
+
+      {/* ── Mandatory Remarks Modal for Status Change ── */}
+      {remarksModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl p-5 sm:p-6 text-slate-100 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2 text-amber-400">
+                <AlertTriangle className="w-5 h-5" />
+                <h3 className="font-bold text-sm sm:text-base">Mandatory Status Remarks</h3>
+              </div>
+              <button onClick={() => setRemarksModalOpen(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400">
+              Per regulatory compliance, transitioning to <strong className="text-white">"{pendingStatusValue}"</strong> requires recorded remarks for audit history.
+            </p>
+
+            <form onSubmit={handleConfirmRemarksStatusChange} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Reason / Remarks <span className="text-rose-400">*</span>
+                </label>
+                <textarea
+                  rows="3"
+                  required
+                  placeholder="e.g. Borrower verified, dispute details logged..."
+                  value={statusRemarksInput}
+                  onChange={(e) => setStatusRemarksInput(e.target.value)}
+                  className="w-full p-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setRemarksModalOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-xl hover:bg-slate-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!statusRemarksInput.trim()}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-xl disabled:opacity-50"
+                >
+                  Confirm Transition
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

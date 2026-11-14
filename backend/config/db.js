@@ -144,7 +144,8 @@ export const updateCaseStatusWithHistory = async ({
   caseId,
   employeeId,
   newStatus,
-  remarks = ""
+  remarks = "",
+  source = "System"
 }) => {
   return await transaction(async (trx) => {
     // 1. Locate existing case via O(1) index or store
@@ -164,9 +165,14 @@ export const updateCaseStatusWithHistory = async ({
     targetCase.status = newStatus;
     targetCase.updated_at = now;
 
-    // Adjust specific status side-effects
-    if (newStatus === "Closed" || newStatus === "Fully Paid") {
+    // Adjust specific status side-effects per business rules:
+    // Rule 9 & 10: Fully Paid zeroes outstanding amount. Closed does NOT automatically mean Fully Paid (preserves balance).
+    if (newStatus === "Fully Paid") {
       targetCase.outstanding_amount = 0;
+    } else if (newStatus === "Closed") {
+      targetCase.is_closed = true;
+      targetCase.closed_at = now;
+      targetCase.closed_by = employeeId;
     } else if (newStatus === "Field Visit") {
       targetCase.is_field_visit_required = true;
     }
@@ -178,6 +184,7 @@ export const updateCaseStatusWithHistory = async ({
       employee_id: employeeId,
       previous_status: previousStatus,
       new_status: newStatus,
+      source: source || "System",
       remarks: remarks || `Status transition from ${previousStatus} to ${newStatus}`,
       created_at: now
     };

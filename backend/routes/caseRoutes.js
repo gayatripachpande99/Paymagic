@@ -5,9 +5,14 @@ import {
   updateCaseStatus,
   assignCase,
   bulkAssignCases,
+  previewRuleAllocation,
+  executeRuleAllocation,
   transferCase,
+  getTransferHistory,
   setFollowUpDate,
   setRecoveryTarget,
+  listRecoveryTargets,
+  getCaseAuditHistory,
   listAllPayments,
   recordPayment,
   listFieldVisits,
@@ -18,38 +23,45 @@ import { authenticate, requireRoles } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Field Visits listing (placed before /:id)
+// ── Specific GET endpoints (MUST precede /:id to avoid collision) ──
 router.get("/field-visits", authenticate, listFieldVisits);
-
-// Payments listing (placed before /:id)
 router.get("/payments/all", authenticate, listAllPayments);
+router.get("/targets", authenticate, listRecoveryTargets);
+router.get("/transfers/history", authenticate, requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"), getTransferHistory);
+router.get("/audit-history", authenticate, getCaseAuditHistory);
+router.get("/audit/history", authenticate, getCaseAuditHistory);
 
-// Case listing & detail
-router.get("/", authenticate, listCases);
-router.get("/:id", authenticate, getCaseById);
+// ── Rule-Based Allocation Engine ──
+router.post("/allocate/preview", authenticate, requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"), previewRuleAllocation);
+router.post("/allocate/execute", authenticate, requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"), executeRuleAllocation);
 
-// Field Visit actions
-router.post("/:id/field-visits/start", authenticate, startFieldVisit);
-router.post("/:id/field-visits/:visitId/complete", authenticate, completeFieldVisit);
-
-// Payments recording
-router.post("/:id/payments", authenticate, recordPayment);
-
-// Status update (critical transaction rule)
-router.patch("/:id/status", authenticate, updateCaseStatus);
-
-// Case assignment & transfer (Admin/Supervisor)
+// ── Case Assignment & Bulk Operations ──
 router.post("/assign", authenticate, requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"), assignCase);
 router.post("/bulk-assign", authenticate, requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"), bulkAssignCases);
+
+// ── Case Transfer ──
 router.post("/transfer", authenticate, requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"), transferCase);
 router.post("/transfer/:caseId", authenticate, requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"), transferCase);
 
-// Follow-up scheduling
+// ── Follow-up Scheduling ──
 router.patch("/:id/follow-up", authenticate, setFollowUpDate);
 router.post("/follow-up", authenticate, setFollowUpDate);
 
-// Targets
+// ── Targets ──
 router.post("/targets", authenticate, requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"), setRecoveryTarget);
 
-export default router;
+// ── Case listing & Detail ──
+router.get("/", authenticate, listCases);
+router.get("/:id", authenticate, getCaseById);
 
+// ── Status update (Critical Transaction Rule) ──
+router.patch("/:id/status", authenticate, updateCaseStatus);
+
+// ── Payments Recording ──
+router.post("/:id/payments", authenticate, recordPayment);
+
+// ── Field Visit actions ──
+router.post("/:id/field-visits/start", authenticate, startFieldVisit);
+router.post("/:id/field-visits/:visitId/complete", authenticate, completeFieldVisit);
+
+export default router;

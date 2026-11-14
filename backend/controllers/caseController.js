@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { memoryStore, updateCaseStatusWithHistory } from "../config/db.js";
 import { maskCustomerForRole } from "../middleware/authMiddleware.js";
 import { cacheService } from "../services/cacheService.js";
+import { indexService } from "../services/indexService.js";
 
 const VALID_STATUSES = [
   "New", "Assigned", "Contacted", "Promise to Pay", "Partially Paid",
@@ -182,12 +183,12 @@ export const getCaseById = async (req, res) => {
 
 /**
  * PATCH /api/cases/:caseId/status
- * Update case status using updateCaseStatusWithHistory.
+ * Update case status using updateCaseStatusWithHistory inside atomic transaction.
  */
 export const updateCaseStatus = async (req, res) => {
   try {
     const { caseId } = req.params;
-    const { newStatus, remarks } = req.body;
+    const { newStatus, remarks, follow_up_date, payment_ref } = req.body;
 
     if (!newStatus) {
       return res.status(400).json({ success: false, message: "newStatus is required." });
@@ -199,11 +200,44 @@ export const updateCaseStatus = async (req, res) => {
       });
     }
 
+    const targetCase = memoryStore.loan_cases.find(c => c.id === caseId || c.case_number === caseId);
+    if (!targetCase) {
+      return res.status(404).json({ success: false, message: `Case '${caseId}' not found.` });
+    }
+
+    // Role-based authorization: callers & field agents can only update assigned cases
+    if (["CALLER", "FIELD_AGENT"].includes(req.user.role) && targetCase.assigned_employee_id !== req.user.id) {
+      return res.status(403).json({ success: false, message: "You are not authorized to update status for a case not assigned to you." });
+    }
+
+    // Mandatory remarks check for sensitive transitions per Business Rules
+    if (["Disputed", "Closed", "Not Reachable"].includes(newStatus) && (!remarks || remarks.trim().length < 3)) {
+      return res.status(400).json({
+        success: false,
+        message: `Remarks are mandatory for '${newStatus}' status (minimum 3 characters).`
+      });
+    }
+
+    // Optional follow-up date update
+    if (follow_up_date) {
+      targetCase.follow_up_date = follow_up_date;
+    }
+
+    // Payment reference for paid cases
+    if (payment_ref && (newStatus === "Fully Paid" || newStatus === "Partially Paid")) {
+      targetCase.last_payment_ref = payment_ref;
+    }
+
+    const source = ["SUPER_ADMIN", "ADMIN"].includes(req.user.role)
+      ? "Admin"
+      : (req.user.role === "SUPERVISOR" ? "Manager" : "Employee");
+
     const result = await updateCaseStatusWithHistory({
-      caseId,
+      caseId: targetCase.id,
       employeeId: req.user.id,
       newStatus,
-      remarks: remarks || ""
+      remarks: remarks || `Status transition from ${targetCase.status} to ${newStatus}`,
+      source
     });
 
     if (!result.changed) {
@@ -301,77 +335,341 @@ export const assignCase = async (req, res) => {
   }
 };
 
+// In-memory store for active allocation preview sessions
+const allocationPreviewStore = new Map();
+
+/**
+ * POST /api/cases/allocate/preview
+ * Compute proposed case distribution across active employees based on strategy without mutating data.
+ */
+export const previewRuleAllocation = async (req, res) => {
+  try {
+    const {
+      strategy = "EQUAL",
+      rules = {},
+      limit = 50,
+      targetEmployeeIds = []
+    } = req.body;
+
+    // 1. Identify eligible active employees
+    let eligibleEmployees = memoryStore.users.filter(
+      u => ["CALLER", "FIELD_AGENT", "SUPERVISOR", "EMPLOYEE"].includes(u.role) && u.is_active
+    );
+
+    if (targetEmployeeIds && targetEmployeeIds.length > 0) {
+      eligibleEmployees = eligibleEmployees.filter(
+        u => targetEmployeeIds.includes(u.id) || targetEmployeeIds.includes(u.employee_id)
+      );
+    }
+
+    if (eligibleEmployees.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No eligible active employees available for allocation."
+      });
+    }
+
+    // 2. Filter candidate cases (unassigned or "New")
+    let candidateCases = memoryStore.loan_cases.filter(
+      c => !c.assigned_employee_id || c.status === "New"
+    );
+
+    if (rules.minAmount !== undefined && rules.minAmount !== "") {
+      const minA = parseFloat(rules.minAmount);
+      if (!isNaN(minA)) candidateCases = candidateCases.filter(c => c.outstanding_amount >= minA);
+    }
+    if (rules.maxAmount !== undefined && rules.maxAmount !== "") {
+      const maxA = parseFloat(rules.maxAmount);
+      if (!isNaN(maxA)) candidateCases = candidateCases.filter(c => c.outstanding_amount <= maxA);
+    }
+    if (rules.priority) {
+      const pList = Array.isArray(rules.priority) ? rules.priority : [rules.priority];
+      candidateCases = candidateCases.filter(c => pList.includes(c.priority));
+    }
+    if (rules.city) {
+      const cityLower = rules.city.toLowerCase();
+      candidateCases = candidateCases.filter(c => {
+        const cust = memoryStore.customers.find(cust => cust.id === c.customer_id);
+        return cust && cust.city && cust.city.toLowerCase() === cityLower;
+      });
+    }
+    if (rules.lender) {
+      const lenderLower = rules.lender.toLowerCase();
+      candidateCases = candidateCases.filter(c => c.lender_name.toLowerCase().includes(lenderLower));
+    }
+
+    const maxAllocation = Math.min(candidateCases.length, parseInt(limit, 10) || 50);
+    const selectedCases = candidateCases.slice(0, maxAllocation);
+
+    if (selectedCases.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No unassigned cases match the specified allocation criteria."
+      });
+    }
+
+    // 3. Compute distribution according to strategy
+    const employeeBuckets = eligibleEmployees.map(emp => {
+      const currentActive = memoryStore.loan_cases.filter(
+        c => c.assigned_employee_id === emp.id && !["Closed", "Fully Paid"].includes(c.status)
+      ).length;
+      return {
+        employee: emp,
+        current_active: currentActive,
+        assigned_cases: []
+      };
+    });
+
+    if (strategy === "AMOUNT_BALANCED" || strategy === "AMOUNT_DESC") {
+      // Sort cases by outstanding amount descending
+      const sortedCases = [...selectedCases].sort((a, b) => (b.outstanding_amount || 0) - (a.outstanding_amount || 0));
+      // Snake / greedy distribution: assign next case to employee with smallest running total
+      for (const lc of sortedCases) {
+        employeeBuckets.sort((a, b) => {
+          const sumA = a.assigned_cases.reduce((s, c) => s + (c.outstanding_amount || 0), 0);
+          const sumB = b.assigned_cases.reduce((s, c) => s + (c.outstanding_amount || 0), 0);
+          return sumA - sumB;
+        });
+        employeeBuckets[0].assigned_cases.push(lc);
+      }
+    } else if (strategy === "WORKLOAD_BASED") {
+      // Prioritize staff with lowest current active cases
+      for (const lc of selectedCases) {
+        employeeBuckets.sort((a, b) => (a.current_active + a.assigned_cases.length) - (b.current_active + b.assigned_cases.length));
+        employeeBuckets[0].assigned_cases.push(lc);
+      }
+    } else if (strategy === "LOCATION_MATCH" || strategy === "LOCATION") {
+      let roundRobinIdx = 0;
+      for (const lc of selectedCases) {
+        const cust = memoryStore.customers.find(c => c.id === lc.customer_id);
+        const city = cust?.city || "";
+        const matchedBucket = employeeBuckets.find(
+          b => b.employee.city && b.employee.city.toLowerCase() === city.toLowerCase()
+        );
+        if (matchedBucket) {
+          matchedBucket.assigned_cases.push(lc);
+        } else {
+          employeeBuckets[roundRobinIdx % employeeBuckets.length].assigned_cases.push(lc);
+          roundRobinIdx++;
+        }
+      }
+    } else {
+      // Default: EQUAL distribution (Round-Robin)
+      selectedCases.forEach((lc, idx) => {
+        const bucketIdx = idx % employeeBuckets.length;
+        employeeBuckets[bucketIdx].assigned_cases.push(lc);
+      });
+    }
+
+    const previewId = `alloc_prev_${uuidv4().slice(0, 8)}`;
+    const totalOutstanding = selectedCases.reduce((s, c) => s + (c.outstanding_amount || 0), 0);
+
+    const proposedSummary = employeeBuckets.map(b => ({
+      user_id: b.employee.id,
+      employee_id: b.employee.employee_id,
+      employee_name: b.employee.full_name,
+      role: b.employee.role,
+      current_active_cases: b.current_active,
+      proposed_cases_count: b.assigned_cases.length,
+      proposed_outstanding_amount: b.assigned_cases.reduce((s, c) => s + (c.outstanding_amount || 0), 0),
+      case_ids: b.assigned_cases.map(c => c.id),
+      sample_cases: b.assigned_cases.slice(0, 3).map(c => ({
+        id: c.id,
+        case_number: c.case_number,
+        loan_account_no: c.loan_account_no,
+        outstanding_amount: c.outstanding_amount,
+        priority: c.priority
+      }))
+    }));
+
+    // Cache preview session
+    allocationPreviewStore.set(previewId, {
+      previewId,
+      strategy,
+      rules,
+      selectedCases,
+      proposedSummary,
+      createdAt: new Date().toISOString()
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Preview generated: ${selectedCases.length} cases evaluated across ${eligibleEmployees.length} agents.`,
+      data: {
+        preview_id: previewId,
+        strategy,
+        total_cases_selected: selectedCases.length,
+        total_outstanding_amount: totalOutstanding,
+        eligible_employees_count: eligibleEmployees.length,
+        allocations: proposedSummary
+      }
+    });
+  } catch (error) {
+    console.error("previewRuleAllocation Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * POST /api/cases/allocate/execute
+ * Atomically commits the rule-based allocation to the database.
+ */
+export const executeRuleAllocation = async (req, res) => {
+  try {
+    const { preview_id } = req.body;
+
+    if (!preview_id) {
+      return res.status(400).json({ success: false, message: "preview_id is required." });
+    }
+
+    const preview = allocationPreviewStore.get(preview_id);
+    if (!preview) {
+      return res.status(404).json({
+        success: false,
+        message: "Allocation preview session expired or not found. Please regenerate preview."
+      });
+    }
+
+    const { strategy, proposedSummary } = preview;
+    const now = new Date().toISOString();
+    let totalAssigned = 0;
+
+    for (const alloc of proposedSummary) {
+      for (const caseId of alloc.case_ids) {
+        const lc = memoryStore.loan_cases.find(c => c.id === caseId);
+        if (!lc) continue;
+
+        const prevEmpId = lc.assigned_employee_id;
+        lc.assigned_employee_id = alloc.user_id;
+        lc.assigned_at = now;
+        lc.updated_at = now;
+
+        // Record assignment
+        memoryStore.case_assignments.push({
+          id: `asgn_${uuidv4()}`,
+          case_id: lc.id,
+          assigned_to: alloc.user_id,
+          assigned_from: prevEmpId || null,
+          assigned_by: req.user.id,
+          assignment_type: "RULE_BASED",
+          assigned_at: now,
+          remarks: `Rule-based allocation (${strategy}) to ${alloc.employee_name}`
+        });
+
+        // If case was New, transition to Assigned
+        if (lc.status === "New") {
+          lc.status = "Assigned";
+          memoryStore.case_status_history.unshift({
+            id: `csh_${uuidv4()}`,
+            case_id: lc.id,
+            employee_id: req.user.id,
+            previous_status: "New",
+            new_status: "Assigned",
+            source: "Admin",
+            remarks: `Rule-allocated (${strategy}) to ${alloc.employee_name} (${alloc.employee_id})`,
+            created_at: now
+          });
+        }
+
+        totalAssigned++;
+      }
+
+      // Update employee active cases count
+      const empRecord = memoryStore.employees.find(e => e.id === alloc.user_id);
+      if (empRecord) {
+        empRecord.active_cases_count = memoryStore.loan_cases.filter(
+          c => c.assigned_employee_id === alloc.user_id && !["Closed", "Fully Paid"].includes(c.status)
+        ).length;
+      }
+    }
+
+    indexService.rebuild(memoryStore);
+    cacheService.delPattern("cases:*");
+    cacheService.delPattern("dashboard:*");
+    allocationPreviewStore.delete(preview_id);
+
+    return res.status(200).json({
+      success: true,
+      message: `Successfully executed rule allocation: ${totalAssigned} cases assigned across ${proposedSummary.length} employees.`,
+      data: {
+        total_assigned: totalAssigned,
+        strategy,
+        summary: proposedSummary.map(p => ({
+          employee_id: p.employee_id,
+          employee_name: p.employee_name,
+          assigned_cases_count: p.proposed_cases_count,
+          assigned_outstanding_amount: p.proposed_outstanding_amount
+        }))
+      }
+    });
+  } catch (error) {
+    console.error("executeRuleAllocation Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 /**
  * POST /api/cases/bulk-assign
  * Bulk assign cases. Supports manual (caseIds + employeeId) or rule-based.
  */
 export const bulkAssignCases = async (req, res) => {
   try {
-    const { mode = "manual", employeeId, caseIds, rules } = req.body;
+    const targetEmpId = req.body.employeeId || req.body.targetEmployeeId || req.body.employee_id;
+    const { mode = "manual", caseIds, rules, rule, limit, city } = req.body;
 
-    if (!employeeId) {
-      return res.status(400).json({ success: false, message: "employeeId is required." });
+    // Handle modal rule-based payload if sent without explicit employeeId
+    if (!targetEmpId && rule) {
+      req.body.strategy = rule;
+      req.body.limit = limit;
+      req.body.rules = { city };
+      return previewRuleAllocation(req, res);
     }
 
-    const employee = memoryStore.users.find(u => u.id === employeeId && u.is_active);
+    if (!targetEmpId) {
+      return res.status(400).json({ success: false, message: "Target employeeId is required for bulk assignment." });
+    }
+
+    const employee = memoryStore.users.find(
+      u => (u.id === targetEmpId || u.employee_id === targetEmpId) && u.is_active
+    );
     if (!employee) {
-      return res.status(404).json({ success: false, message: `Active employee '${employeeId}' not found.` });
+      return res.status(404).json({ success: false, message: `Active employee '${targetEmpId}' not found.` });
     }
 
     let targetCases = [];
 
-    if (mode === "manual") {
-      if (!caseIds || !Array.isArray(caseIds) || caseIds.length === 0) {
-        return res.status(400).json({ success: false, message: "caseIds array is required for manual mode." });
-      }
+    if (caseIds && Array.isArray(caseIds) && caseIds.length > 0) {
       targetCases = memoryStore.loan_cases.filter(c => caseIds.includes(c.id));
-    } else if (mode === "rule-based") {
-      if (!rules || typeof rules !== "object") {
-        return res.status(400).json({ success: false, message: "rules object is required for rule-based mode." });
+    } else if (mode === "rule-based" || rule) {
+      targetCases = memoryStore.loan_cases.filter(c => c.status === "New" || !c.assigned_employee_id);
+
+      const filterRules = rules || {};
+      if (rule === "AMOUNT_DESC") {
+        targetCases.sort((a, b) => (b.outstanding_amount || 0) - (a.outstanding_amount || 0));
+      } else if (rule === "LOCATION" || filterRules.city || city) {
+        const targetCity = (city || filterRules.city || "").toLowerCase();
+        if (targetCity) {
+          targetCases = targetCases.filter(c => {
+            const customer = memoryStore.customers.find(cust => cust.id === c.customer_id);
+            return customer && customer.city && customer.city.toLowerCase() === targetCity;
+          });
+        }
       }
 
-      targetCases = [...memoryStore.loan_cases];
-
-      // Filter by amount range
-      if (rules.minAmount !== undefined) {
-        targetCases = targetCases.filter(c => c.outstanding_amount >= rules.minAmount);
-      }
-      if (rules.maxAmount !== undefined) {
-        targetCases = targetCases.filter(c => c.outstanding_amount <= rules.maxAmount);
-      }
-
-      // Filter by priority
-      if (rules.priority) {
-        const priorities = Array.isArray(rules.priority) ? rules.priority : [rules.priority];
-        targetCases = targetCases.filter(c => priorities.includes(c.priority));
-      }
-
-      // Filter by location (customer city)
-      if (rules.city) {
-        const cityLower = rules.city.toLowerCase();
-        targetCases = targetCases.filter(c => {
-          const customer = memoryStore.customers.find(cust => cust.id === c.customer_id);
-          return customer && customer.city.toLowerCase() === cityLower;
-        });
-      }
-
-      // Filter by lender
-      if (rules.lender) {
-        const lenderLower = rules.lender.toLowerCase();
-        targetCases = targetCases.filter(c => c.lender_name.toLowerCase().includes(lenderLower));
-      }
-
-      // Only unassigned or "New" cases
-      if (rules.unassignedOnly !== false) {
-        targetCases = targetCases.filter(c => c.status === "New" || !c.assigned_employee_id);
-      }
-
-      // Limit
-      if (rules.maxCases) {
-        targetCases = targetCases.slice(0, rules.maxCases);
-      }
+      const maxLimit = parseInt(limit || filterRules.maxCases || 25, 10);
+      targetCases = targetCases.slice(0, maxLimit);
     } else {
-      return res.status(400).json({ success: false, message: "mode must be 'manual' or 'rule-based'." });
+      return res.status(400).json({
+        success: false,
+        message: "Please provide either a list of caseIds or allocation rules/limit."
+      });
+    }
+
+    if (targetCases.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No eligible cases found matching selection criteria."
+      });
     }
 
     const now = new Date().toISOString();
@@ -385,16 +683,16 @@ export const bulkAssignCases = async (req, res) => {
         const assignment = {
           id: `asgn_${uuidv4()}`,
           case_id: loanCase.id,
-          assigned_to: employeeId,
+          assigned_to: employee.id,
           assigned_from: previousEmployeeId || null,
           assigned_by: req.user.id,
-          assignment_type: mode === "manual" ? "BULK_MANUAL" : "RULE_BASED",
+          assignment_type: caseIds ? "BULK_MANUAL" : "RULE_BASED",
           assigned_at: now,
-          remarks: `Bulk ${mode} assignment to ${employee.full_name}`
+          remarks: `Bulk assignment to ${employee.full_name}`
         };
         memoryStore.case_assignments.push(assignment);
 
-        loanCase.assigned_employee_id = employeeId;
+        loanCase.assigned_employee_id = employee.id;
         loanCase.assigned_at = now;
         loanCase.updated_at = now;
 
@@ -403,6 +701,7 @@ export const bulkAssignCases = async (req, res) => {
             caseId: loanCase.id,
             employeeId: req.user.id,
             newStatus: "Assigned",
+            source: "Admin",
             remarks: `Bulk assigned to ${employee.full_name}`
           });
         }
@@ -414,12 +713,16 @@ export const bulkAssignCases = async (req, res) => {
     }
 
     // Update employee active cases count
-    const empRecord = memoryStore.employees.find(e => e.id === employeeId);
+    const empRecord = memoryStore.employees.find(e => e.id === employee.id);
     if (empRecord) {
       empRecord.active_cases_count = memoryStore.loan_cases.filter(
-        c => c.assigned_employee_id === employeeId && !["Closed", "Fully Paid"].includes(c.status)
+        c => c.assigned_employee_id === employee.id && !["Closed", "Fully Paid"].includes(c.status)
       ).length;
     }
+
+    indexService.rebuild(memoryStore);
+    cacheService.delPattern("cases:*");
+    cacheService.delPattern("dashboard:*");
 
     return res.status(200).json({
       success: true,
@@ -427,6 +730,11 @@ export const bulkAssignCases = async (req, res) => {
       data: {
         assigned_count: assignedCount,
         total_requested: targetCases.length,
+        assigned_to: {
+          id: employee.id,
+          employee_id: employee.employee_id,
+          name: employee.full_name
+        },
         errors: errors.length > 0 ? errors : undefined
       }
     });
@@ -694,6 +1002,200 @@ export const setRecoveryTarget = async (req, res) => {
     });
   } catch (error) {
     console.error("setRecoveryTarget Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * GET /api/cases/targets
+ * List recovery targets and achievement metrics across all staff or team.
+ */
+export const listRecoveryTargets = async (req, res) => {
+  try {
+    const { month = new Date().getMonth() + 1, year = new Date().getFullYear() } = req.query;
+    const targetMonth = parseInt(month, 10);
+    const targetYear = parseInt(year, 10);
+
+    const monthStart = new Date(targetYear, targetMonth - 1, 1).toISOString();
+    const monthEnd = new Date(targetYear, targetMonth, 0, 23, 59, 59).toISOString();
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    const eligibleEmployees = memoryStore.users.filter(
+      u => ["CALLER", "FIELD_AGENT", "SUPERVISOR", "EMPLOYEE"].includes(u.role) && u.is_active
+    );
+
+    const employeeTargets = eligibleEmployees.map(emp => {
+      const recordedTarget = memoryStore.targets.find(
+        t => (t.employee_id === emp.id || t.employee_id === emp.employee_id) && t.month === targetMonth && t.year === targetYear
+      );
+
+      const empRecord = memoryStore.employees.find(e => e.id === emp.id);
+      const targetAmount = recordedTarget ? recordedTarget.target_amount : (empRecord?.assigned_target || 100000);
+
+      const assignedCases = memoryStore.loan_cases.filter(c => c.assigned_employee_id === emp.id);
+      const assignedAmount = assignedCases.reduce((sum, c) => sum + (c.outstanding_amount || 0), 0);
+
+      const recoveredAmount = memoryStore.payments
+        .filter(p => p.collected_by_id === emp.id && p.payment_date >= monthStart && p.payment_date <= monthEnd)
+        .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+      const remainingTarget = Math.max(0, targetAmount - recoveredAmount);
+      const achievementPercentage = targetAmount > 0 ? Math.round((recoveredAmount / targetAmount) * 10000) / 100 : 0;
+
+      const upcomingFollowups = assignedCases.filter(
+        c => c.follow_up_date && c.follow_up_date >= todayStr && !["Closed", "Fully Paid"].includes(c.status)
+      ).length;
+
+      const overdueFollowups = assignedCases.filter(
+        c => c.follow_up_date && c.follow_up_date < todayStr && !["Closed", "Fully Paid"].includes(c.status)
+      ).length;
+
+      return {
+        employee_id: emp.employee_id,
+        user_id: emp.id,
+        full_name: emp.full_name,
+        role: emp.role,
+        department: emp.department || "Operations",
+        target_amount: targetAmount,
+        assigned_amount: assignedAmount,
+        recovered_amount: recoveredAmount,
+        remaining_target: remainingTarget,
+        achievement_percentage: achievementPercentage,
+        assigned_cases_count: assignedCases.length,
+        upcoming_followups: upcomingFollowups,
+        overdue_followups: overdueFollowups,
+        month: targetMonth,
+        year: targetYear
+      };
+    });
+
+    const teamTargetTotal = employeeTargets.reduce((s, e) => s + e.target_amount, 0);
+    const teamRecoveredTotal = employeeTargets.reduce((s, e) => s + e.recovered_amount, 0);
+    const teamAssignedTotal = employeeTargets.reduce((s, e) => s + e.assigned_amount, 0);
+    const teamAchievement = teamTargetTotal > 0 ? Math.round((teamRecoveredTotal / teamTargetTotal) * 10000) / 100 : 0;
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        month: targetMonth,
+        year: targetYear,
+        summary: {
+          team_target_amount: teamTargetTotal,
+          team_recovered_amount: teamRecoveredTotal,
+          team_assigned_amount: teamAssignedTotal,
+          team_remaining_target: Math.max(0, teamTargetTotal - teamRecoveredTotal),
+          team_achievement_percentage: teamAchievement,
+          total_eligible_staff: eligibleEmployees.length
+        },
+        employee_targets: employeeTargets
+      }
+    });
+  } catch (error) {
+    console.error("listRecoveryTargets Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * GET /api/cases/audit/history
+ * GET /api/cases/audit-history
+ * Returns chronological status change and case lifecycle audit logs.
+ */
+export const getCaseAuditHistory = async (req, res) => {
+  try {
+    const { caseId, employeeId, page = 1, limit = 25 } = req.query;
+    let history = [...memoryStore.case_status_history];
+
+    if (caseId) {
+      history = history.filter(h => h.case_id === caseId);
+    }
+    if (employeeId) {
+      history = history.filter(h => h.employee_id === employeeId);
+    }
+
+    const totalCount = history.length;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 25));
+    const startIdx = (pageNum - 1) * limitNum;
+    const paginated = history.slice(startIdx, startIdx + limitNum);
+
+    const enriched = paginated.map(h => {
+      const targetCase = memoryStore.loan_cases.find(c => c.id === h.case_id);
+      const employee = memoryStore.users.find(u => u.id === h.employee_id || u.employee_id === h.employee_id);
+      const customer = targetCase ? memoryStore.customers.find(c => c.id === targetCase.customer_id) : null;
+      return {
+        ...h,
+        case_number: targetCase?.case_number || "N/A",
+        loan_account_no: targetCase?.loan_account_no || "N/A",
+        customer_name: customer?.full_name || "Borrower",
+        employee_name: employee?.full_name || "Operations User",
+        source: h.source || "System"
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        history: enriched,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          totalCount,
+          totalPages: Math.ceil(totalCount / limitNum)
+        }
+      }
+    });
+  } catch (error) {
+    console.error("getCaseAuditHistory Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * GET /api/cases/transfers/history
+ * Returns historical transfer records between staff members.
+ */
+export const getTransferHistory = async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const transfers = (memoryStore.case_assignments || [])
+      .filter(a => a.assignment_type === "TRANSFER")
+      .sort((a, b) => new Date(b.assigned_at) - new Date(a.assigned_at));
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+    const startIdx = (pageNum - 1) * limitNum;
+    const paginated = transfers.slice(startIdx, startIdx + limitNum);
+
+    const enriched = paginated.map(t => {
+      const targetCase = memoryStore.loan_cases.find(c => c.id === t.case_id);
+      const fromEmp = memoryStore.users.find(u => u.id === t.assigned_from || u.employee_id === t.assigned_from);
+      const toEmp = memoryStore.users.find(u => u.id === t.assigned_to || u.employee_id === t.assigned_to);
+      const byEmp = memoryStore.users.find(u => u.id === t.assigned_by);
+      return {
+        ...t,
+        case_number: targetCase?.case_number || "N/A",
+        loan_account_no: targetCase?.loan_account_no || "N/A",
+        from_employee_name: fromEmp?.full_name || t.assigned_from || "Unassigned",
+        to_employee_name: toEmp?.full_name || t.assigned_to,
+        assigned_by_name: byEmp?.full_name || "Admin"
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        transfers: enriched,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          totalCount: transfers.length,
+          totalPages: Math.ceil(transfers.length / limitNum)
+        }
+      }
+    });
+  } catch (error) {
+    console.error("getTransferHistory Error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
