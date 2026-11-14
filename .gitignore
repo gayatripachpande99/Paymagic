@@ -5,3 +5,17 @@ Paymagic-main.zip
 .DS_Store
 *.log
 *.mp4
+
+# External tools & agent configurations (keep only frontend and backend in Git)
+.agent/
+.agents/
+.gemini/
+.gsd/
+adapters/
+scripts/
+scratch/
+GSD-STYLE.md
+PROJECT_RULES.md
+VERSION
+model_capabilities.yaml
+
