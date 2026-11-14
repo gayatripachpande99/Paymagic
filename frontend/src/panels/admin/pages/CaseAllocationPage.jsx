@@ -783,10 +783,10 @@ export default function CaseAllocationPage({
             )}
 
             {/* DESKTOP & TABLET VIEW: Scrollable Responsive Table (hidden on mobile < 768px) */}
-            <div className="hidden md:block portal-table-container relative w-full overflow-x-auto">
+            <div className="hidden md:block portal-table-container relative w-full overflow-x-auto max-h-[680px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
               <table className="portal-table min-w-[950px] w-full text-left">
-                <thead>
-                  <tr className="bg-slate-950/80 border-b border-slate-800/80">
+                <thead className="sticky top-0 z-10 bg-slate-950/95 backdrop-blur-md shadow-sm">
+                  <tr className="border-b border-slate-800/80">
                     <th className="py-3.5 px-3 text-center w-12">
                       <input
                         type="checkbox"
@@ -921,8 +921,11 @@ export default function CaseAllocationPage({
                           <button
                             type="button"
                             onClick={() => {
-                              setSelectedCaseId(item.id);
-                              setShowCaseDetailModal(true);
+                              const targetId = item.id || item.case_number;
+                              if (targetId) {
+                                setSelectedCaseId(targetId);
+                                setShowCaseDetailModal(true);
+                              }
                             }}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 min-h-[34px] rounded-lg bg-indigo-600/20 hover:bg-indigo-600/35 text-indigo-300 hover:text-white border border-indigo-500/30 hover:border-indigo-500/50 text-[11px] font-semibold transition cursor-pointer shadow-sm"
                             title="View case details and status history timeline"
@@ -1035,8 +1038,11 @@ export default function CaseAllocationPage({
                         <button
                           type="button"
                           onClick={() => {
-                            setSelectedCaseId(item.id);
-                            setShowCaseDetailModal(true);
+                            const targetId = item.id || item.case_number;
+                            if (targetId) {
+                              setSelectedCaseId(targetId);
+                              setShowCaseDetailModal(true);
+                            }
                           }}
                           className="px-3 py-1.5 min-h-[34px] rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-[11px] font-semibold transition cursor-pointer"
                           title="View case timeline and details"
@@ -1124,7 +1130,15 @@ export default function CaseAllocationPage({
               {(adminOverview?.recent_status_history || []).map((act, idx) => (
                 <div
                   key={act.id || idx}
-                  className="p-3.5 sm:p-4 rounded-xl bg-slate-800/50 hover:bg-slate-800/70 border border-slate-700/60 text-xs space-y-2 transition-all duration-200 shadow-sm hover:border-indigo-500/40"
+                  onClick={() => {
+                    const targetId = act.case_id || (casesList.find(c => c.case_number === act.case_number)?.id);
+                    if (targetId) {
+                      setSelectedCaseId(targetId);
+                      setShowCaseDetailModal(true);
+                    }
+                  }}
+                  className="p-3.5 sm:p-4 rounded-xl bg-slate-800/50 hover:bg-slate-800/70 border border-slate-700/60 text-xs space-y-2 transition-all duration-200 shadow-sm hover:border-indigo-500/40 cursor-pointer"
+                  title="Click to view full case history timeline"
                 >
                   <div className="flex justify-between items-start gap-2">
                     <span className="font-mono font-bold text-indigo-400 bg-indigo-500/15 px-2 py-0.5 rounded-md border border-indigo-500/25 text-[11px]">
@@ -1167,8 +1181,11 @@ export default function CaseAllocationPage({
                 type="button"
                 onClick={() => {
                   if (casesList.length > 0) {
-                    setSelectedCaseId(casesList[0].id);
-                    setShowCaseDetailModal(true);
+                    const targetId = casesList[0].id || casesList[0].case_number;
+                    if (targetId) {
+                      setSelectedCaseId(targetId);
+                      setShowCaseDetailModal(true);
+                    }
                   }
                 }}
                 className="inline-flex items-center justify-center gap-2 text-xs text-indigo-300 hover:text-white font-semibold py-2.5 px-4 rounded-xl bg-indigo-950/40 hover:bg-indigo-900/50 border border-indigo-500/30 hover:border-indigo-500/50 transition-all shadow-sm w-full cursor-pointer"

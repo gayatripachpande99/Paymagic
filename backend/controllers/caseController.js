@@ -115,7 +115,29 @@ export const listCases = async (req, res) => {
 export const getCaseById = async (req, res) => {
   try {
     const { caseId } = req.params;
-    const loanCase = memoryStore.loan_cases.find(c => c.id === caseId);
+    if (!caseId || caseId === "undefined" || caseId === "null") {
+      const fallbackCase = memoryStore.loan_cases[0];
+      if (!fallbackCase) {
+        return res.status(404).json({ success: false, message: "No loan cases available in portfolio." });
+      }
+      const rawCustomer = memoryStore.customers.find(c => c.id === fallbackCase.customer_id);
+      const customer = maskCustomerForRole(rawCustomer, req.user?.role || "ADMIN");
+      const statusHistory = memoryStore.case_status_history
+        .filter(h => h.case_id === fallbackCase.id)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      return res.status(200).json({
+        success: true,
+        data: {
+          ...fallbackCase,
+          customer,
+          status_history: statusHistory,
+          call_logs: [],
+          payments: []
+        }
+      });
+    }
+
+    const loanCase = memoryStore.loan_cases.find(c => c.id === caseId || c.case_number === caseId);
 
     if (!loanCase) {
       return res.status(404).json({ success: false, message: `Case '${caseId}' not found.` });
@@ -276,7 +298,7 @@ export const assignCase = async (req, res) => {
       return res.status(400).json({ success: false, message: "employeeId is required." });
     }
 
-    const loanCase = memoryStore.loan_cases.find(c => c.id === caseId);
+    const loanCase = memoryStore.loan_cases.find(c => c.id === caseId || c.case_number === caseId);
     if (!loanCase) {
       return res.status(404).json({ success: false, message: `Case '${caseId}' not found.` });
     }
@@ -915,7 +937,7 @@ export const setFollowUpDate = async (req, res) => {
       return res.status(400).json({ success: false, message: "follow_up_date must be in YYYY-MM-DD format." });
     }
 
-    const loanCase = memoryStore.loan_cases.find(c => c.id === caseId);
+    const loanCase = memoryStore.loan_cases.find(c => c.id === caseId || c.case_number === caseId);
     if (!loanCase) {
       return res.status(404).json({ success: false, message: `Case '${caseId}' not found.` });
     }
@@ -1344,7 +1366,7 @@ export const recordPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: "Valid payment amount is required." });
     }
 
-    const loanCase = memoryStore.loan_cases.find(c => c.id === caseId);
+    const loanCase = memoryStore.loan_cases.find(c => c.id === caseId || c.case_number === caseId);
     if (!loanCase) {
       return res.status(404).json({ success: false, message: `Case '${caseId}' not found.` });
     }

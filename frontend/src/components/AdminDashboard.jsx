@@ -1771,7 +1771,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
         />
       )}
 
-      {showCaseDetailModal && selectedCaseId && (
+      {showCaseDetailModal && selectedCaseId && selectedCaseId !== "undefined" && (
         <CaseDetailModal
           caseId={selectedCaseId}
           isOpen={showCaseDetailModal}
