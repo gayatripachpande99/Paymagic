@@ -196,3 +196,4 @@ export const followupRepository = {
 };
 
 export default followupRepository;
+

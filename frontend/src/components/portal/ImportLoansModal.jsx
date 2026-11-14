@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   FileSpreadsheet,
   Download,
@@ -11,7 +11,11 @@ import {
   ShieldCheck,
   ChevronRight,
   RotateCcw,
-  FileCheck
+  FileCheck,
+  Search,
+  Filter,
+  ArrowRight,
+  Check
 } from "lucide-react";
 import api, { API_URL } from "../../services/api";
 
@@ -21,16 +25,52 @@ export const ImportLoansModal = ({
   onSuccess
 }) => {
   const [selectedFile, setSelectedFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [previewData, setPreviewData] = useState(null);
-  const [step, setStep] = useState("UPLOAD"); // "UPLOAD" | "PREVIEW"
+  const [step, setStep] = useState("UPLOAD"); // "UPLOAD" | "PREVIEW" | "RESULT"
+  const [importResult, setImportResult] = useState(null);
+
+  // Preview filtering & search
+  const [previewTab, setPreviewTab] = useState("VALID"); // "VALID" | "DUPLICATES" | "REJECTED"
+  const [searchQuery, setSearchQuery] = useState("");
+  const [previewPage, setPreviewPage] = useState(1);
+  const pageSize = 8;
 
   if (!isOpen) return null;
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        setErrorMsg("File exceeds the maximum allowable limit of 10 MB.");
+        return;
+      }
+      setSelectedFile(file);
+      setErrorMsg("");
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        setErrorMsg("File exceeds the maximum allowable limit of 10 MB.");
+        return;
+      }
+      setSelectedFile(file);
       setErrorMsg("");
     }
   };
@@ -38,8 +78,7 @@ export const ImportLoansModal = ({
   const handleDownloadTemplate = (format = "xlsx") => {
     const token = localStorage.getItem("paymagic_token");
     const downloadUrl = `${API_URL}/upload/template?format=${format}`;
-    
-    // Trigger download with browser
+
     fetch(downloadUrl, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     })
@@ -62,9 +101,9 @@ export const ImportLoansModal = ({
   };
 
   const handleAnalyzeFile = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!selectedFile) {
-      setErrorMsg("Please select an Excel (.xlsx, .xls) or CSV file.");
+      setErrorMsg("Please select an Excel (.xlsx) or CSV (.csv) file up to 10 MB.");
       return;
     }
 
@@ -87,8 +126,10 @@ export const ImportLoansModal = ({
       if (json && json.success) {
         setPreviewData(json.data);
         setStep("PREVIEW");
+        setPreviewTab(json.data.valid_records > 0 ? "VALID" : (json.data.duplicate_records > 0 ? "DUPLICATES" : "REJECTED"));
+        setPreviewPage(1);
       } else {
-        setErrorMsg(json?.message || "File pre-validation failed.");
+        setErrorMsg(json?.message || "File pre-validation failed. Ensure 16 standard columns and valid data types.");
       }
     } catch (err) {
       console.error("File preview error:", err);
@@ -104,15 +145,16 @@ export const ImportLoansModal = ({
       setLoading(true);
       setErrorMsg("");
 
-      const res = await api.post("/upload/confirm", {
+      const res = await api.post(`/upload/${previewData.preview_batch_id}/confirm`, {
         preview_batch_id: previewData.preview_batch_id
       });
 
       if (res && res.success) {
+        setImportResult(res.data);
+        setStep("RESULT");
         if (onSuccess) {
           onSuccess(res.message || `Successfully imported ${res.data.success_count} cases.`);
         }
-        handleClose();
       } else {
         setErrorMsg(res?.message || "Failed to confirm import.");
       }
@@ -138,7 +180,7 @@ export const ImportLoansModal = ({
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `import_rejected_records.${format}`;
+        a.download = `import_rejected_records_${previewData.preview_batch_id}.${format}`;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -153,25 +195,60 @@ export const ImportLoansModal = ({
   const handleClose = () => {
     setSelectedFile(null);
     setPreviewData(null);
+    setImportResult(null);
     setStep("UPLOAD");
     setErrorMsg("");
+    setSearchQuery("");
     onClose();
   };
 
+  // Filter preview list based on active tab and search query
+  const displayedItems = useMemo(() => {
+    if (!previewData) return [];
+    let items = [];
+    if (previewTab === "VALID") items = previewData.sample_valid || [];
+    else if (previewTab === "DUPLICATES") items = previewData.duplicate_records || [];
+    else if (previewTab === "REJECTED") items = previewData.rejected_records || [];
+
+    if (!searchQuery.trim()) return items;
+
+    const q = searchQuery.toLowerCase().trim();
+    return items.filter(item => {
+      const name = (item.customer_name || "").toLowerCase();
+      const code = (item.customer_code || "").toLowerCase();
+      const acct = (item.loan_account_no || "").toLowerCase();
+      const lender = (item.lender_name || "").toLowerCase();
+      return name.includes(q) || code.includes(q) || acct.includes(q) || lender.includes(q);
+    });
+  }, [previewData, previewTab, searchQuery]);
+
+  const totalPages = Math.ceil(displayedItems.length / pageSize) || 1;
+  const paginatedItems = useMemo(() => {
+    const start = (previewPage - 1) * pageSize;
+    return displayedItems.slice(start, start + pageSize);
+  }, [displayedItems, previewPage, pageSize]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden text-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-3xl max-h-[92vh] flex flex-col bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden text-slate-100">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-800 bg-slate-950/60 shrink-0">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-800 bg-slate-950/70 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
-              <FileSpreadsheet className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600/30 to-indigo-600/30 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0">
+              <FileSpreadsheet className="w-5 h-5 text-cyan-400" />
             </div>
             <div>
-              <h3 className="font-semibold text-white text-sm sm:text-base">Import Customer Loan Records</h3>
+              <h3 className="font-bold text-white text-base tracking-tight flex items-center gap-2">
+                <span>Import Loan Customer Data</span>
+                <span className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  Module A
+                </span>
+              </h3>
               <p className="text-xs text-slate-400">
-                {step === "UPLOAD" ? "Upload Excel (.xlsx, .xls) or CSV dataset" : "Pre-validation summary & schema audit"}
+                {step === "UPLOAD" && "Upload standard 16-column Excel or CSV portfolio dataset (Max 10 MB)"}
+                {step === "PREVIEW" && `Audit Batch: ${previewData?.preview_batch_id || "Active Session"} • Read-only preview`}
+                {step === "RESULT" && "Import execution complete & committed to PostgreSQL"}
               </p>
             </div>
           </div>
@@ -183,32 +260,37 @@ export const ImportLoansModal = ({
           </button>
         </div>
 
-        {/* Body */}
-        {step === "UPLOAD" ? (
+        {/* Body Content */}
+        {step === "UPLOAD" && (
           <form onSubmit={handleAnalyzeFile} className="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1">
             
             {/* Download Template Banner */}
-            <div className="p-3.5 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2.5">
-                <FileCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="text-slate-300">Need the official schema format before importing?</span>
+            <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+                  <FileCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-slate-200 font-semibold block">Official 16-Column Template</span>
+                  <span className="text-slate-400 text-[11px]">Download formatted sample template matching PostgreSQL schema</span>
+                </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => handleDownloadTemplate("xlsx")}
-                  className="px-2.5 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 font-semibold flex items-center gap-1 transition text-[11px]"
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 font-semibold flex items-center gap-1.5 transition text-xs cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>Template (.xlsx)</span>
+                  <span>Excel (.xlsx)</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDownloadTemplate("csv")}
-                  className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold flex items-center gap-1 transition text-[11px]"
+                  className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 font-semibold flex items-center gap-1.5 transition text-xs cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>Template (.csv)</span>
+                  <span>CSV (.csv)</span>
                 </button>
               </div>
             </div>
@@ -216,36 +298,70 @@ export const ImportLoansModal = ({
             {/* File Upload Zone */}
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2">
-                Select Spreadsheet File (.xlsx, .xls, .csv) <span className="text-rose-400">*</span>
+                Select Spreadsheet File (.xlsx, .csv) <span className="text-rose-400">*</span>
               </label>
-              <div className="border-2 border-dashed border-slate-700 hover:border-blue-500 rounded-2xl p-6 text-center bg-slate-950/40 transition">
-                <Upload className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                <p className="text-xs text-slate-300 mb-1 font-medium">
-                  {selectedFile ? selectedFile.name : "Click to select or drag and drop loan file"}
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-2xl p-7 text-center transition cursor-pointer ${
+                  isDragging
+                    ? "border-cyan-400 bg-cyan-950/20"
+                    : selectedFile
+                    ? "border-emerald-500/60 bg-emerald-950/10"
+                    : "border-slate-700 hover:border-cyan-500/60 bg-slate-950/40"
+                }`}
+              >
+                <div className="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700 mx-auto flex items-center justify-center mb-3">
+                  <Upload className={`w-6 h-6 ${selectedFile ? "text-emerald-400" : "text-cyan-400"}`} />
+                </div>
+                <p className="text-sm text-slate-200 font-semibold mb-1">
+                  {selectedFile ? selectedFile.name : "Drag and drop loan portfolio file here"}
                 </p>
-                <p className="text-[11px] text-slate-500">
-                  {selectedFile ? `${(selectedFile.size / 1024).toFixed(1)} KB` : "Supports Excel (.xlsx, .xls) and CSV up to 15MB"}
+                <p className="text-xs text-slate-400 mb-3">
+                  {selectedFile
+                    ? `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • Ready for schema validation`
+                    : "Supports Microsoft Excel (.xlsx) and CSV (.csv) up to 10 MB"}
                 </p>
                 <input
                   type="file"
-                  accept=".xlsx, .xls, .csv"
+                  id="loan-import-file-input"
+                  accept=".xlsx, .csv"
                   onChange={handleFileChange}
-                  className="mt-3 block w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
+                  className="hidden"
                 />
+                <label
+                  htmlFor="loan-import-file-input"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs border border-slate-600 cursor-pointer transition shadow-sm"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Browse From Computer</span>
+                </label>
               </div>
             </div>
 
-            {/* Suggested Fields Information */}
-            <div className="p-3 rounded-xl bg-slate-800/40 border border-slate-700/40 text-[11px] text-slate-400 space-y-1">
-              <span className="font-semibold text-slate-300 block">Required Header Columns:</span>
-              <p>Customer Name, Customer Mobile Number, Loan Account Number, Bank / Financial Institution, Total Loan Amount</p>
-              <span className="font-semibold text-slate-300 block pt-1">Optional Columns:</span>
-              <p>Loan ID, Loan Type, Outstanding Amount, Overdue Amount, EMI Amount, Days Past Due (DPD), Customer Address, City, State, PIN Code, Priority, Follow-up Date, Recovery Target</p>
+            {/* Schema Checklist */}
+            <div className="p-3.5 rounded-xl bg-slate-950/50 border border-slate-800 text-[11px] text-slate-400 space-y-1.5">
+              <span className="font-semibold text-slate-300 block text-xs">Standard 16 Business Fields Enforced:</span>
+              <p className="leading-relaxed">
+                Borrower Name, Customer Code, Phone, Alternate Phone, Email, Address, City, State, Pincode, Lender Name, Loan Account No, Loan Type, Principal Amount, Outstanding Amount, DPD, Priority.
+              </p>
+              <div className="flex items-center gap-4 text-[10px] text-slate-400 pt-1">
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-emerald-400" /> Formula injection protected
+                </span>
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-emerald-400" /> Magic-byte verified
+                </span>
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-emerald-400" /> Atomic rollback guaranteed
+                </span>
+              </div>
             </div>
 
             {errorMsg && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0" />
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
@@ -262,126 +378,238 @@ export const ImportLoansModal = ({
               <button
                 type="submit"
                 disabled={loading || !selectedFile}
-                className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-xl shadow-md shadow-blue-600/20 flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
+                className="px-5 py-2 text-xs font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-blue-600/20 flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
-                <span>Validate &amp; Preview Records</span>
+                <span>Pre-Validate &amp; Generate Preview</span>
               </button>
             </div>
           </form>
-        ) : (
-          /* STEP 2: VALIDATION RESULTS & CONFIRMATION */
+        )}
+
+        {/* STEP 2: PREVIEW SCREEN */}
+        {step === "PREVIEW" && (
           <div className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1">
             
-            {/* Stat Counters */}
+            {/* Stat KPI Cards */}
             <div className="grid grid-cols-4 gap-2.5 text-center">
               <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700">
-                <span className="text-[10px] text-slate-400 font-semibold block">Total Rows</span>
-                <span className="text-lg font-bold font-mono text-white">{previewData?.total_records}</span>
+                <span className="text-[10px] text-slate-400 font-semibold block uppercase tracking-wider">Total Rows</span>
+                <span className="text-xl font-bold font-mono text-white">{previewData?.total_records}</span>
               </div>
               <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                <span className="text-[10px] text-emerald-400 font-semibold block">Valid Records</span>
-                <span className="text-lg font-bold font-mono text-emerald-400">{previewData?.valid_records}</span>
+                <span className="text-[10px] text-emerald-400 font-semibold block uppercase tracking-wider">Valid Records</span>
+                <span className="text-xl font-bold font-mono text-emerald-400">{previewData?.valid_records}</span>
               </div>
               <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                <span className="text-[10px] text-amber-400 font-semibold block">Duplicates</span>
-                <span className="text-lg font-bold font-mono text-amber-400">{previewData?.duplicate_records}</span>
+                <span className="text-[10px] text-amber-400 font-semibold block uppercase tracking-wider">Duplicates</span>
+                <span className="text-xl font-bold font-mono text-amber-400">{previewData?.duplicate_records}</span>
               </div>
               <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20">
-                <span className="text-[10px] text-rose-400 font-semibold block">Rejected</span>
-                <span className="text-lg font-bold font-mono text-rose-400">{previewData?.rejected_records}</span>
+                <span className="text-[10px] text-rose-400 font-semibold block uppercase tracking-wider">Rejected</span>
+                <span className="text-xl font-bold font-mono text-rose-400">{previewData?.rejected_records}</span>
               </div>
             </div>
 
-            {/* Error Actions if Any */}
+            {/* Checksum and Session Info */}
+            <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-400 px-1 py-1">
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500">SHA-256:</span>
+                <span className="font-mono text-[10px] text-slate-300">
+                  {previewData?.file_checksum ? `${previewData.file_checksum.slice(0, 16)}...` : "Verified"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500">Session TTL:</span>
+                <span className="text-amber-400 font-medium">30 minutes</span>
+              </div>
+            </div>
+
+            {/* Navigation Tabs and Search Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-950/70 border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => { setPreviewTab("VALID"); setPreviewPage(1); }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    previewTab === "VALID"
+                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Valid Cases ({previewData?.valid_records || 0})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPreviewTab("DUPLICATES"); setPreviewPage(1); }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    previewTab === "DUPLICATES"
+                      ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Duplicates ({previewData?.duplicate_records || 0})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPreviewTab("REJECTED"); setPreviewPage(1); }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    previewTab === "REJECTED"
+                      ? "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Rejected ({previewData?.rejected_records || 0})
+                </button>
+              </div>
+
+              {/* Search Bar */}
+              <div className="relative flex-1 sm:max-w-xs">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Search name, code, account #..."
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); setPreviewPage(1); }}
+                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-950/80 border border-slate-800 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+            </div>
+
+            {/* Preview Table */}
+            <div className="rounded-xl border border-slate-800 bg-slate-950/40 overflow-hidden min-h-[180px]">
+              {previewTab === "VALID" && (
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-950/90 border-b border-slate-800 text-slate-400 text-[11px]">
+                    <tr>
+                      <th className="py-2.5 px-3">Borrower Name</th>
+                      <th className="py-2.5 px-3">Customer Code</th>
+                      <th className="py-2.5 px-3">Loan Account #</th>
+                      <th className="py-2.5 px-3">Lender</th>
+                      <th className="py-2.5 px-3 text-right">Principal</th>
+                      <th className="py-2.5 px-3 text-right">Outstanding</th>
+                      <th className="py-2.5 px-3 text-center">Priority</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                    {paginatedItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-8 text-center text-slate-500 text-xs">
+                          No valid records found matching search criteria.
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedItems.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-slate-800/40">
+                          <td className="py-2 px-3 font-semibold text-white">{row.customer_name}</td>
+                          <td className="py-2 px-3 font-mono text-[11px] text-slate-400">{row.customer_code}</td>
+                          <td className="py-2 px-3 font-mono text-cyan-400 font-medium">{row.loan_account_no}</td>
+                          <td className="py-2 px-3 text-slate-300">{row.lender_name}</td>
+                          <td className="py-2 px-3 text-right font-mono text-slate-300">
+                            ₹{Number(row.principal_amount || 0).toLocaleString("en-IN")}
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono font-bold text-amber-400">
+                            ₹{Number(row.outstanding_amount || 0).toLocaleString("en-IN")}
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                              row.priority === "CRITICAL" ? "bg-rose-500/20 text-rose-400 border border-rose-500/30" :
+                              row.priority === "HIGH" ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" :
+                              "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                            }`}>
+                              {row.priority}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
+
+              {(previewTab === "DUPLICATES" || previewTab === "REJECTED") && (
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-950/90 border-b border-slate-800 text-slate-400 text-[11px]">
+                    <tr>
+                      <th className="py-2.5 px-3 w-16">Row</th>
+                      <th className="py-2.5 px-3">Borrower</th>
+                      <th className="py-2.5 px-3">Account Number</th>
+                      <th className="py-2.5 px-3">Reason / Audit Flag</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {paginatedItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="py-8 text-center text-slate-500 text-xs">
+                          No {previewTab.toLowerCase()} records in this file.
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedItems.map((err, idx) => (
+                        <tr key={idx} className="hover:bg-slate-800/40">
+                          <td className="py-2 px-3 font-mono text-slate-400">Row {err.row}</td>
+                          <td className="py-2 px-3 font-medium text-slate-200">{err.customer_name || "N/A"}</td>
+                          <td className="py-2 px-3 font-mono text-cyan-400">{err.loan_account_no || "N/A"}</td>
+                          <td className="py-2 px-3 text-[11px] text-rose-300">{err.reason}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+                <span>
+                  Showing {Math.min(displayedItems.length, (previewPage - 1) * pageSize + 1)}–{Math.min(displayedItems.length, previewPage * pageSize)} of {displayedItems.length} records
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={previewPage === 1}
+                    onClick={() => setPreviewPage(p => Math.max(1, p - 1))}
+                    className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 transition"
+                  >
+                    Prev
+                  </button>
+                  <span className="px-2 font-mono">{previewPage} / {totalPages}</span>
+                  <button
+                    type="button"
+                    disabled={previewPage >= totalPages}
+                    onClick={() => setPreviewPage(p => Math.min(totalPages, p + 1))}
+                    className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-40 transition"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Error report export banner if duplicates or rejected exist */}
             {(previewData?.duplicate_records > 0 || previewData?.rejected_records > 0) && (
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2 text-amber-300">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>
-                    {previewData?.duplicate_records + previewData?.rejected_records} rows will be skipped during import.
+                    {(previewData?.duplicate_records || 0) + (previewData?.rejected_records || 0)} rows will be skipped during atomic database insertion.
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleDownloadErrors("csv")}
-                  className="px-2.5 py-1.5 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 text-[11px] font-semibold flex items-center gap-1 self-start sm:self-auto transition"
+                  className="px-3 py-1.5 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 text-[11px] font-semibold flex items-center gap-1.5 transition cursor-pointer self-start sm:self-auto"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  <span>Download Rejected Rows (.csv)</span>
+                  <span>Download Rejection Report (.csv)</span>
                 </button>
               </div>
             )}
 
-            {/* Sample Valid Records Preview */}
-            {previewData?.sample_valid?.length > 0 && (
-              <div>
-                <h4 className="text-xs font-semibold text-slate-300 mb-1.5">
-                  Sample Valid Cases Preview (Showing {previewData.sample_valid.length})
-                </h4>
-                <div className="rounded-xl border border-slate-800 overflow-hidden max-h-48 overflow-y-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-950/70 border-b border-slate-800 text-slate-400">
-                      <tr>
-                        <th className="py-2 px-3">Borrower</th>
-                        <th className="py-2 px-3">Account #</th>
-                        <th className="py-2 px-3">Lender</th>
-                        <th className="py-2 px-3 text-right">Principal</th>
-                        <th className="py-2 px-3 text-right">Outstanding</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/60">
-                      {previewData.sample_valid.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-slate-800/40">
-                          <td className="py-2 px-3 font-medium text-white">{row.customer_name}</td>
-                          <td className="py-2 px-3 font-mono text-indigo-400">{row.loan_account_no}</td>
-                          <td className="py-2 px-3 text-slate-300">{row.lender_name}</td>
-                          <td className="py-2 px-3 text-right font-mono text-slate-200">
-                            ₹{Number(row.principal_amount || 0).toLocaleString("en-IN")}
-                          </td>
-                          <td className="py-2 px-3 text-right font-mono font-bold text-amber-400">
-                            ₹{Number(row.outstanding_amount || row.principal_amount || 0).toLocaleString("en-IN")}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* Error Rows Table if Any */}
-            {previewData?.error_records?.length > 0 && (
-              <div>
-                <h4 className="text-xs font-semibold text-rose-300 mb-1.5">
-                  Validation &amp; Duplicate Audit Log
-                </h4>
-                <div className="rounded-xl border border-rose-950/40 bg-rose-950/10 overflow-hidden max-h-36 overflow-y-auto">
-                  <table className="w-full text-left text-[11px]">
-                    <thead className="bg-slate-950/70 border-b border-rose-900/30 text-rose-300 font-semibold">
-                      <tr>
-                        <th className="py-1.5 px-3">Row</th>
-                        <th className="py-1.5 px-3">Account #</th>
-                        <th className="py-1.5 px-3">Reason</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-rose-900/20 text-rose-200">
-                      {previewData.error_records.map((err, idx) => (
-                        <tr key={idx}>
-                          <td className="py-1.5 px-3 font-mono font-semibold">Row {err.row}</td>
-                          <td className="py-1.5 px-3 font-mono">{err.loan_account_no}</td>
-                          <td className="py-1.5 px-3">{err.reason}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
             {errorMsg && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0" />
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
@@ -391,19 +619,75 @@ export const ImportLoansModal = ({
               <button
                 type="button"
                 onClick={() => setStep("UPLOAD")}
-                className="px-3.5 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 flex items-center gap-1.5 transition"
+                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 flex items-center gap-1.5 transition cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Upload Another File</span>
+                <span>Choose Another File</span>
               </button>
               <button
                 type="button"
                 onClick={handleConfirmImport}
                 disabled={loading || previewData?.valid_records === 0}
-                className="px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-md shadow-emerald-600/20 flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
+                className="px-5 py-2 text-xs font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl shadow-lg shadow-emerald-600/20 flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                 <span>Confirm &amp; Import ({previewData?.valid_records || 0} Cases)</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: RESULT SCREEN */}
+        {step === "RESULT" && (
+          <div className="p-6 sm:p-8 space-y-6 text-center overflow-y-auto flex-1">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 text-emerald-400 mx-auto flex items-center justify-center animate-in zoom-in-75 duration-300">
+              <Check className="w-8 h-8" />
+            </div>
+
+            <div>
+              <h4 className="text-lg font-bold text-white mb-1">Portfolio Ingestion Successful!</h4>
+              <p className="text-xs text-slate-400">
+                All valid customer accounts have been transactionally committed to PostgreSQL with initial intake status 'New'.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 max-w-lg mx-auto text-center">
+              <div className="p-3.5 rounded-xl bg-slate-800/70 border border-slate-700">
+                <span className="text-[10px] text-slate-400 font-semibold block uppercase">Imported Cases</span>
+                <span className="text-2xl font-bold font-mono text-emerald-400">{importResult?.success_count}</span>
+              </div>
+              <div className="p-3.5 rounded-xl bg-slate-800/70 border border-slate-700">
+                <span className="text-[10px] text-slate-400 font-semibold block uppercase">Duplicates Skipped</span>
+                <span className="text-2xl font-bold font-mono text-amber-400">{importResult?.skipped_duplicates}</span>
+              </div>
+              <div className="p-3.5 rounded-xl bg-slate-800/70 border border-slate-700">
+                <span className="text-[10px] text-slate-400 font-semibold block uppercase">Rejected Rows</span>
+                <span className="text-2xl font-bold font-mono text-rose-400">{importResult?.rejected_count}</span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 max-w-lg mx-auto text-left text-xs space-y-1">
+              <div className="flex justify-between text-slate-400">
+                <span>Batch Reference ID:</span>
+                <span className="font-mono text-cyan-400">{importResult?.batch_id}</span>
+              </div>
+              <div className="flex justify-between text-slate-400">
+                <span>Target Status:</span>
+                <span className="text-emerald-400 font-semibold">New (Rule-allocatable)</span>
+              </div>
+              <div className="flex justify-between text-slate-400">
+                <span>Audit Trail:</span>
+                <span className="text-slate-300">case_status_history intake entry logged</span>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="px-6 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-xl shadow-lg shadow-blue-600/20 transition cursor-pointer"
+              >
+                View Updated Portfolio Cases
               </button>
             </div>
           </div>

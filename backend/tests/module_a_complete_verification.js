@@ -80,7 +80,7 @@ const runModuleATests = async () => {
   const resCsv = mockRes();
   await getImportTemplate(mockReq({ query: { format: "csv" } }), resCsv);
   assert.strictEqual(resCsv.statusCode, 200, "Template CSV response must be 200");
-  assert(typeof resCsv.data === "string" && resCsv.data.includes("Customer Name"), "CSV template must contain Customer Name header");
+  assert(typeof resCsv.data === "string" && (resCsv.data.includes("Borrower Name") || resCsv.data.includes("Customer Name")), "CSV template must contain Borrower/Customer Name header");
   console.log("✓ Downloadable template generates valid .xlsx and .csv formats with standard loan fields.");
 
   // 3. Test Pre-Validation & Duplicate Detection
@@ -89,36 +89,61 @@ const runModuleATests = async () => {
   const existingCaseAccount = memoryStore.loan_cases[0].loan_account_no;
   const testUploadRows = [
     {
-      "Customer Name": "Mohit Agarwal",
-      "Customer Mobile Number": "9811122233",
-      "Loan Account Number": "LN-NEW-TEST-001",
-      "Bank / Financial Institution": "Axis Bank",
-      "Total Loan Amount": 200000,
+      "Borrower Name": "Mohit Agarwal",
+      "Customer Code": "CUST-NEW-001",
+      "Phone": "9811122233",
+      "City": "Mumbai",
+      "State": "Maharashtra",
+      "Pincode": "400001",
+      "Lender Name": "Axis Bank",
+      "Loan Account No": "LN-NEW-TEST-001",
+      "Loan Type": "Personal",
+      "Principal Amount": 200000,
       "Outstanding Amount": 140000,
-      "City": "Mumbai"
+      "DPD": 15,
+      "Priority": "MEDIUM"
     },
     {
-      "Customer Name": "Duplicate In DB Customer",
-      "Customer Mobile Number": "9822233344",
-      "Loan Account Number": existingCaseAccount, // In-DB duplicate!
-      "Bank / Financial Institution": "HDFC Bank",
-      "Total Loan Amount": 300000,
-      "Outstanding Amount": 210000
+      "Borrower Name": "Duplicate In DB Customer",
+      "Customer Code": "CUST-DUP-002",
+      "Phone": "9822233344",
+      "City": "Mumbai",
+      "State": "Maharashtra",
+      "Pincode": "400001",
+      "Lender Name": "HDFC Bank",
+      "Loan Account No": existingCaseAccount, // In-DB duplicate!
+      "Loan Type": "Personal",
+      "Principal Amount": 300000,
+      "Outstanding Amount": 210000,
+      "DPD": 30,
+      "Priority": "HIGH"
     },
     {
-      "Customer Name": "Duplicate In File Customer",
-      "Customer Mobile Number": "9833344455",
-      "Loan Account Number": "LN-NEW-TEST-001", // In-file duplicate!
-      "Bank / Financial Institution": "SBI",
-      "Total Loan Amount": 100000,
-      "Outstanding Amount": 70000
+      "Borrower Name": "Duplicate In File Customer",
+      "Customer Code": "CUST-DUP-003",
+      "Phone": "9833344455",
+      "City": "Mumbai",
+      "State": "Maharashtra",
+      "Pincode": "400001",
+      "Lender Name": "SBI",
+      "Loan Account No": "LN-NEW-TEST-001", // In-file duplicate!
+      "Loan Type": "Personal",
+      "Principal Amount": 100000,
+      "Outstanding Amount": 70000,
+      "DPD": 45,
+      "Priority": "MEDIUM"
     },
     {
-      "Customer Name": "", // Invalid: Missing Name!
-      "Customer Mobile Number": "123", // Invalid phone!
-      "Loan Account Number": "LN-INVALID-001",
-      "Bank / Financial Institution": "", // Invalid: missing lender!
-      "Total Loan Amount": -500 // Invalid: negative principal!
+      "Borrower Name": "", // Invalid: Missing Name!
+      "Customer Code": "CUST-INV-004",
+      "Phone": "123", // Invalid phone!
+      "City": "Mumbai",
+      "State": "Maharashtra",
+      "Pincode": "400001",
+      "Lender Name": "", // Invalid: missing lender!
+      "Loan Account No": "LN-INVALID-001",
+      "Loan Type": "Personal",
+      "Principal Amount": -500 // Invalid: negative principal!
     }
   ];
 

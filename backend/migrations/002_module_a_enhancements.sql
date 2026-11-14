@@ -42,3 +42,4 @@ CREATE INDEX IF NOT EXISTS idx_case_status_history_emp_created ON case_status_hi
 -- 6. INDEXES FOR CASE ASSIGNMENTS
 CREATE INDEX IF NOT EXISTS idx_case_assignments_case_id ON case_assignments(case_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_case_assignments_to_id ON case_assignments(assigned_to_id, created_at DESC);
+

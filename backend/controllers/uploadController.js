@@ -1,353 +1,114 @@
 import { v4 as uuidv4 } from "uuid";
-import { memoryStore, transaction } from "../config/db.js";
-import { indexService } from "../services/indexService.js";
-import { cacheService } from "../services/cacheService.js";
+import db, { memoryStore, transaction } from "../config/db.js";
+import { uploadRepository } from "../repositories/uploadRepository.js";
+import { fileValidationService } from "../services/fileValidationService.js";
+import { loanValidationService, STANDARD_COLUMNS } from "../services/loanValidationService.js";
 import multer from "multer";
 import * as XLSX from "xlsx";
 
-// Multer configuration for file uploads (in-memory storage)
+// 1. Multer configuration: 10MB limit and extension filter
 const storage = multer.memoryStorage();
 export const upload = multer({
   storage,
   limits: {
-    fileSize: 15 * 1024 * 1024 // 15MB max
+    fileSize: 10 * 1024 * 1024 // 10MB maximum file size
   },
   fileFilter: (req, file, cb) => {
-    const allowedMimes = [
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "application/vnd.ms-excel",
-      "text/csv",
-      "application/csv"
-    ];
-    const allowedExts = [".xlsx", ".xls", ".csv"];
+    const allowedExts = [".xlsx", ".csv"];
     const ext = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf("."));
-
-    if (allowedMimes.includes(file.mimetype) || allowedExts.includes(ext)) {
+    if (allowedExts.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error("Only .xlsx, .xls, and .csv files are allowed."));
+      cb(new Error(`File extension '${ext}' is not permitted. Only .xlsx and .csv files are supported.`));
     }
   }
 });
 
-// In-memory store for active preview sessions
-const previewStore = new Map();
-
-/**
- * Standard column name mappings.
- * Maps various common header names to our internal field names.
- */
-const COLUMN_MAPPINGS = {
-  // Customer fields
-  "customer name": "customer_name",
-  "customer_name": "customer_name",
-  "full name": "customer_name",
-  "full_name": "customer_name",
-  "borrower name": "customer_name",
-  "borrower": "customer_name",
-  "name": "customer_name",
-
-  "phone": "phone",
-  "phone number": "phone",
-  "phone_number": "phone",
-  "mobile": "phone",
-  "mobile number": "phone",
-  "mobile_number": "phone",
-  "customer mobile number": "phone",
-  "contact": "phone",
-  "contact number": "phone",
-
-  "alternate phone": "alternate_phone",
-  "alternate_phone": "alternate_phone",
-  "alt phone": "alternate_phone",
-  "secondary phone": "alternate_phone",
-
-  "email": "email",
-  "email address": "email",
-  "email_address": "email",
-
-  "address": "address",
-  "customer address": "address",
-  "current address": "address",
-  "current_address": "address",
-  "residential address": "address",
-
-  "city": "city",
-  "town": "city",
-
-  "state": "state",
-  "province": "state",
-
-  "pincode": "pincode",
-  "pin code": "pincode",
-  "pin_code": "pincode",
-  "zip": "pincode",
-  "zip code": "pincode",
-  "postal code": "pincode",
-
-  // Loan fields
-  "loan account": "loan_account_no",
-  "loan account no": "loan_account_no",
-  "loan_account_no": "loan_account_no",
-  "loan account number": "loan_account_no",
-  "account number": "loan_account_no",
-  "account no": "loan_account_no",
-  "account_no": "loan_account_no",
-
-  "loan id": "loan_id",
-  "loan_id": "loan_id",
-
-  "lender": "lender_name",
-  "lender name": "lender_name",
-  "lender_name": "lender_name",
-  "bank name": "lender_name",
-  "bank": "lender_name",
-  "financier": "lender_name",
-  "bank / financial institution": "lender_name",
-  "financial institution": "lender_name",
-
-  "loan type": "loan_type",
-  "loan_type": "loan_type",
-  "product": "loan_type",
-  "product type": "loan_type",
-
-  "principal": "principal_amount",
-  "principal amount": "principal_amount",
-  "principal_amount": "principal_amount",
-  "loan amount": "principal_amount",
-  "loan_amount": "principal_amount",
-  "total loan amount": "principal_amount",
-  "sanctioned amount": "principal_amount",
-  "amount": "principal_amount",
-
-  "outstanding": "outstanding_amount",
-  "outstanding amount": "outstanding_amount",
-  "outstanding_amount": "outstanding_amount",
-  "balance": "outstanding_amount",
-  "due amount": "outstanding_amount",
-  "due_amount": "outstanding_amount",
-  "total due": "outstanding_amount",
-
-  "overdue": "overdue_amount",
-  "overdue amount": "overdue_amount",
-  "overdue_amount": "overdue_amount",
-
-  "emi": "emi_amount",
-  "emi amount": "emi_amount",
-  "emi_amount": "emi_amount",
-  "monthly emi": "emi_amount",
-
-  "dpd": "dpd",
-  "days past due": "dpd",
-  "days past due (dpd)": "dpd",
-  "days_past_due": "dpd",
-  "overdue days": "dpd",
-
-  "priority": "priority",
-  "case priority": "priority",
-
-  "assigned employee": "assigned_employee",
-  "assigned_employee": "assigned_employee",
-  "agent": "assigned_employee",
-
-  "status": "status",
-  "case status": "status",
-
-  "follow-up date": "follow_up_date",
-  "follow_up_date": "follow_up_date",
-  "follow up date": "follow_up_date",
-
-  "recovery target": "recovery_target",
-  "recovery_target": "recovery_target",
-  "target": "recovery_target",
-
-  "credit score": "credit_score",
-  "credit_score": "credit_score",
-  "cibil": "credit_score",
-  "cibil score": "credit_score",
-
-  // Extended banking recovery fields
-  "disbursed date": "disbursed_date",
-  "disbursement date": "disbursed_date",
-  "disbursed_date": "disbursed_date",
-
-  "principal outstanding": "principal_outstanding",
-  "principal_outstanding": "principal_outstanding",
-
-  "interest outstanding": "interest_outstanding",
-  "interest_outstanding": "interest_outstanding",
-
-  "penalty": "penalty_amount",
-  "late fees": "penalty_amount",
-  "penalty amount": "penalty_amount",
-  "penalty_amount": "penalty_amount",
-
-  "emi due date": "emi_due_date",
-  "due date": "emi_due_date",
-  "emi_due_date": "emi_due_date",
-
-  "bucket": "bucket",
-  "stage": "bucket",
-  "overdue bucket": "bucket",
-
-  "branch": "branch_name",
-  "branch name": "branch_name",
-  "branch_name": "branch_name",
-
-  "co-borrower name": "co_borrower_name",
-  "co borrower name": "co_borrower_name",
-  "co_borrower_name": "co_borrower_name",
-
-  "co-borrower phone": "co_borrower_phone",
-  "co borrower phone": "co_borrower_phone",
-  "co_borrower_phone": "co_borrower_phone",
-
-  "guarantor details": "guarantor_details",
-  "guarantor": "guarantor_details",
-
-  "collateral details": "collateral_details",
-  "collateral": "collateral_details",
-
-  "risk category": "risk_category",
-  "customer risk category": "risk_category",
-  "risk_category": "risk_category",
-
-  "remarks": "remarks",
-  "notes": "remarks",
-  "case remarks": "remarks"
-};
-
-/**
- * Map raw headers to internal field names.
- */
-function mapHeaders(rawHeaders) {
-  const mapping = {};
-  for (const header of rawHeaders) {
-    const normalized = header.toString().trim().toLowerCase();
-    if (COLUMN_MAPPINGS[normalized]) {
-      mapping[header] = COLUMN_MAPPINGS[normalized];
-    }
-  }
-  return mapping;
-}
-
-/**
- * Validate a single row of data.
- */
-function validateRow(row, rowIndex) {
-  const errors = [];
-
-  if (!row.customer_name || row.customer_name.toString().trim().length < 2) {
-    errors.push(`Row ${rowIndex}: Customer name is missing or too short.`);
-  }
-
-  const phone = row.phone ? row.phone.toString().trim() : "";
-  if (!phone || phone.replace(/\D/g, "").length < 10) {
-    errors.push(`Row ${rowIndex}: Customer Mobile Number is missing or invalid (must be at least 10 digits).`);
-  }
-
-  if (!row.loan_account_no || row.loan_account_no.toString().trim().length < 3) {
-    errors.push(`Row ${rowIndex}: Loan account number is missing.`);
-  }
-
-  if (!row.lender_name || row.lender_name.toString().trim().length < 2) {
-    errors.push(`Row ${rowIndex}: Bank / Financial Institution name is missing.`);
-  }
-
-  const principal = parseFloat(row.principal_amount);
-  if (isNaN(principal) || principal <= 0) {
-    errors.push(`Row ${rowIndex}: Total Loan Amount (Principal) is invalid or must be greater than 0.`);
-  }
-
-  const outstanding = parseFloat(row.outstanding_amount);
-  if (row.outstanding_amount !== undefined && row.outstanding_amount !== "" && (isNaN(outstanding) || outstanding < 0)) {
-    errors.push(`Row ${rowIndex}: Outstanding amount is invalid.`);
-  }
-
-  return errors;
-}
-
 /**
  * GET /api/upload/template
- * Download official PayMagic Loan Import Template in .xlsx or .csv format.
+ * Download official PayMagic Loan Import Template with exactly 16 standard business fields.
  */
 export const getImportTemplate = async (req, res) => {
   try {
     const format = (req.query.format || "xlsx").toLowerCase();
 
-    const templateHeaders = [
-      "Customer Name",
-      "Customer Mobile Number",
-      "Loan Account Number",
-      "Loan ID",
-      "Loan Type",
-      "Bank / Financial Institution",
-      "Total Loan Amount",
-      "Outstanding Amount",
-      "Overdue Amount",
-      "EMI Amount",
-      "Days Past Due (DPD)",
-      "Customer Address",
-      "City",
-      "State",
-      "PIN Code",
-      "Priority",
-      "Follow-up Date",
-      "Recovery Target"
-    ];
-
     const sampleRows = [
       {
-        "Customer Name": "Aarav Sharma",
-        "Customer Mobile Number": "9876543210",
-        "Loan Account Number": "LN-HDFC-9901",
-        "Loan ID": "LOAN-HDFC-01",
-        "Loan Type": "Personal Loan",
-        "Bank / Financial Institution": "HDFC Bank",
-        "Total Loan Amount": 250000,
-        "Outstanding Amount": 180000,
-        "Overdue Amount": 45000,
-        "EMI Amount": 12500,
-        "Days Past Due (DPD)": 45,
-        "Customer Address": "Flat 402, Sunset Towers, Andheri West",
+        "Borrower Name": "Aarav Sharma",
+        "Customer Code": "CUST-MUM-1001",
+        "Phone": "9876543210",
+        "Alternate Phone": "9823456780",
+        "Email": "aarav.sharma@example.com",
+        "Address": "Flat 402, Sunset Towers, Andheri West",
         "City": "Mumbai",
         "State": "Maharashtra",
-        "PIN Code": "400053",
-        "Priority": "HIGH",
-        "Follow-up Date": new Date(Date.now() + 86400000 * 3).toISOString().split("T")[0],
-        "Recovery Target": 50000
+        "Pincode": "400053",
+        "Lender Name": "Bajaj Finance",
+        "Loan Account No": "LN-BAJAJ-8801",
+        "Loan Type": "Personal",
+        "Principal Amount": 250000,
+        "Outstanding Amount": 185000,
+        "DPD": 45,
+        "Priority": "HIGH"
       },
       {
-        "Customer Name": "Pooja Verma",
-        "Customer Mobile Number": "9823456789",
-        "Loan Account Number": "LN-ICICI-8812",
-        "Loan ID": "LOAN-ICICI-02",
-        "Loan Type": "Auto Loan",
-        "Bank / Financial Institution": "ICICI Bank",
-        "Total Loan Amount": 450000,
-        "Outstanding Amount": 320000,
-        "Overdue Amount": 80000,
-        "EMI Amount": 18200,
-        "Days Past Due (DPD)": 62,
-        "Customer Address": "Plot 12, Baner Road",
+        "Borrower Name": "Pooja Verma",
+        "Customer Code": "CUST-PUN-2045",
+        "Phone": "9823456789",
+        "Alternate Phone": "",
+        "Email": "pooja.verma@example.com",
+        "Address": "Plot 12, Baner Road",
         "City": "Pune",
         "State": "Maharashtra",
-        "PIN Code": "411045",
-        "Priority": "CRITICAL",
-        "Follow-up Date": new Date(Date.now() + 86400000 * 2).toISOString().split("T")[0],
-        "Recovery Target": 90000
+        "Pincode": "411045",
+        "Lender Name": "HDFC Bank",
+        "Loan Account No": "LN-HDFC-9912",
+        "Loan Type": "Auto",
+        "Principal Amount": 450000,
+        "Outstanding Amount": 320000,
+        "DPD": 65,
+        "Priority": "CRITICAL"
+      },
+      {
+        "Borrower Name": "Vikram Malhotra",
+        "Customer Code": "CUST-DEL-3310",
+        "Phone": "9910293847",
+        "Alternate Phone": "9910293800",
+        "Email": "",
+        "Address": "B-14, Sector 62",
+        "City": "Noida",
+        "State": "Uttar Pradesh",
+        "Pincode": "201301",
+        "Lender Name": "ICICI Bank",
+        "Loan Account No": "LN-ICICI-4421",
+        "Loan Type": "Credit Card",
+        "Principal Amount": 75000,
+        "Outstanding Amount": 64500,
+        "DPD": 22,
+        "Priority": "MEDIUM"
       }
     ];
 
-    const ws = XLSX.utils.json_to_sheet(sampleRows, { header: templateHeaders });
+    const ws = XLSX.utils.json_to_sheet(sampleRows, { header: STANDARD_COLUMNS });
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Loan_Import_Template");
+    XLSX.utils.book_append_sheet(wb, ws, "Standard_Loan_Template");
 
     if (format === "csv") {
-      const csvOutput = XLSX.utils.sheet_to_csv(ws);
-      res.setHeader("Content-Type", "text/csv");
+      let csvOutput = XLSX.utils.sheet_to_csv(ws);
+      // Sanitize any dangerous characters in CSV output
+      const sanitizedLines = csvOutput.split("\n").map(line => {
+        return line.split(",").map(cell => {
+          const trimmed = cell.trim();
+          if (["=", "+", "-", "@"].includes(trimmed[0]) && isNaN(Number(trimmed))) {
+            return `'${trimmed}`;
+          }
+          return cell;
+        }).join(",");
+      }).join("\n");
+
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
       res.setHeader("Content-Disposition", 'attachment; filename="PayMagic_Loan_Import_Template.csv"');
-      return res.status(200).send(csvOutput);
+      return res.status(200).send(sanitizedLines);
     }
 
     const xlsxBuffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
@@ -362,149 +123,241 @@ export const getImportTemplate = async (req, res) => {
 
 /**
  * POST /api/upload/preview
- * Pre-validates uploaded Excel/CSV file without saving to database.
- * Detects duplicates, schema issues, and displays row-level errors.
+ * Pre-validates uploaded Excel/CSV file without mutating business records.
+ * Generates durable preview session, validates 16 columns, detects duplicates, and checks magic bytes.
  */
 export const previewUpload = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "No file uploaded. Please attach an .xlsx or .csv file." });
-    }
-
-    const { originalname, buffer, size } = req.file;
-    const workbook = XLSX.read(buffer, { type: "buffer" });
-    const sheetName = workbook.SheetNames[0];
-    if (!sheetName) {
-      return res.status(400).json({ success: false, message: "The uploaded file has no sheets." });
-    }
-
-    const sheet = workbook.Sheets[sheetName];
-    const rawData = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-    if (rawData.length === 0) {
-      return res.status(400).json({ success: false, message: "The uploaded file contains no data rows." });
-    }
-
-    // Map headers
-    const rawHeaders = Object.keys(rawData[0]);
-    const headerMapping = mapHeaders(rawHeaders);
-    const mappedFields = Object.values(headerMapping);
-
-    const requiredFields = ["customer_name", "phone", "loan_account_no", "lender_name", "principal_amount"];
-    const missingRequired = requiredFields.filter(f => !mappedFields.includes(f));
-
-    if (missingRequired.length > 0) {
       return res.status(400).json({
         success: false,
-        message: `Missing required columns: ${missingRequired.join(", ")}. Please use the downloadable template.`,
-        data: {
-          detected_headers: rawHeaders,
-          mapped_headers: headerMapping,
-          missing_required: missingRequired
-        }
+        message: "No file uploaded. Please attach an .xlsx or .csv file (max 10 MB)."
       });
     }
 
-    const previewBatchId = `prev_${uuidv4()}`;
+    // 1. Strict File Security Validation (Size, Extension, Magic Bytes)
+    const fileSecurity = fileValidationService.validateUpload(req.file);
+    if (!fileSecurity.valid) {
+      return res.status(400).json({
+        success: false,
+        message: fileSecurity.error
+      });
+    }
+
+    const { buffer, originalname, size } = req.file;
+
+    // 2. Parse Spreadsheet (Never evaluate formulas!)
+    let workbook;
+    try {
+      workbook = XLSX.read(buffer, {
+        type: "buffer",
+        cellFormula: false, // Security: Do not evaluate formulas
+        cellHTML: false,
+        raw: false // Parse cells as formatted text to preserve string precision
+      });
+    } catch (parseErr) {
+      return res.status(400).json({
+        success: false,
+        message: `Corrupted or unreadable spreadsheet: ${parseErr.message}`
+      });
+    }
+
+    // 3. Validate Workbook Boundaries (Sheet count, row limits)
+    const structureCheck = fileValidationService.validateWorkbookStructure(workbook);
+    if (!structureCheck.valid) {
+      return res.status(400).json({
+        success: false,
+        message: structureCheck.error
+      });
+    }
+
+    const worksheet = workbook.Sheets[structureCheck.sheetName];
+    const rawData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+    if (!rawData || rawData.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "The uploaded spreadsheet contains no data rows."
+      });
+    }
+
+    if (rawData.length > fileValidationService.MAX_ROWS) {
+      return res.status(400).json({
+        success: false,
+        message: `File row count (${rawData.length}) exceeds maximum allowable limit of ${fileValidationService.MAX_ROWS} rows.`
+      });
+    }
+
+    // 4. Validate Headers
+    const firstRowKeys = Object.keys(rawData[0]);
+    if (firstRowKeys.length > fileValidationService.MAX_COLS) {
+      return res.status(400).json({
+        success: false,
+        message: `File column count (${firstRowKeys.length}) exceeds maximum allowable limit of ${fileValidationService.MAX_COLS} columns.`
+      });
+    }
+
+    // 5. Pre-collect loan accounts to query database duplicates
+    const normalizedRows = [];
+    const loanAccountsToCheck = [];
+
+    rawData.forEach((row, idx) => {
+      const normalized = loanValidationService.normalizeHeaders(row);
+      normalizedRows.push({ raw: row, normalized, rowIndex: idx + 2 });
+      if (normalized.loan_account_no) {
+        loanAccountsToCheck.push(normalized.loan_account_no);
+      }
+    });
+
+    // Query database duplicates using parameterized SQL via repository
+    const dbDuplicatesList = await uploadRepository.checkDuplicateAccounts(loanAccountsToCheck);
+    const dbDuplicateSet = new Set(dbDuplicatesList.map(a => String(a).trim().toUpperCase()));
+
+    // 6. Partition Rows into Valid, Duplicates, and Rejected
     const validRows = [];
     const duplicateRows = [];
     const rejectedRows = [];
-    const seenInFile = new Set();
 
-    for (let i = 0; i < rawData.length; i++) {
-      const rawRow = rawData[i];
-      const rowIndex = i + 2;
+    const seenAccountsInFile = new Set();
+    const seenCustomerCodesInFile = new Set();
 
-      const mappedRow = {};
-      for (const [rawHeader, internalField] of Object.entries(headerMapping)) {
-        mappedRow[internalField] = rawRow[rawHeader];
-      }
+    normalizedRows.forEach(({ raw, normalized, rowIndex }) => {
+      // Validate schema and business rules
+      const valResult = loanValidationService.validateRow(normalized, rowIndex);
 
-      // Check validation
-      const rowErrors = validateRow(mappedRow, rowIndex);
-      if (rowErrors.length > 0) {
+      if (!valResult.isValid) {
         rejectedRows.push({
           row: rowIndex,
-          reason: rowErrors.join("; "),
-          data: rawRow,
-          mapped: mappedRow
+          loan_account_no: normalized.loan_account_no || "N/A",
+          customer_name: normalized.borrower_name || "N/A",
+          customer_code: normalized.customer_code || "N/A",
+          reason: valResult.errors.join("; "),
+          data: raw
         });
-        continue;
+        return;
       }
 
-      const loanAccount = mappedRow.loan_account_no.toString().trim();
+      const cleanRow = valResult.sanitized;
+      const acctKey = cleanRow.loan_account_no.toUpperCase();
+      const custKey = cleanRow.customer_code.toUpperCase();
 
       // Check duplicate within same file
-      if (seenInFile.has(loanAccount)) {
+      if (seenAccountsInFile.has(acctKey)) {
         duplicateRows.push({
           row: rowIndex,
-          loan_account_no: loanAccount,
-          reason: `Duplicate loan account number '${loanAccount}' in row ${rowIndex} (appears earlier in same file).`,
-          data: rawRow,
-          mapped: mappedRow
+          loan_account_no: cleanRow.loan_account_no,
+          customer_name: cleanRow.borrower_name,
+          customer_code: cleanRow.customer_code,
+          reason: `Duplicate loan account number '${cleanRow.loan_account_no}' appears multiple times in uploaded file.`,
+          data: raw
         });
-        continue;
+        return;
       }
-      seenInFile.add(loanAccount);
+      seenAccountsInFile.add(acctKey);
 
-      // Check duplicate against database
-      const existingCase = memoryStore.loan_cases.find(
-        c => c.loan_account_no && c.loan_account_no.toLowerCase() === loanAccount.toLowerCase()
-      );
-      if (existingCase) {
+      // Check duplicate against existing database
+      if (dbDuplicateSet.has(acctKey)) {
         duplicateRows.push({
           row: rowIndex,
-          loan_account_no: loanAccount,
-          reason: `Loan account '${loanAccount}' already exists in database (Case: ${existingCase.case_number}).`,
-          data: rawRow,
-          mapped: mappedRow
+          loan_account_no: cleanRow.loan_account_no,
+          customer_name: cleanRow.borrower_name,
+          customer_code: cleanRow.customer_code,
+          reason: `Loan account '${cleanRow.loan_account_no}' already exists in PayMagic portfolio.`,
+          data: raw
         });
-        continue;
+        return;
       }
 
       validRows.push({
         row: rowIndex,
-        data: rawRow,
-        mapped: mappedRow
+        customer: {
+          customer_code: cleanRow.customer_code,
+          full_name: cleanRow.borrower_name,
+          phone_raw: cleanRow.phone,
+          phone_masked: `${cleanRow.phone.slice(0, 7)}****${cleanRow.phone.slice(-2)}`,
+          alternate_phone: cleanRow.alternate_phone,
+          email: cleanRow.email,
+          current_address: cleanRow.address,
+          city: cleanRow.city,
+          state: cleanRow.state,
+          pincode: cleanRow.pincode
+        },
+        caseData: {
+          lender_name: cleanRow.lender_name,
+          loan_account_no: cleanRow.loan_account_no,
+          loan_type: cleanRow.loan_type,
+          principal_amount: cleanRow.principal_amount,
+          outstanding_amount: cleanRow.outstanding_amount,
+          dpd: cleanRow.dpd,
+          priority: cleanRow.priority
+        }
       });
-    }
+    });
 
-    // Cache preview session for 30 minutes
-    const previewData = {
-      previewBatchId,
-      fileName: originalname,
-      fileSizeBytes: size,
-      uploaderId: req.user.id,
-      uploaderName: req.user.fullName || req.user.name,
-      totalRows: rawData.length,
-      validRows,
-      duplicateRows,
-      rejectedRows,
-      rawHeaders,
-      headerMapping,
-      createdAt: new Date().toISOString()
+    // 7. Persist Preview Session Durably in Database
+    const previewBatchId = `batch_${uuidv4().slice(0, 8)}`;
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 minutes
+
+    const previewPayload = {
+      preview_batch_id: previewBatchId,
+      filename: originalname,
+      file_size_bytes: size,
+      file_checksum: fileSecurity.checksum,
+      uploader_id: req.user.id,
+      uploader_name: req.user.fullName || req.user.name || "Administrator",
+      total_records: rawData.length,
+      valid_records: validRows.length,
+      duplicate_records: duplicateRows.length,
+      rejected_records: rejectedRows.length,
+      sample_valid: validRows.slice(0, 5).map(v => ({
+        customer_name: v.customer.full_name,
+        customer_code: v.customer.customer_code,
+        loan_account_no: v.caseData.loan_account_no,
+        lender_name: v.caseData.lender_name,
+        principal_amount: v.caseData.principal_amount,
+        outstanding_amount: v.caseData.outstanding_amount,
+        dpd: v.caseData.dpd,
+        priority: v.caseData.priority
+      })),
+      duplicate_records_list: duplicateRows.slice(0, 50),
+      rejected_records_list: rejectedRows.slice(0, 50),
+      valid_rows_data: validRows, // Stored durably for atomic confirmation
+      expires_at: expiresAt
     };
-    previewStore.set(previewBatchId, previewData);
+
+    await uploadRepository.createBatchSession({
+      id: previewBatchId,
+      filename: originalname,
+      uploadedBy: req.user.id,
+      fileChecksum: fileSecurity.checksum,
+      totalRecords: rawData.length,
+      validRecords: validRows.length,
+      duplicateRecords: duplicateRows.length,
+      failedRecords: rejectedRows.length,
+      previewData: previewPayload,
+      errorsJson: [...duplicateRows, ...rejectedRows],
+      expiresAt
+    });
 
     return res.status(200).json({
       success: true,
-      message: `File analyzed: ${validRows.length} valid, ${duplicateRows.length} duplicates, ${rejectedRows.length} rejected out of ${rawData.length} rows.`,
+      message: `File evaluated: ${validRows.length} valid, ${duplicateRows.length} duplicate, ${rejectedRows.length} rejected.`,
       data: {
         preview_batch_id: previewBatchId,
-        file_name: originalname,
-        file_size_bytes: size,
+        filename: originalname,
+        file_checksum: fileSecurity.checksum,
         total_records: rawData.length,
         valid_records: validRows.length,
         duplicate_records: duplicateRows.length,
         rejected_records: rejectedRows.length,
         can_import: validRows.length > 0,
-        sample_valid: validRows.slice(0, 10).map(v => v.mapped),
-        error_records: [...duplicateRows, ...rejectedRows].slice(0, 30).map(e => ({
-          row: e.row,
-          loan_account_no: e.loan_account_no || e.mapped?.loan_account_no || "N/A",
-          customer_name: e.mapped?.customer_name || e.data?.["Customer Name"] || "N/A",
-          reason: e.reason
-        }))
+        expires_at: expiresAt,
+        sample_valid: previewPayload.sample_valid,
+        duplicate_rows: duplicateRows.slice(0, 20),
+        rejected_rows: rejectedRows.slice(0, 20),
+        duplicate_records_list: duplicateRows.slice(0, 20),
+        rejected_records_list: rejectedRows.slice(0, 20),
+        error_records: [...duplicateRows, ...rejectedRows].slice(0, 30)
       }
     });
   } catch (error) {
@@ -514,26 +367,62 @@ export const previewUpload = async (req, res) => {
 };
 
 /**
- * POST /api/upload/confirm
- * Atomically commits the pre-validated preview batch into the database.
+ * POST /api/upload/:batchId/confirm and POST /api/upload/confirm
+ * Atomically commits validated preview batch into PostgreSQL inside a database transaction.
  */
 export const confirmUpload = async (req, res) => {
   try {
-    const { preview_batch_id, skipDuplicates = true } = req.body;
+    const batchId = req.params.batchId || req.body.preview_batch_id || req.body.batch_id;
 
-    if (!preview_batch_id) {
-      return res.status(400).json({ success: false, message: "preview_batch_id is required." });
+    if (!batchId) {
+      return res.status(400).json({ success: false, message: "batchId or preview_batch_id is required." });
     }
 
-    const preview = previewStore.get(preview_batch_id);
-    if (!preview) {
+    // 1. Fetch batch session with update lock
+    const batch = await uploadRepository.getBatchSession(batchId, null, true);
+    if (!batch) {
       return res.status(404).json({
         success: false,
-        message: "Preview session expired or not found. Please upload the file again."
+        message: `Import batch session '${batchId}' not found. Please upload the file again.`
       });
     }
 
-    const { validRows, duplicateRows, rejectedRows, fileName, fileSizeBytes, uploaderId, uploaderName } = preview;
+    // 2. Security & Authorization Checks
+    if (batch.status === "CONFIRMED") {
+      return res.status(409).json({
+        success: false,
+        message: `Import batch '${batchId}' has already been confirmed and processed.`
+      });
+    }
+
+    if (["CANCELLED", "EXPIRED"].includes(batch.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Import batch '${batchId}' is in '${batch.status}' status and cannot be confirmed.`
+      });
+    }
+
+    // Check expiration
+    if (batch.expires_at && new Date(batch.expires_at) < new Date()) {
+      await uploadRepository.expireBatchSession(batchId);
+      return res.status(410).json({
+        success: false,
+        message: `Import preview session '${batchId}' has expired (30-minute validity limit). Please re-upload.`
+      });
+    }
+
+    // Check uploader ownership or administrative privilege
+    const isOwner = batch.uploaded_by === req.user.id;
+    const isPrivilegedAdmin = ["SUPER_ADMIN", "ADMIN"].includes(req.user.role);
+    if (!isOwner && !isPrivilegedAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to confirm an import batch uploaded by another user."
+      });
+    }
+
+    const previewData = batch.preview_data || {};
+    const validRows = previewData.valid_rows_data || [];
 
     if (validRows.length === 0) {
       return res.status(400).json({
@@ -542,149 +431,24 @@ export const confirmUpload = async (req, res) => {
       });
     }
 
-    const batchId = `batch_${uuidv4().slice(0, 8)}`;
-    const now = new Date().toISOString();
-    const createdCases = [];
-
-    // Atomically execute import
-    await transaction(async () => {
-      for (const item of validRows) {
-        const mappedRow = item.mapped;
-        const phone = mappedRow.phone.toString().trim();
-
-        // Find or create customer
-        let customer = memoryStore.customers.find(c => c.phone_raw === phone);
-        if (!customer) {
-          const custId = `cust_${uuidv4().slice(0, 8)}`;
-          const maskedPhone = phone.length > 6
-            ? `${phone.slice(0, Math.max(4, phone.length - 4))}****${phone.slice(-2)}`
-            : phone;
-
-          customer = {
-            id: custId,
-            customer_code: `CUST-IMP-${String(memoryStore.customers.length + 1).padStart(4, "0")}`,
-            full_name: mappedRow.customer_name.toString().trim(),
-            phone_masked: maskedPhone,
-            phone_raw: phone,
-            alternate_phone: mappedRow.alternate_phone ? mappedRow.alternate_phone.toString().trim() : null,
-            email: mappedRow.email ? mappedRow.email.toString().trim() : null,
-            current_address: mappedRow.address ? mappedRow.address.toString().trim() : null,
-            city: mappedRow.city ? mappedRow.city.toString().trim() : "Unknown",
-            state: mappedRow.state ? mappedRow.state.toString().trim() : "Unknown",
-            pincode: mappedRow.pincode ? mappedRow.pincode.toString().trim() : null,
-            credit_score: mappedRow.credit_score ? parseInt(mappedRow.credit_score, 10) || null : null
-          };
-          memoryStore.customers.push(customer);
-        }
-
-        const principal = parseFloat(mappedRow.principal_amount) || 0;
-        const outstanding = parseFloat(mappedRow.outstanding_amount) || principal;
-        const overdue = parseFloat(mappedRow.overdue_amount) || Math.round(outstanding * 0.35);
-        const emi = parseFloat(mappedRow.emi_amount) || Math.round(principal / 24);
-        const recovered = Math.max(0, principal - outstanding);
-        const dpd = parseInt(mappedRow.dpd, 10) || 0;
-        const caseCount = memoryStore.loan_cases.length + 1;
-
-        const caseId = `case_imp_${uuidv4().slice(0, 8)}`;
-        const caseNumber = `PM-LN-${new Date().getFullYear()}-IMP-${String(caseCount).padStart(5, "0")}`;
-
-        const priority = mappedRow.priority
-          ? mappedRow.priority.toString().toUpperCase()
-          : (outstanding > 120000 ? "CRITICAL" : outstanding > 60000 ? "HIGH" : outstanding > 30000 ? "MEDIUM" : "LOW");
-
-        const target = parseFloat(mappedRow.recovery_target) || Math.round(outstanding * 0.4);
-
-        const newCase = {
-          id: caseId,
-          case_number: caseNumber,
-          customer_id: customer.id,
-          lender_name: mappedRow.lender_name.toString().trim(),
-          loan_account_no: mappedRow.loan_account_no.toString().trim(),
-          loan_id: mappedRow.loan_id ? mappedRow.loan_id.toString().trim() : null,
-          loan_type: mappedRow.loan_type ? mappedRow.loan_type.toString().trim() : "Personal Loan",
-          principal_amount: principal,
-          outstanding_amount: outstanding,
-          overdue_amount: overdue,
-          emi_amount: emi,
-          total_recovered_amount: recovered,
-          dpd,
-          priority,
-          status: "New",
-          assigned_employee_id: null,
-          assigned_at: null,
-          follow_up_date: mappedRow.follow_up_date || null,
-          recovery_target: target,
-          is_field_visit_required: false,
-          import_batch_id: batchId,
-          created_at: now,
-          updated_at: now
-        };
-
-        memoryStore.loan_cases.push(newCase);
-
-        // Immutable initial audit status record
-        memoryStore.case_status_history.unshift({
-          id: `csh_${uuidv4()}`,
-          case_id: caseId,
-          employee_id: req.user.id,
-          previous_status: "SYSTEM_INTAKE",
-          new_status: "New",
-          source: "Admin",
-          remarks: `Imported from file '${fileName}' (batch: ${batchId}).`,
-          created_at: now
-        });
-
-        createdCases.push(newCase);
-      }
-
-      // Rebuild in-memory search index
-      indexService.rebuild(memoryStore);
-
-      // Invalidate relevant cache keys
-      cacheService.delPattern("cases:*");
-      cacheService.delPattern("dashboard:*");
-    });
-
-    const errorRows = [...duplicateRows, ...rejectedRows].map(e => ({
-      row: e.row,
-      reason: e.reason,
-      data: e.data
-    }));
-
-    // Record import batch
-    const importBatch = {
-      id: batchId,
-      uploaded_by: uploaderId,
-      uploaded_by_name: uploaderName,
-      file_name: fileName,
-      file_size_bytes: fileSizeBytes,
-      total_rows: preview.totalRows,
-      success_count: createdCases.length,
-      duplicate_count: duplicateRows.length,
-      rejected_count: rejectedRows.length,
-      fail_count: duplicateRows.length + rejectedRows.length,
-      status: duplicateRows.length + rejectedRows.length === 0 ? "SUCCESS" : "PARTIAL",
-      error_rows: errorRows,
-      created_at: now
-    };
-
-    memoryStore.import_batches.unshift(importBatch);
-
-    // Clean up preview session
-    previewStore.delete(preview_batch_id);
+    // 3. Atomically save records inside transaction
+    const createdCases = await uploadRepository.saveImportedRecords(
+      batch.id,
+      validRows,
+      req.user.id
+    );
 
     return res.status(200).json({
       success: true,
-      message: `Successfully imported ${createdCases.length} loan cases.`,
+      message: `Successfully confirmed and imported ${createdCases.length} loan case(s).`,
       data: {
-        batch_id: batchId,
-        file_name: fileName,
-        total_rows: preview.totalRows,
+        batch_id: batch.id,
+        filename: batch.filename,
         success_count: createdCases.length,
-        duplicate_count: duplicateRows.length,
-        rejected_count: rejectedRows.length,
-        status: importBatch.status,
-        created_cases: createdCases.slice(0, 10)
+        total_records: batch.total_records,
+        skipped_duplicates: batch.duplicate_records,
+        rejected_count: batch.failed_records,
+        status: "CONFIRMED"
       }
     });
   } catch (error) {
@@ -694,59 +458,39 @@ export const confirmUpload = async (req, res) => {
 };
 
 /**
- * GET /api/upload/errors/:batchId
- * Download CSV/Excel of rejected and duplicate rows with reasons.
+ * GET /api/upload/errors/:batchId and GET /api/upload/:batchId/errors
+ * Download row-level rejected and duplicate records with sanitized CSV export.
  */
 export const downloadErrorRecords = async (req, res) => {
   try {
     const { batchId } = req.params;
-    const format = (req.query.format || "csv").toLowerCase();
+    const batch = await uploadRepository.getBatchSession(batchId);
 
-    // Check if in import_batches
-    let errorRows = [];
-    let fileName = "loan_import_errors";
-
-    const batch = memoryStore.import_batches.find(b => b.id === batchId);
-    if (batch && batch.error_rows) {
-      errorRows = batch.error_rows;
-      fileName = `${batch.file_name.replace(/\.[^/.]+$/, "")}_errors`;
-    } else {
-      // Check in active preview store
-      const preview = previewStore.get(batchId);
-      if (preview) {
-        errorRows = [...preview.duplicateRows, ...preview.rejectedRows];
-        fileName = `${preview.fileName.replace(/\.[^/.]+$/, "")}_errors`;
-      }
+    if (!batch) {
+      return res.status(404).json({ success: false, message: `Batch '${batchId}' not found.` });
     }
 
-    if (!errorRows || errorRows.length === 0) {
-      return res.status(404).json({ success: false, message: "No error records found for this batch." });
-    }
+    const errors = batch.errors_json || [];
 
-    const exportRows = errorRows.map(err => {
-      const rowData = err.data || {};
-      return {
-        "Row Number": err.row,
-        "Failure Reason": err.reason,
-        ...rowData
-      };
+    // Build sanitized CSV with formula protection
+    const csvHeaders = ["Row Number", "Loan Account Number", "Customer Name", "Failure Reason"];
+    const csvRows = [csvHeaders.join(",")];
+
+    errors.forEach(err => {
+      const rowNo = err.row || "N/A";
+      const acct = loanValidationService.sanitizeFormula(err.loan_account_no || "N/A");
+      const name = loanValidationService.sanitizeFormula(err.customer_name || "N/A");
+      const reason = loanValidationService.sanitizeFormula(err.reason || "Validation rejected");
+
+      // Wrap fields in double quotes
+      csvRows.push(`"${rowNo}","${acct}","${name}","${reason.replace(/"/g, '""')}"`);
     });
 
-    const ws = XLSX.utils.json_to_sheet(exportRows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Rejected_Records");
+    const csvContent = csvRows.join("\r\n");
 
-    if (format === "xlsx") {
-      const xlsxBuffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
-      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-      res.setHeader("Content-Disposition", `attachment; filename="${fileName}.xlsx"`);
-      return res.status(200).send(xlsxBuffer);
-    }
-
-    const csvOutput = XLSX.utils.sheet_to_csv(ws);
-    res.setHeader("Content-Type", "text/csv");
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}.csv"`);
-    return res.status(200).send(csvOutput);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="import_errors_${batchId}.csv"`);
+    return res.status(200).send(csvContent);
   } catch (error) {
     console.error("downloadErrorRecords Error:", error);
     return res.status(500).json({ success: false, message: error.message });
@@ -754,262 +498,87 @@ export const downloadErrorRecords = async (req, res) => {
 };
 
 /**
- * POST /api/upload
- * Backwards-compatible direct upload.
+ * GET /api/upload/history
+ * Returns paginated import batch audit history.
+ */
+export const getImportHistory = async (req, res) => {
+  try {
+    const { limit = 20, page = 1 } = req.query;
+    const limitNum = parseInt(limit, 10) || 20;
+    const offset = (Math.max(1, parseInt(page, 10)) - 1) * limitNum;
+
+    const batches = await uploadRepository.getBatchHistory({ limit: limitNum, offset });
+    return res.status(200).json({
+      success: true,
+      message: `Retrieved ${batches.length} import batch(es).`,
+      data: { batches }
+    });
+  } catch (error) {
+    console.error("getImportHistory Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * GET /api/upload/:batchId
+ * Fetch single batch details
+ */
+export const getBatchById = async (req, res) => {
+  try {
+    const { batchId } = req.params;
+    const batch = await uploadRepository.getBatchSession(batchId);
+    if (!batch) {
+      return res.status(404).json({ success: false, message: `Batch '${batchId}' not found.` });
+    }
+    return res.status(200).json({ success: true, data: { batch } });
+  } catch (error) {
+    console.error("getBatchById Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Direct file upload & import (Legacy / CLI single-step support)
  */
 export const uploadFile = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "No file uploaded. Please attach an .xlsx or .csv file." });
+      return res.status(400).json({ success: false, message: "No file uploaded." });
     }
 
-    const { originalname, buffer, size } = req.file;
-    const workbook = XLSX.read(buffer, { type: "buffer" });
-    const sheetName = workbook.SheetNames[0];
-    if (!sheetName) {
-      return res.status(400).json({ success: false, message: "The uploaded file has no sheets." });
-    }
-
-    const sheet = workbook.Sheets[sheetName];
-    const rawData = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-    if (rawData.length === 0) {
-      return res.status(400).json({ success: false, message: "The uploaded file contains no data rows." });
-    }
-
-    const rawHeaders = Object.keys(rawData[0]);
-    const headerMapping = mapHeaders(rawHeaders);
-    const mappedFields = Object.values(headerMapping);
-
-    const requiredFields = ["customer_name", "phone", "loan_account_no", "lender_name", "principal_amount"];
-    const missingRequired = requiredFields.filter(f => !mappedFields.includes(f));
-
-    if (missingRequired.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: `Missing required columns: ${missingRequired.join(", ")}.`,
-        data: {
-          detected_headers: rawHeaders,
-          mapped_headers: headerMapping,
-          missing_required: missingRequired
-        }
-      });
-    }
-
-    const batchId = `batch_${uuidv4().slice(0, 8)}`;
-    const now = new Date().toISOString();
-    let successCount = 0;
-    let duplicateCount = 0;
-    let rejectedCount = 0;
-    const errorRows = [];
-    const createdCases = [];
-    const seenAccounts = new Set();
-
-    for (let i = 0; i < rawData.length; i++) {
-      const rawRow = rawData[i];
-      const rowIndex = i + 2;
-
-      const mappedRow = {};
-      for (const [rawHeader, internalField] of Object.entries(headerMapping)) {
-        mappedRow[internalField] = rawRow[rawHeader];
-      }
-
-      const rowErrors = validateRow(mappedRow, rowIndex);
-      if (rowErrors.length > 0) {
-        rejectedCount++;
-        errorRows.push({ row: rowIndex, reason: rowErrors.join("; "), data: rawRow });
-        continue;
-      }
-
-      const loanAccount = mappedRow.loan_account_no.toString().trim();
-      if (seenAccounts.has(loanAccount)) {
-        duplicateCount++;
-        errorRows.push({ row: rowIndex, reason: `Duplicate loan account '${loanAccount}' in file`, data: rawRow });
-        continue;
-      }
-      seenAccounts.add(loanAccount);
-
-      const existingCase = memoryStore.loan_cases.find(
-        c => c.loan_account_no && c.loan_account_no.toLowerCase() === loanAccount.toLowerCase()
-      );
-      if (existingCase) {
-        duplicateCount++;
-        errorRows.push({
-          row: rowIndex,
-          reason: `Duplicate loan account number '${loanAccount}' in database (Case: ${existingCase.case_number}).`,
-          data: rawRow
-        });
-        continue;
-      }
-
-      const phone = mappedRow.phone.toString().trim();
-      let customer = memoryStore.customers.find(c => c.phone_raw === phone);
-
-      if (!customer) {
-        const custId = `cust_${uuidv4().slice(0, 8)}`;
-        const maskedPhone = phone.length > 6
-          ? `${phone.slice(0, Math.max(4, phone.length - 4))}****${phone.slice(-2)}`
-          : phone;
-
-        customer = {
-          id: custId,
-          customer_code: `CUST-IMP-${String(memoryStore.customers.length + 1).padStart(4, "0")}`,
-          full_name: mappedRow.customer_name.toString().trim(),
-          phone_masked: maskedPhone,
-          phone_raw: phone,
-          alternate_phone: mappedRow.alternate_phone ? mappedRow.alternate_phone.toString().trim() : null,
-          email: mappedRow.email ? mappedRow.email.toString().trim() : null,
-          current_address: mappedRow.address ? mappedRow.address.toString().trim() : null,
-          city: mappedRow.city ? mappedRow.city.toString().trim() : "Unknown",
-          state: mappedRow.state ? mappedRow.state.toString().trim() : "Unknown",
-          pincode: mappedRow.pincode ? mappedRow.pincode.toString().trim() : null,
-          credit_score: mappedRow.credit_score ? parseInt(mappedRow.credit_score, 10) || null : null
-        };
-        memoryStore.customers.push(customer);
-      }
-
-      const principal = parseFloat(mappedRow.principal_amount) || 0;
-      const outstanding = parseFloat(mappedRow.outstanding_amount) || principal;
-      const overdue = parseFloat(mappedRow.overdue_amount) || Math.round(outstanding * 0.35);
-      const emi = parseFloat(mappedRow.emi_amount) || Math.round(principal / 24);
-      const recovered = Math.max(0, principal - outstanding);
-      const dpd = parseInt(mappedRow.dpd, 10) || 0;
-      const caseCount = memoryStore.loan_cases.length + 1;
-
-      const caseId = `case_imp_${uuidv4().slice(0, 8)}`;
-      const caseNumber = `PM-LN-${new Date().getFullYear()}-IMP-${String(caseCount).padStart(5, "0")}`;
-
-      const priority = mappedRow.priority
-        ? mappedRow.priority.toString().toUpperCase()
-        : (outstanding > 120000 ? "CRITICAL" : outstanding > 60000 ? "HIGH" : outstanding > 30000 ? "MEDIUM" : "LOW");
-
-      const newCase = {
-        id: caseId,
-        case_number: caseNumber,
-        customer_id: customer.id,
-        lender_name: mappedRow.lender_name.toString().trim(),
-        loan_account_no: mappedRow.loan_account_no.toString().trim(),
-        loan_id: mappedRow.loan_id ? mappedRow.loan_id.toString().trim() : null,
-        loan_type: mappedRow.loan_type ? mappedRow.loan_type.toString().trim() : "Personal Loan",
-        principal_amount: principal,
-        outstanding_amount: outstanding,
-        overdue_amount: overdue,
-        emi_amount: emi,
-        total_recovered_amount: recovered,
-        dpd,
-        priority,
-        status: "New",
-        assigned_employee_id: null,
-        assigned_at: null,
-        follow_up_date: mappedRow.follow_up_date || null,
-        recovery_target: parseFloat(mappedRow.recovery_target) || Math.round(outstanding * 0.4),
-        is_field_visit_required: false,
-        import_batch_id: batchId,
-        created_at: now,
-        updated_at: now
-      };
-
-      memoryStore.loan_cases.push(newCase);
-
-      memoryStore.case_status_history.unshift({
-        id: `csh_${uuidv4()}`,
-        case_id: caseId,
-        employee_id: req.user.id,
-        previous_status: "SYSTEM_INTAKE",
-        new_status: "New",
-        source: "Admin",
-        remarks: `Imported from file '${originalname}' (batch: ${batchId}).`,
-        created_at: now
-      });
-
-      createdCases.push(newCase);
-      successCount++;
-    }
-
-    const importBatch = {
-      id: batchId,
-      uploaded_by: req.user.id,
-      uploaded_by_name: req.user.fullName || req.user.name,
-      file_name: originalname,
-      file_size_bytes: size,
-      total_rows: rawData.length,
-      success_count: successCount,
-      duplicate_count: duplicateCount,
-      rejected_count: rejectedCount,
-      fail_count: duplicateCount + rejectedCount,
-      status: duplicateCount + rejectedCount === 0 ? "SUCCESS" : (successCount > 0 ? "PARTIAL" : "FAILED"),
-      detected_headers: rawHeaders,
-      header_mapping: headerMapping,
-      error_rows: errorRows,
-      created_at: now
+    // Call preview
+    const previewRes = {
+      status(code) { this.statusCode = code; return this; },
+      json(data) { this.body = data; return this; }
     };
 
-    memoryStore.import_batches.unshift(importBatch);
-    indexService.rebuild(memoryStore);
-    cacheService.delPattern("cases:*");
-    cacheService.delPattern("dashboard:*");
+    await previewUpload(req, previewRes);
+    if (previewRes.statusCode !== 200) {
+      return res.status(previewRes.statusCode).json(previewRes.body);
+    }
 
-    return res.status(200).json({
-      success: true,
-      message: `Import complete: ${successCount} cases created, ${duplicateCount} duplicates, ${rejectedCount} rejected out of ${rawData.length} rows.`,
-      data: {
-        batch_id: batchId,
-        file_name: originalname,
-        total_rows: rawData.length,
-        success_count: successCount,
-        duplicate_count: duplicateCount,
-        rejected_count: rejectedCount,
-        status: importBatch.status,
-        header_mapping: headerMapping,
-        error_rows: errorRows,
-        created_cases: createdCases.slice(0, 10)
-      }
-    });
+    const { preview_batch_id } = previewRes.body.data;
+
+    // Call confirm
+    const confirmReq = {
+      params: { batchId: preview_batch_id },
+      body: { preview_batch_id },
+      user: req.user
+    };
+    return await confirmUpload(confirmReq, res);
   } catch (error) {
     console.error("uploadFile Error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-/**
- * GET /api/upload/history
- * Returns all import batch history.
- */
-export const getImportHistory = async (req, res) => {
-  try {
-    const { page = 1, limit = 20 } = req.query;
-    const pageNum = Math.max(1, parseInt(page, 10) || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
-
-    const sorted = [...memoryStore.import_batches].sort(
-      (a, b) => new Date(b.created_at) - new Date(a.created_at)
-    );
-
-    const totalCount = sorted.length;
-    const startIdx = (pageNum - 1) * limitNum;
-    const paginated = sorted.slice(startIdx, startIdx + limitNum);
-
-    const summary = paginated.map(batch => ({
-      ...batch,
-      error_rows: undefined,
-      error_row_count: batch.error_rows ? batch.error_rows.length : 0
-    }));
-
-    return res.status(200).json({
-      success: true,
-      message: `${totalCount} import batch(es) found.`,
-      data: {
-        batches: summary,
-        pagination: {
-          page: pageNum,
-          limit: limitNum,
-          totalCount,
-          totalPages: Math.ceil(totalCount / limitNum)
-        }
-      }
-    });
-  } catch (error) {
-    console.error("getImportHistory Error:", error);
-    return res.status(500).json({ success: false, message: error.message });
-  }
+export default {
+  upload,
+  getImportTemplate,
+  previewUpload,
+  confirmUpload,
+  downloadErrorRecords,
+  getImportHistory,
+  getBatchById,
+  uploadFile
 };
