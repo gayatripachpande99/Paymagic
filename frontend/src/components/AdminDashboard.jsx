@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import api from "../services/api";
-import WebPhoneDialer from "./portal/WebPhoneDialer";
 import CaseAllocationPage from "../panels/admin/pages/CaseAllocationPage";
 import BulkAllocateModal from "./portal/BulkAllocateModal";
 import TransferCasesModal from "./portal/TransferCasesModal";
@@ -757,15 +756,6 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
           </div>
 
           <div className="topbar-right">
-            {activeTab === "cases" && (
-              <button
-                className="primary-btn add-emp-btn"
-                onClick={() => setShowBulkAllocateModal(true)}
-              >
-                <span>Rule Allocation</span>
-              </button>
-            )}
-
             {/* Prominent Add Employee Button */}
             {activeTab !== "cases" && (
               <button
@@ -1811,9 +1801,6 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
           }}
         />
       )}
-
-      {/* Floating WebPhone Dialer Widget */}
-      <WebPhoneDialer user={user} />
     </div>
   );
 }
