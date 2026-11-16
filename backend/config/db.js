@@ -35,13 +35,25 @@ export const memoryStore = {
   notifications: [],
   enquiries: [],
   audit_logs: [],
-  import_batches: []
+  import_batches: [],
+  case_ptp_commitments: [],
+  customer_contacts: [],
+  payment_receipts: [],
+  reconciliation_batches: [],
+  reconciliation_records: []
 };
 
 export const initializeDatabase = async () => {
+  const isProduction = process.env.NODE_ENV === "production";
   const dbUrl = process.env.DATABASE_URL;
 
-  if (dbUrl) {
+  // 1. Strict Production Enforcement: PostgreSQL is the SOLE source of truth
+  if (isProduction) {
+    if (!dbUrl) {
+      console.error("FATAL: DATABASE_URL is mandatory in production environment. Aborting startup.");
+      throw new Error("FATAL: DATABASE_URL must be configured in production environment.");
+    }
+
     try {
       pool = new Pool({
         connectionString: dbUrl,
@@ -52,15 +64,37 @@ export const initializeDatabase = async () => {
       await client.query("SELECT 1");
       client.release();
       isPgActive = true;
+      console.log("Connected to PostgreSQL Database engine in PRODUCTION. Running migrations...");
+      await runMigrations(pool);
+      return;
+    } catch (err) {
+      console.error("FATAL: Production PostgreSQL connection failed:", err.message);
+      isPgActive = false;
+      throw new Error(`Production database failure: Cannot connect to PostgreSQL: ${err.message}`);
+    }
+  }
+
+  // 2. Non-Production Environments (development / test)
+  if (dbUrl) {
+    try {
+      pool = new Pool({
+        connectionString: dbUrl,
+        ssl: { rejectUnauthorized: false },
+        connectionTimeoutMillis: 5000
+      });
+      const client = await pool.connect();
+      await client.query("SELECT 1");
+      client.release();
+      isPgActive = true;
       console.log("Connected to PostgreSQL Database engine. Running migrations...");
       await runMigrations(pool);
       return;
     } catch (err) {
-      console.warn("PostgreSQL connection failed, operating with in-memory relational engine:", err.message);
+      console.warn("PostgreSQL connection failed in non-production, operating with in-memory relational engine:", err.message);
       isPgActive = false;
     }
   } else {
-    console.warn("Notice: DATABASE_URL not configured. Operating with high-integrity in-memory relational engine.");
+    console.warn("Notice: DATABASE_URL not configured. Operating with high-integrity in-memory relational engine (Dev/Test mode).");
     isPgActive = false;
   }
 
@@ -84,6 +118,8 @@ export const initializeDatabase = async () => {
   memoryStore.cash_handovers = seed.cashHandovers || [];
   memoryStore.enquiries = seed.enquiries;
   memoryStore.notifications = seed.notifications || [];
+  memoryStore.allocation_sessions = seed.allocationSessions || [];
+  memoryStore.sla_escalations = seed.slaEscalations || [];
 
   // Rebuild all O(1) in-memory indexes
   const indexStats = indexService.rebuild(memoryStore);
@@ -130,6 +166,18 @@ export const transaction = async (callback) => {
     const restored = JSON.parse(snapshot);
     Object.keys(restored).forEach((key) => {
       if (Array.isArray(memoryStore[key])) {
+        // Restore mutated properties on original objects so held references reflect rollback
+        for (const item of memoryStore[key]) {
+          if (item && item.id) {
+            const snapItem = restored[key].find(r => r && r.id === item.id);
+            if (snapItem) {
+              Object.keys(item).forEach(k => {
+                if (!(k in snapItem)) delete item[k];
+              });
+              Object.assign(item, snapItem);
+            }
+          }
+        }
         memoryStore[key].length = 0;
         memoryStore[key].push(...restored[key]);
       } else {
@@ -213,9 +261,25 @@ export const updateCaseStatusWithHistory = async ({
   });
 };
 
+/**
+ * Universal Database Query Interface
+ * Backed by active PostgreSQL connection pool.
+ * In production, throws error if pool is uninitialized.
+ */
+export const query = async (text, params) => {
+  if (isPgActive && pool) {
+    return await pool.query(text, params);
+  }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Database pool is not initialized in production environment.");
+  }
+  throw new Error("PostgreSQL query executed while database pool is not active.");
+};
+
 export const db = {
   isPgActive: () => isPgActive,
   getPool: () => pool,
+  query,
   transaction,
   updateCaseStatusWithHistory,
   store: memoryStore,

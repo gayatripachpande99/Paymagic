@@ -27,7 +27,34 @@ export const TransferCasesModal = ({
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  const [rebalanceLoading, setRebalanceLoading] = useState(false);
+  const [rebalanceRecommendations, setRebalanceRecommendations] = useState(null);
+
   if (!isOpen) return null;
+
+  const handleFetchRebalance = async () => {
+    try {
+      setRebalanceLoading(true);
+      setErrorMsg("");
+      const res = await api.post("/allocation/rebalance/preview", {});
+      if (res && res.success) {
+        setRebalanceRecommendations(res.data);
+        if (res.data.recommendations && res.data.recommendations.length > 0) {
+          const first = res.data.recommendations[0];
+          setFromEmployeeId(first.from_employee_id);
+          setToEmployeeId(first.to_employee_id);
+          setReason(first.reason);
+        }
+      } else {
+        setErrorMsg(res?.message || "No rebalance recommendations available.");
+      }
+    } catch (err) {
+      console.error("Rebalance error:", err);
+      setErrorMsg(err.message || "Failed to load rebalancing recommendations.");
+    } finally {
+      setRebalanceLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -113,6 +140,29 @@ export const TransferCasesModal = ({
               Single Case Reassign
             </button>
           </div>
+
+          {/* Automated Rebalancing Suggestion Button */}
+          <div className="flex items-center justify-between p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs">
+            <span className="text-indigo-300">Intelligent Workload Balancing:</span>
+            <button
+              type="button"
+              onClick={handleFetchRebalance}
+              disabled={rebalanceLoading}
+              className="px-2.5 py-1 bg-indigo-600/80 hover:bg-indigo-600 text-white rounded-lg text-[11px] font-semibold transition cursor-pointer"
+            >
+              {rebalanceLoading ? "Analyzing Workloads..." : "Suggest Rebalance"}
+            </button>
+          </div>
+
+          {rebalanceRecommendations && (
+            <div className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/80 text-[11px] space-y-1 text-slate-300">
+              <div className="font-semibold text-emerald-400">
+                {rebalanceRecommendations.rebalance_required
+                  ? `Identified ${rebalanceRecommendations.total_proposed_transfers} potential transfer(s) from overloaded staff.`
+                  : "All active staff workloads are currently balanced."}
+              </div>
+            </div>
+          )}
 
           {/* Single Case Mode */}
           {transferMode === "SINGLE" ? (

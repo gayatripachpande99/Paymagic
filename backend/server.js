@@ -4,6 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { initializeDatabase } from "./config/db.js";
+import db from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import enquiryRoutes from "./routes/enquiryRoutes.js";
@@ -18,6 +19,11 @@ import attendanceRoutes from "./routes/attendanceRoutes.js";
 import fieldRecoveryRoutes from "./routes/fieldRecoveryRoutes.js";
 import complaintRoutes from "./routes/complaintRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import allocationRoutes from "./routes/allocationRoutes.js";
+import recoveryRoutes from "./routes/recoveryRoutes.js";
+import paymentGatewayRoutes from "./routes/paymentGatewayRoutes.js";
+import monitoringRoutes from "./routes/monitoringRoutes.js";
+import { logger } from "./utils/logger.js";
 import { schedulerService } from "./services/schedulerService.js";
 
 const app = express();
@@ -31,10 +37,26 @@ app.use(
   })
 );
 
+// Allowed origins for CORS
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map(o => o.trim())
+  : [
+      process.env.FRONTEND_URL,
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://localhost:5000"
+    ].filter(Boolean);
+
 // Cross-Origin Resource Sharing
 app.use(
   cors({
-    origin: "*",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, server-to-server) or matching allowed list
+      if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Fallback to allow dev requests smoothly
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
@@ -65,15 +87,27 @@ const authLimiter = rateLimit({
 });
 app.use("/api/auth/login", authLimiter);
 
-// Express JSON Body Parser (large payloads for bulk imports)
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+// Express JSON Body Parser (Strict 2MB limit with rawBody capture for cryptographic webhook signatures)
+app.use(
+  express.json({
+    limit: "2mb",
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    }
+  })
+);
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "2mb",
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    }
+  })
+);
 
-// Request logging middleware
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
-  next();
-});
+// Request logging middleware with correlation IDs and PII sanitization
+app.use(logger.requestMiddleware());
 
 // API Routes
 app.use("/api/auth", authRoutes);
@@ -89,13 +123,88 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/field", fieldRecoveryRoutes);
 app.use("/api/complaints", complaintRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/allocation", allocationRoutes);
+app.use("/api/recovery", recoveryRoutes);
+app.use("/api/payment-gateway", paymentGatewayRoutes);
+app.use("/api/monitoring", monitoringRoutes);
 
-// System Health Check
-app.get("/api/health", (req, res) => {
+// ── Health, Liveness, and Readiness Endpoints ──
+
+// Liveness Probe: Confirms the application process is running (does not query database)
+app.get("/api/health/live", (req, res) => {
   res.status(200).json({
-    status: "HEALTHY",
+    status: "ALIVE",
+    uptime_seconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Readiness Probe: Confirms PostgreSQL is reachable and ready to serve traffic
+app.get("/api/health/ready", async (req, res) => {
+  const isProduction = process.env.NODE_ENV === "production";
+  const isPg = db.isPgActive();
+
+  if (isPg) {
+    try {
+      await db.query("SELECT 1");
+      return res.status(200).json({
+        status: "READY",
+        database: "POSTGRESQL_CONNECTED",
+        timestamp: new Date().toISOString()
+      });
+    } catch (err) {
+      return res.status(503).json({
+        status: "NOT_READY",
+        database: "POSTGRESQL_DISCONNECTED",
+        error: "PostgreSQL database connectivity check failed.",
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  // Non-production (dev/test) environments may operate ready in-memory
+  if (!isProduction) {
+    return res.status(200).json({
+      status: "READY",
+      database: "IN_MEMORY_ISOLATED",
+      mode: "development",
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // In production, database is required for readiness
+  return res.status(503).json({
+    status: "NOT_READY",
+    database: "POSTGRESQL_NOT_ACTIVE",
+    error: "PostgreSQL database is required in production.",
+    timestamp: new Date().toISOString()
+  });
+});
+
+// General Health Check (Backward Compatible)
+app.get("/api/health", async (req, res) => {
+  const isProduction = process.env.NODE_ENV === "production";
+  const isPg = db.isPgActive();
+  let dbStatus = isPg ? "POSTGRESQL_CONNECTED" : (isProduction ? "POSTGRESQL_DISCONNECTED" : "IN_MEMORY_ISOLATED");
+  let isHealthy = true;
+
+  if (isPg) {
+    try {
+      await db.query("SELECT 1");
+    } catch (e) {
+      dbStatus = "POSTGRESQL_ERROR";
+      isHealthy = false;
+    }
+  } else if (isProduction) {
+    isHealthy = false;
+  }
+
+  const statusCode = isHealthy ? 200 : 503;
+  res.status(statusCode).json({
+    status: isHealthy ? "HEALTHY" : "DEGRADED",
     service: "PayMagic Loan Recovery Operations API",
     version: "2.0.0",
+    database: dbStatus,
     compliance: {
       callingHoursIST: "08:00 - 19:00",
       recordingRetention: "365 days / private encrypted S3",
@@ -127,15 +236,28 @@ app.use((err, req, res, next) => {
 });
 
 // Initialize database and start server
-initializeDatabase().then(() => {
+export const startServer = async () => {
+  await initializeDatabase();
   // Start Spring Scheduler Engine for background reminder tasks
   schedulerService.start();
 
-  app.listen(PORT, () => {
+  return app.listen(PORT, () => {
     console.log(`=======================================================`);
     console.log(`⚡ PayMagic Platform Server listening on port ${PORT}`);
     console.log(`🌐 Base API: http://localhost:${PORT}/api`);
     console.log(`🔒 Fair Practice Calling Hours: 08:00 to 19:00 IST`);
     console.log(`=======================================================`);
   });
-});
+};
+
+const isDirectRun = process.argv[1] && (
+  process.argv[1].endsWith("server.js") ||
+  process.argv[1].endsWith("server")
+);
+
+if (isDirectRun) {
+  startServer();
+}
+
+export { app };
+export default app;

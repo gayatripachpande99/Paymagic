@@ -24,6 +24,7 @@ export const BulkAllocateModal = ({
   const [allocationRule, setAllocationRule] = useState("AMOUNT_BALANCED");
   const [batchSize, setBatchSize] = useState("25");
   const [targetCity, setTargetCity] = useState("Mumbai");
+  const [shiftAwareOnly, setShiftAwareOnly] = useState(false);
   const [selectedStaffScope, setSelectedStaffScope] = useState("ALL_ELIGIBLE"); // "ALL_ELIGIBLE" | "SINGLE"
   const [singleEmployeeId, setSingleEmployeeId] = useState(employees[0]?.id || employees[0]?.employeeId || "");
   const [loading, setLoading] = useState(false);
@@ -45,6 +46,7 @@ export const BulkAllocateModal = ({
         strategy: allocationRule,
         limit: parseInt(batchSize, 10) || 25,
         targetEmployeeIds: selectedStaffScope === "SINGLE" && singleEmployeeId ? [singleEmployeeId] : [],
+        shiftAware: shiftAwareOnly || allocationRule === "SHIFT_AWARE",
         rules: {
           city: allocationRule === "LOCATION" ? targetCity : undefined,
           priority: allocationRule === "PRIORITY_CRITICAL" ? ["CRITICAL", "HIGH"] : undefined
@@ -243,7 +245,39 @@ export const BulkAllocateModal = ({
                     Distributes by delinquency stage from 90+ DPD (NPA) to B1
                   </p>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAllocationRule("SHIFT_AWARE")}
+                  className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 ${
+                    allocationRule === "SHIFT_AWARE"
+                      ? "bg-indigo-600/20 border-indigo-500 text-white shadow-md shadow-indigo-600/10"
+                      : "bg-slate-800/60 border-slate-700/60 text-slate-400 hover:border-slate-600"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-semibold text-xs text-indigo-300">
+                    <Sparkles className="w-4 h-4 text-sky-400" />
+                    <span>Shift-Aware Active Staff</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-tight">
+                    Allocates strictly to agents who are currently marked ON_SHIFT or PRESENT today
+                  </p>
+                </button>
               </div>
+            </div>
+
+            {/* Shift Aware Toggle */}
+            <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-800/40 border border-slate-700/50">
+              <input
+                type="checkbox"
+                id="shiftAwareToggle"
+                checked={shiftAwareOnly}
+                onChange={(e) => setShiftAwareOnly(e.target.checked)}
+                className="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-600 focus:ring-indigo-500"
+              />
+              <label htmlFor="shiftAwareToggle" className="text-xs text-slate-300 cursor-pointer">
+                Strict Shift Restriction: Exclude staff whose shift is OFF_SHIFT or on approved leave
+              </label>
             </div>
 
             {/* City Field if Location Rule */}
@@ -370,6 +404,19 @@ export const BulkAllocateModal = ({
               </div>
             </div>
 
+            {/* Unallocated Cases Warning if any */}
+            {previewData?.unallocated_cases_count > 0 && (
+              <div className="p-3.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs space-y-1">
+                <div className="flex items-center gap-2 font-semibold">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>{previewData.unallocated_cases_count} Case(s) could not be allocated</span>
+                </div>
+                <p className="text-[11px] text-amber-200/80">
+                  {previewData.unallocated_cases[0]?.reason || "Staff capacity or portfolio limits reached."}
+                </p>
+              </div>
+            )}
+
             {/* Employee Breakdown Table */}
             <div>
               <h4 className="text-xs font-semibold text-slate-300 mb-2">
@@ -382,6 +429,7 @@ export const BulkAllocateModal = ({
                       <th className="py-2 px-3">Specialist</th>
                       <th className="py-2 px-3 text-center">Active</th>
                       <th className="py-2 px-3 text-center">Proposed +</th>
+                      <th className="py-2 px-3 text-center">Cap. Usage</th>
                       <th className="py-2 px-3 text-right">Allocated Amount</th>
                     </tr>
                   </thead>
@@ -390,7 +438,7 @@ export const BulkAllocateModal = ({
                       <tr key={alloc.user_id || alloc.employee_id} className="hover:bg-slate-800/40">
                         <td className="py-2.5 px-3">
                           <div className="font-semibold text-white">{alloc.employee_name}</div>
-                          <div className="text-[10px] text-slate-400 font-mono">{alloc.employee_id}</div>
+                          <div className="text-[10px] text-slate-400 font-mono">{alloc.employee_id} • {alloc.city || 'HQ'}</div>
                         </td>
                         <td className="py-2.5 px-3 text-center text-slate-400 font-mono">
                           {alloc.current_active_cases}
@@ -398,8 +446,15 @@ export const BulkAllocateModal = ({
                         <td className="py-2.5 px-3 text-center font-mono font-bold text-indigo-400">
                           +{alloc.proposed_cases_count}
                         </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold ${
+                            (alloc.capacity_utilization_pct || 0) > 90 ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'
+                          }`}>
+                            {alloc.capacity_utilization_pct || Math.round((alloc.current_active_cases + alloc.proposed_cases_count) / (alloc.max_workload_capacity || 150) * 100)}%
+                          </span>
+                        </td>
                         <td className="py-2.5 px-3 text-right font-mono font-bold text-amber-400">
-                          ₹{Number(alloc.proposed_outstanding_amount || 0).toLocaleString("en-IN")}
+                          ₹{Number(alloc.proposed_portfolio_amount || 0).toLocaleString("en-IN")}
                         </td>
                       </tr>
                     ))}

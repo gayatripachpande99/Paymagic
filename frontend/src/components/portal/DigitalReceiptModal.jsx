@@ -22,9 +22,14 @@ export default function DigitalReceiptModal({
       const fetchReceipt = async () => {
         try {
           setLoading(true);
-          const res = await api.get(`/field/receipt/${receiptNumber}`);
-          if (res && res.success && res.receipt) {
-            setReceipt(res.receipt);
+          let res = null;
+          try {
+            res = await api.get(`/field/receipt/${receiptNumber}`);
+          } catch {
+            res = await api.get(`/recovery/payments/${receiptNumber}/receipt`);
+          }
+          if (res && res.success && (res.receipt || res.data?.receipt)) {
+            setReceipt(res.receipt || res.data?.receipt);
           }
         } catch (err) {
           console.error("Receipt fetch error:", err);

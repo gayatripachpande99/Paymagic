@@ -737,12 +737,13 @@ export const caseRepository = {
 
       if (db.isPgActive()) {
         const caseRes = await trxClient.query(
-          "SELECT * FROM loan_cases WHERE id = $1 FOR UPDATE",
+          "SELECT * FROM loan_cases WHERE id = $1 OR case_number = $1 FOR UPDATE",
           [caseId]
         );
         const currentCase = caseRes.rows[0];
         if (!currentCase) throw new Error(`Loan case '${caseId}' not found.`);
 
+        const resolvedCaseId = currentCase.id;
         const prevEmpId = currentCase.assigned_employee_id;
         const prevStatus = currentCase.status;
         const newStatus = prevStatus === "New" ? "Assigned" : prevStatus;
@@ -752,7 +753,7 @@ export const caseRepository = {
            SET assigned_employee_id = $1, assigned_at = $2, status = $3, updated_at = $4
            WHERE id = $5
            RETURNING *`,
-          [employeeId, now, newStatus, now, caseId]
+          [employeeId, now, newStatus, now, resolvedCaseId]
         );
 
         const assignId = `asgn_${uuidv4()}`;
@@ -760,7 +761,7 @@ export const caseRepository = {
           `INSERT INTO case_assignments (
             id, case_id, assigned_from_id, assigned_to_id, assigned_by_id, assignment_reason, remarks, created_at
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-          [assignId, caseId, prevEmpId || null, employeeId, assignedById, remarks || "Manual Case Assignment", remarks, now]
+          [assignId, resolvedCaseId, prevEmpId || null, employeeId, assignedById, remarks || "Manual Case Assignment", remarks, now]
         );
 
         if (prevStatus !== newStatus) {
@@ -769,7 +770,7 @@ export const caseRepository = {
             `INSERT INTO case_status_history (
               id, case_id, employee_id, previous_status, new_status, source, remarks, created_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-            [auditId, caseId, assignedById, prevStatus, newStatus, "Assignment", remarks || "Auto status transition on assignment", now]
+            [auditId, resolvedCaseId, assignedById, prevStatus, newStatus, "Assignment", remarks || "Auto status transition on assignment", now]
           );
         }
 
@@ -789,9 +790,10 @@ export const caseRepository = {
         return updateRes.rows[0];
       }
 
-      const lc = memoryStore.loan_cases.find(c => c.id === caseId);
+      const lc = memoryStore.loan_cases.find(c => c.id === caseId || c.case_number === caseId);
       if (!lc) throw new Error(`Loan case '${caseId}' not found.`);
 
+      const resolvedCaseId = lc.id;
       const prevEmpId = lc.assigned_employee_id;
       const prevStatus = lc.status;
       const newStatus = prevStatus === "New" ? "Assigned" : prevStatus;
@@ -803,7 +805,7 @@ export const caseRepository = {
 
       memoryStore.case_assignments.unshift({
         id: `asgn_${uuidv4()}`,
-        case_id: caseId,
+        case_id: resolvedCaseId,
         assigned_to: employeeId,
         assigned_to_id: employeeId,
         assigned_from: prevEmpId || null,
@@ -819,7 +821,7 @@ export const caseRepository = {
       if (prevStatus !== newStatus) {
         memoryStore.case_status_history.unshift({
           id: `csh_${uuidv4()}`,
-          case_id: caseId,
+          case_id: resolvedCaseId,
           employee_id: assignedById,
           previous_status: prevStatus,
           new_status: newStatus,
@@ -870,12 +872,13 @@ export const caseRepository = {
 
       if (db.isPgActive()) {
         const caseRes = await trxClient.query(
-          "SELECT * FROM loan_cases WHERE id = $1 FOR UPDATE",
+          "SELECT * FROM loan_cases WHERE id = $1 OR case_number = $1 FOR UPDATE",
           [caseId]
         );
         const currentCase = caseRes.rows[0];
         if (!currentCase) throw new Error(`Loan case '${caseId}' not found.`);
 
+        const resolvedCaseId = currentCase.id;
         const fromEmpId = currentCase.assigned_employee_id;
 
         const updateRes = await trxClient.query(
@@ -883,7 +886,7 @@ export const caseRepository = {
            SET assigned_employee_id = $1, assigned_at = $2, updated_at = $3
            WHERE id = $4
            RETURNING *`,
-          [toEmployeeId, now, now, caseId]
+          [toEmployeeId, now, now, resolvedCaseId]
         );
 
         const assignId = `asgn_${uuidv4()}`;
@@ -891,7 +894,7 @@ export const caseRepository = {
           `INSERT INTO case_assignments (
             id, case_id, assigned_from_id, assigned_to_id, assigned_by_id, assignment_reason, remarks, created_at
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-          [assignId, caseId, fromEmpId || null, toEmployeeId, transferredById, reason, reason, now]
+          [assignId, resolvedCaseId, fromEmpId || null, toEmployeeId, transferredById, reason, reason, now]
         );
 
         const auditId = `csh_${uuidv4()}`;
@@ -899,7 +902,7 @@ export const caseRepository = {
           `INSERT INTO case_status_history (
             id, case_id, employee_id, previous_status, new_status, source, reference_id, remarks, created_at
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-          [auditId, caseId, transferredById, currentCase.status, currentCase.status, "Case Transfer", assignId, `Transferred to employee ${toEmployeeId}: ${reason}`, now]
+          [auditId, resolvedCaseId, transferredById, currentCase.status, currentCase.status, "Case Transfer", assignId, `Transferred to employee ${toEmployeeId}: ${reason}`, now]
         );
 
         db.cacheService.delPattern("cases:*");
@@ -908,9 +911,10 @@ export const caseRepository = {
         return updateRes.rows[0];
       }
 
-      const lc = memoryStore.loan_cases.find(c => c.id === caseId);
+      const lc = memoryStore.loan_cases.find(c => c.id === caseId || c.case_number === caseId);
       if (!lc) throw new Error(`Loan case '${caseId}' not found.`);
 
+      const resolvedCaseId = lc.id;
       const fromEmpId = lc.assigned_employee_id;
       lc.assigned_employee_id = toEmployeeId;
       lc.assigned_at = now;
@@ -919,7 +923,7 @@ export const caseRepository = {
       const assignId = `asgn_${uuidv4()}`;
       memoryStore.case_assignments.unshift({
         id: assignId,
-        case_id: caseId,
+        case_id: resolvedCaseId,
         assigned_to: toEmployeeId,
         assigned_to_id: toEmployeeId,
         assigned_from: fromEmpId || null,
@@ -934,7 +938,7 @@ export const caseRepository = {
 
       memoryStore.case_status_history.unshift({
         id: `csh_${uuidv4()}`,
-        case_id: caseId,
+        case_id: resolvedCaseId,
         employee_id: transferredById,
         previous_status: lc.status,
         new_status: lc.status,

@@ -95,9 +95,17 @@ export const createSeedData = async () => {
       current_recovery: 4250000.00,
       max_workload_capacity: 500,
       active_cases_count: 0,
+      max_portfolio_amount: 50000000.00,
+      current_portfolio_amount: 0.00,
       shift_status: "ON_SHIFT",
       telephony_agent_id: "TEL-SADM-1",
-      location_zone: "National HQ"
+      location_zone: "National HQ",
+      city: "Mumbai",
+      state: "Maharashtra",
+      pincode: "400001",
+      specialization: "EXECUTIVE",
+      supervisor_id: null,
+      is_on_leave: false
     },
     {
       id: "usr_admin",
@@ -106,9 +114,17 @@ export const createSeedData = async () => {
       current_recovery: 1980000.00,
       max_workload_capacity: 400,
       active_cases_count: 0,
+      max_portfolio_amount: 25000000.00,
+      current_portfolio_amount: 0.00,
       shift_status: "ON_SHIFT",
       telephony_agent_id: "TEL-ADM-1",
-      location_zone: "Western Command"
+      location_zone: "Western Command",
+      city: "Mumbai",
+      state: "Maharashtra",
+      pincode: "400051",
+      specialization: "MANAGEMENT",
+      supervisor_id: null,
+      is_on_leave: false
     },
     {
       id: "usr_supervisor",
@@ -117,9 +133,17 @@ export const createSeedData = async () => {
       current_recovery: 812000.00,
       max_workload_capacity: 250,
       active_cases_count: 10,
+      max_portfolio_amount: 10000000.00,
+      current_portfolio_amount: 500000.00,
       shift_status: "ON_SHIFT",
       telephony_agent_id: "TEL-SUP-1",
-      location_zone: "Pune Metro"
+      location_zone: "Pune Metro",
+      city: "Pune",
+      state: "Maharashtra",
+      pincode: "411001",
+      specialization: "TEAM_LEAD",
+      supervisor_id: "usr_admin",
+      is_on_leave: false
     },
     {
       id: "usr_caller_1",
@@ -128,9 +152,17 @@ export const createSeedData = async () => {
       current_recovery: 85000.00,
       max_workload_capacity: 150,
       active_cases_count: 42,
+      max_portfolio_amount: 25000000.00,
+      current_portfolio_amount: 850000.00,
       shift_status: "ON_SHIFT",
       telephony_agent_id: "TEL-CAL-101",
-      location_zone: "Pune East"
+      location_zone: "Pune East",
+      city: "Pune",
+      state: "Maharashtra",
+      pincode: "411014",
+      specialization: "PERSONAL_LOAN",
+      supervisor_id: "usr_supervisor",
+      is_on_leave: false
     },
     {
       id: "usr_caller_2",
@@ -139,9 +171,17 @@ export const createSeedData = async () => {
       current_recovery: 64000.00,
       max_workload_capacity: 150,
       active_cases_count: 38,
+      max_portfolio_amount: 25000000.00,
+      current_portfolio_amount: 720000.00,
       shift_status: "ON_SHIFT",
       telephony_agent_id: "TEL-CAL-102",
-      location_zone: "Pune West"
+      location_zone: "Pune West",
+      city: "Pune",
+      state: "Maharashtra",
+      pincode: "411038",
+      specialization: "CREDIT_CARD",
+      supervisor_id: "usr_supervisor",
+      is_on_leave: false
     },
     {
       id: "usr_field_1",
@@ -150,9 +190,17 @@ export const createSeedData = async () => {
       current_recovery: 142000.00,
       max_workload_capacity: 60,
       active_cases_count: 18,
+      max_portfolio_amount: 15000000.00,
+      current_portfolio_amount: 450000.00,
       shift_status: "ON_SHIFT",
       telephony_agent_id: "TEL-FLD-201",
-      location_zone: "Mumbai Suburbs"
+      location_zone: "Mumbai Suburbs",
+      city: "Mumbai",
+      state: "Maharashtra",
+      pincode: "400053",
+      specialization: "FIELD_RECOVERY",
+      supervisor_id: "usr_supervisor",
+      is_on_leave: false
     }
   ];
 
@@ -1084,7 +1132,9 @@ export const createSeedData = async () => {
     fieldVisits,
     cashHandovers,
     enquiries,
-    notifications
+    notifications,
+    allocationSessions: [],
+    slaEscalations: []
   };
 };
 
