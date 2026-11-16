@@ -2,11 +2,22 @@ import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import api from "../services/api";
 import CaseAllocationPage from "../panels/admin/pages/CaseAllocationPage";
+import {
+  ManagementAnalyticsPage,
+  PaymentRecoveryPage,
+  CallRecordsAudioPage,
+  FieldRecoveryVisitsPage,
+  GrievanceDisputesPage,
+  RemindersQueuePage
+} from "../panels/admin/pages";
 import BulkAllocateModal from "./portal/BulkAllocateModal";
 import TransferCasesModal from "./portal/TransferCasesModal";
 import SetTargetModal from "./portal/SetTargetModal";
 import CaseDetailModal from "./portal/CaseDetailModal";
 import PaymentModal from "./portal/PaymentModal";
+import AudioPlayerModal from "./portal/AudioPlayerModal";
+import DigitalReceiptModal from "./portal/DigitalReceiptModal";
+import ScheduleFieldVisitModal from "./portal/ScheduleFieldVisitModal";
 
 const CASE_STATUSES = [
   "New",
@@ -71,6 +82,23 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const [selectedPaymentCase, setSelectedPaymentCase] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  // Modals & State for Modules B, C, E, F, G, H
+  const [selectedCallAudio, setSelectedCallAudio] = useState(null);
+  const [showAudioModal, setShowAudioModal] = useState(false);
+  const [selectedReceiptRef, setSelectedReceiptRef] = useState(null);
+  const [showDigitalReceiptModal, setShowDigitalReceiptModal] = useState(false);
+  const [showScheduleVisitModal, setShowScheduleVisitModal] = useState(false);
+  const [fieldOverviewData, setFieldOverviewData] = useState(null);
+  const [fieldVisitsList, setFieldVisitsList] = useState([]);
+  const [fieldVisitsLoading, setFieldVisitsLoading] = useState(false);
+  const [cashHandoversList, setCashHandoversList] = useState([]);
+  const [cashHandoversLoading, setCashHandoversLoading] = useState(false);
+  const [paymentsSummary, setPaymentsSummary] = useState({ total_count: 0, total_collected: 0 });
+  const [paymentsList, setPaymentsList] = useState([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const [reportsData, setReportsData] = useState(null);
+  const [reportsLoading, setReportsLoading] = useState(false);
 
 
   // Show/Hide password states
@@ -279,10 +307,92 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
     loadCases(1);
   }, []);
 
+  const loadPayments = async () => {
+    try {
+      setPaymentsLoading(true);
+      const res = await api.get("/recovery/payments");
+      if (res.success) {
+        setPaymentsList(res.payments || res.data || []);
+        if (res.summary) setPaymentsSummary(res.summary);
+      }
+    } catch (err) {
+      console.error("Failed to load payments", err);
+    } finally {
+      setPaymentsLoading(false);
+    }
+  };
+
+  const loadFieldVisits = async () => {
+    try {
+      setFieldVisitsLoading(true);
+      const res = await api.get("/field/visits");
+      if (res.success) setFieldVisitsList(res.visits || res.data || []);
+    } catch (e) {
+      console.error("Error loading visits", e);
+    } finally {
+      setFieldVisitsLoading(false);
+    }
+  };
+
+  const loadFieldOverview = async () => {
+    try {
+      const res = await api.get("/field/overview");
+      if (res.success) setFieldOverviewData(res.overview || res.data || res);
+    } catch (e) {
+      console.error("Error loading field overview", e);
+    }
+  };
+
+  const loadCashHandovers = async () => {
+    try {
+      setCashHandoversLoading(true);
+      const res = await api.get("/field/cash-handovers");
+      if (res.success) setCashHandoversList(res.handovers || res.data || []);
+    } catch (e) {
+      console.error("Error loading cash handovers", e);
+    } finally {
+      setCashHandoversLoading(false);
+    }
+  };
+
+  const handleReconcileCash = async (id) => {
+    try {
+      const res = await api.post(`/field/cash-handovers/${id}/reconcile`);
+      if (res.success) {
+        setSuccessMsg("Cash handover reconciled successfully.");
+        await loadCashHandovers();
+        await loadFieldOverview();
+      }
+    } catch (e) {
+      setErrorMsg(e.message || "Failed to reconcile cash handover.");
+    }
+  };
+
+  const loadReports = async () => {
+    try {
+      setReportsLoading(true);
+      const res = await api.get("/recovery/reports");
+      if (res.success) setReportsData(res.reports || res.data || res);
+    } catch (e) {
+      console.error("Error loading reports", e);
+    } finally {
+      setReportsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === "cases") {
       loadCases(1);
       loadAdminOverview();
+    } else if (activeTab === "payments") {
+      loadPayments();
+    } else if (activeTab === "field-recovery") {
+      loadFieldVisits();
+      loadFieldOverview();
+      loadCashHandovers();
+    } else if (activeTab === "analytics") {
+      loadAdminOverview();
+      loadReports();
     }
   }, [caseFilterStatus, activeTab]);
 
@@ -646,7 +756,74 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
               <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
               <path d="M9 14l2 2 4-4" />
             </svg>
-            <span>Recovery Case Allocation</span>
+            <span>Case Allocation</span>
+          </button>
+
+          <button
+            className={`portal-nav-item ${activeTab === "analytics" ? "active" : ""}`}
+            onClick={() => { setActiveTab("analytics"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            <span>Portfolio Analytics</span>
+          </button>
+
+          <button
+            className={`portal-nav-item ${activeTab === "payments" ? "active" : ""}`}
+            onClick={() => { setActiveTab("payments"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="2" y="5" width="20" height="14" rx="2" />
+              <line x1="2" y1="10" x2="22" y2="10" />
+            </svg>
+            <span>Collections &amp; Recovery</span>
+          </button>
+
+          <button
+            className={`portal-nav-item ${activeTab === "telephony" ? "active" : ""}`}
+            onClick={() => { setActiveTab("telephony"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            <span>Call Records &amp; Audio</span>
+          </button>
+
+          <button
+            className={`portal-nav-item ${activeTab === "field-recovery" ? "active" : ""}`}
+            onClick={() => { setActiveTab("field-recovery"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span>Field Recovery</span>
+          </button>
+
+          <button
+            className={`portal-nav-item ${activeTab === "complaints" ? "active" : ""}`}
+            onClick={() => { setActiveTab("complaints"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <span>Grievances &amp; Disputes</span>
+          </button>
+
+          <button
+            className={`portal-nav-item ${activeTab === "reminders" ? "active" : ""}`}
+            onClick={() => { setActiveTab("reminders"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <span>Sentinels &amp; Alerts</span>
           </button>
 
           <button
@@ -654,37 +831,10 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             onClick={() => { setActiveTab("attendance"); setErrorMsg(""); setMobileSidebarOpen(false); }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="3" width="7" height="7" rx="1.5" />
-              <rect x="14" y="3" width="7" height="7" rx="1.5" />
-              <rect x="14" y="14" width="7" height="7" rx="1.5" />
-              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
             </svg>
             <span>Live Attendance</span>
-          </button>
-
-          <button
-            className={`portal-nav-item ${activeTab === "employees" ? "active" : ""}`}
-            onClick={() => { setActiveTab("employees"); setErrorMsg(""); setMobileSidebarOpen(false); }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            <span>Staff Directory &amp; Passwords</span>
-          </button>
-
-          <button
-            className={`portal-nav-item ${activeTab === "records" ? "active" : ""}`}
-            onClick={() => { setActiveTab("records"); setErrorMsg(""); setMobileSidebarOpen(false); }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-              <line x1="12" y1="11" x2="12" y2="17" />
-              <line x1="9" y1="14" x2="15" y2="14" />
-            </svg>
-            <span>Record Upload &amp; Allocation</span>
           </button>
 
           <button
@@ -700,6 +850,34 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             </svg>
             <span>Leave Approvals</span>
           </button>
+
+          {(user?.role === "ADMIN" || user?.role === "SUPER_ADMIN") && (
+            <>
+              <button
+                className={`portal-nav-item ${activeTab === "employees" ? "active" : ""}`}
+                onClick={() => { setActiveTab("employees"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                </svg>
+                <span>Staff Directory</span>
+              </button>
+
+              <button
+                className={`portal-nav-item ${activeTab === "records" ? "active" : ""}`}
+                onClick={() => { setActiveTab("records"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <span>Data Ingestion</span>
+              </button>
+            </>
+          )}
         </nav>
 
         <div className="portal-sidebar-footer">
@@ -741,6 +919,12 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
               <h2>
                 Admin Command Center · <span className="gradient-text">
                   {activeTab === "cases" && "Recovery Case Management & Allocation"}
+                  {activeTab === "analytics" && "Executive Portfolio Analytics & DPD Buckets"}
+                  {activeTab === "payments" && "Payment Recovery & Collections Desk"}
+                  {activeTab === "telephony" && "Voice Telephony CDR & Evidence Vault"}
+                  {activeTab === "field-recovery" && "Field Recovery Operations & Radar"}
+                  {activeTab === "complaints" && "Customer Grievance & Disputes Desk"}
+                  {activeTab === "reminders" && "Sentinel Jobs & Notification Hub"}
                   {activeTab === "attendance" && "Live Staff Attendance Roster"}
                   {activeTab === "employees" && "Staff Directory & Security Passwords"}
                   {activeTab === "records" && "Customer Records & File Allocation"}
@@ -748,11 +932,16 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
                 </span>
               </h2>
               <p className="topbar-subtitle">
-                {activeTab === "cases" && "Module A: Customer Loan Data Import, Rule Allocation, Case Transfer, Targets & Status Audits"}
-                {activeTab === "attendance" && "Live Employee Operations, Biometric Attendance & Shift Management"}
-                {activeTab === "employees" && "Staff Directory, Onboarding & Security Credential Management"}
-                {activeTab === "records" && "Dynamic Column Customer Records & Batch Range Allocation"}
-                {activeTab === "leave-approvals" && "HR Pending Employee Leave Desk & Quota Approvals"}
+                {activeTab === "analytics" && "Module C: DPD Aging Buckets (0-30, 31-60, 61-90, 90+), Target Attainment & Lender Breakdowns"}
+                {activeTab === "payments" && "Module A & Phase 6: PTP Tracking, Partial/Full Payments, Collections Ledger & Verification"}
+                {activeTab === "telephony" && "Module B & F: Call History, Dispositions, S3 KMS Pre-Signed URLs & WORM Access Logs"}
+                {activeTab === "field-recovery" && "Module E: Route Run-Sheets, On-Site GPS Auditing, Dynamic UPI QR & Spot Receipts"}
+                {activeTab === "complaints" && "Module G: Customer Grievances, 48-Hour SLA Deadlines & 360-Degree Investigation Dossier"}
+                {activeTab === "reminders" && "Module H: 7 Automated Sentinel Background Jobs, FIFO Priority Queue & DLQ Telemetry"}
+                {activeTab === "attendance" && "Module D: Live Employee Operations, Biometric Attendance & Shift Management"}
+                {activeTab === "employees" && "Module D: Staff Directory, Onboarding & Security Credential Management"}
+                {activeTab === "records" && "Module A: Dynamic Column Customer Records & Batch Range Allocation"}
+                {activeTab === "leave-approvals" && "Module D: HR Pending Employee Leave Desk & Quota Approvals"}
               </p>
             </div>
           </div>
@@ -845,6 +1034,70 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             setShowPaymentModal={setShowPaymentModal}
             casePage={casePage}
             setCasePage={setCasePage}
+          />
+        )}
+
+        {/* ── TAB: MODULE C MANAGEMENT ANALYTICS & DPD BUCKETS ── */}
+        {activeTab === "analytics" && (
+          <ManagementAnalyticsPage
+            adminOverview={adminOverview}
+            casesPagination={casesPagination}
+            reportsData={reportsData}
+            reportsLoading={reportsLoading}
+            handleExportCSV={handleExportCasesCSV}
+          />
+        )}
+
+        {/* ── TAB: MODULE A & PHASE 6 COLLECTIONS & PAYMENTS ── */}
+        {activeTab === "payments" && (
+          <PaymentRecoveryPage
+            paymentsSummary={paymentsSummary}
+            paymentsList={paymentsList}
+            paymentsLoading={paymentsLoading}
+            casesList={casesList}
+            setSelectedPaymentCase={setSelectedPaymentCase}
+            setShowPaymentModal={setShowPaymentModal}
+          />
+        )}
+
+        {/* ── TAB: MODULE B & F CALL RECORDS & AUDIO EVIDENCE VAULT ── */}
+        {activeTab === "telephony" && (
+          <CallRecordsAudioPage
+            user={user}
+            setSelectedCallAudio={setSelectedCallAudio}
+            setShowAudioModal={setShowAudioModal}
+          />
+        )}
+
+        {/* ── TAB: MODULE E FIELD RECOVERY VISITS & OPERATIONS ── */}
+        {activeTab === "field-recovery" && (
+          <FieldRecoveryVisitsPage
+            setShowScheduleVisitModal={setShowScheduleVisitModal}
+            loadFieldVisits={loadFieldVisits}
+            loadFieldOverview={loadFieldOverview}
+            loadCashHandovers={loadCashHandovers}
+            fieldOverviewData={fieldOverviewData}
+            fieldVisitsList={fieldVisitsList}
+            fieldVisitsLoading={fieldVisitsLoading}
+            cashHandoversList={cashHandoversList}
+            cashHandoversLoading={cashHandoversLoading}
+            setSelectedReceiptRef={setSelectedReceiptRef}
+            setShowDigitalReceiptModal={setShowDigitalReceiptModal}
+            handleReconcileCash={handleReconcileCash}
+          />
+        )}
+
+        {/* ── TAB: MODULE G CUSTOMER GRIEVANCES & DISPUTES DESK ── */}
+        {activeTab === "complaints" && (
+          <GrievanceDisputesPage user={user} />
+        )}
+
+        {/* ── TAB: MODULE H SENTINELS & NOTIFICATION HUB ── */}
+        {activeTab === "reminders" && (
+          <RemindersQueuePage
+            user={user}
+            setSelectedCaseId={setSelectedCaseId}
+            setShowCaseDetailModal={setShowCaseDetailModal}
           />
         )}
 
@@ -1777,6 +2030,36 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             setSuccessMsg(msg);
             loadCases(casePage);
             loadAdminOverview();
+          }}
+        />
+      )}
+
+      {showAudioModal && selectedCallAudio && (
+        <AudioPlayerModal
+          call={selectedCallAudio}
+          onClose={() => {
+            setShowAudioModal(false);
+            setSelectedCallAudio(null);
+          }}
+        />
+      )}
+
+      {showDigitalReceiptModal && selectedReceiptRef && (
+        <DigitalReceiptModal
+          receiptNumber={selectedReceiptRef}
+          onClose={() => {
+            setShowDigitalReceiptModal(false);
+            setSelectedReceiptRef(null);
+          }}
+        />
+      )}
+
+      {showScheduleVisitModal && (
+        <ScheduleFieldVisitModal
+          onClose={() => setShowScheduleVisitModal(false)}
+          onCreated={() => {
+            loadFieldVisits();
+            loadFieldOverview();
           }}
         />
       )}

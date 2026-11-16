@@ -229,23 +229,20 @@ export const ImportLoansModal = ({
   }, [displayedItems, previewPage, pageSize]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl max-h-[92vh] flex flex-col bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden text-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#050B20]/85 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-3xl max-h-[92vh] flex flex-col bg-[#0B1733] border border-[#263957] rounded-2xl shadow-2xl overflow-hidden text-[#F4F7FF]">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-800 bg-slate-950/70 shrink-0">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#263957] bg-[#08132D] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600/30 to-indigo-600/30 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0">
-              <FileSpreadsheet className="w-5 h-5 text-cyan-400" />
+            <div className="w-10 h-10 rounded-xl bg-[#14223A] border border-[#315CFF]/30 text-[#315CFF] flex items-center justify-center shrink-0">
+              <FileSpreadsheet className="w-5 h-5 text-[#06C7E8]" />
             </div>
             <div>
-              <h3 className="font-bold text-white text-base tracking-tight flex items-center gap-2">
+              <h3 className="font-bold text-[#F4F7FF] text-base tracking-tight flex items-center gap-2">
                 <span>Import Loan Customer Data</span>
-                <span className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                  Module A
-                </span>
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#9AAAC2]">
                 {step === "UPLOAD" && "Upload standard 16-column Excel or CSV portfolio dataset (Max 10 MB)"}
                 {step === "PREVIEW" && `Audit Batch: ${previewData?.preview_batch_id || "Active Session"} • Read-only preview`}
                 {step === "RESULT" && "Import execution complete & committed to PostgreSQL"}
@@ -254,7 +251,7 @@ export const ImportLoansModal = ({
           </div>
           <button
             onClick={handleClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+            className="p-1.5 text-[#9AAAC2] hover:text-[#F4F7FF] rounded-lg hover:bg-[#14223A] transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -265,21 +262,21 @@ export const ImportLoansModal = ({
           <form onSubmit={handleAnalyzeFile} className="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1">
             
             {/* Download Template Banner */}
-            <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="p-4 rounded-xl bg-[#14223A] border border-[#263957] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-[#00C995]/15 text-[#00C995] flex items-center justify-center shrink-0">
                   <FileCheck className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-slate-200 font-semibold block">Official 16-Column Template</span>
-                  <span className="text-slate-400 text-[11px]">Download formatted sample template matching PostgreSQL schema</span>
+                  <span className="text-[#F4F7FF] font-semibold block">Official 16-Column Template</span>
+                  <span className="text-[#9AAAC2] text-[11px]">Download formatted sample template matching PostgreSQL schema</span>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => handleDownloadTemplate("xlsx")}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 font-semibold flex items-center gap-1.5 transition text-xs cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-[#00C995]/15 hover:bg-[#00C995]/25 text-[#00C995] border border-[#00C995]/30 font-semibold flex items-center gap-1.5 transition text-xs cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Excel (.xlsx)</span>
@@ -287,9 +284,9 @@ export const ImportLoansModal = ({
                 <button
                   type="button"
                   onClick={() => handleDownloadTemplate("csv")}
-                  className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 border border-slate-600 font-semibold flex items-center gap-1.5 transition text-xs cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-[#08132D] hover:bg-[#14223A] text-[#F4F7FF] border border-[#263957] font-semibold flex items-center gap-1.5 transition text-xs cursor-pointer"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-3.5 h-3.5 text-[#9AAAC2]" />
                   <span>CSV (.csv)</span>
                 </button>
               </div>
@@ -297,8 +294,8 @@ export const ImportLoansModal = ({
 
             {/* File Upload Zone */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">
-                Select Spreadsheet File (.xlsx, .csv) <span className="text-rose-400">*</span>
+              <label className="block text-xs font-semibold text-[#9AAAC2] mb-2">
+                Select Spreadsheet File (.xlsx, .csv) <span className="text-[#FF527A]">*</span>
               </label>
               <div
                 onDragOver={handleDragOver}
@@ -306,19 +303,19 @@ export const ImportLoansModal = ({
                 onDrop={handleDrop}
                 className={`border-2 border-dashed rounded-2xl p-7 text-center transition cursor-pointer ${
                   isDragging
-                    ? "border-cyan-400 bg-cyan-950/20"
+                    ? "border-[#315CFF] bg-[#315CFF]/15"
                     : selectedFile
-                    ? "border-emerald-500/60 bg-emerald-950/10"
-                    : "border-slate-700 hover:border-cyan-500/60 bg-slate-950/40"
+                    ? "border-[#00C995]/60 bg-[#00C995]/10"
+                    : "border-[#263957] hover:border-[#315CFF]/60 bg-[#14223A]/50"
                 }`}
               >
-                <div className="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700 mx-auto flex items-center justify-center mb-3">
-                  <Upload className={`w-6 h-6 ${selectedFile ? "text-emerald-400" : "text-cyan-400"}`} />
+                <div className="w-12 h-12 rounded-2xl bg-[#08132D] border border-[#263957] mx-auto flex items-center justify-center mb-3">
+                  <Upload className={`w-6 h-6 ${selectedFile ? "text-[#00C995]" : "text-[#315CFF]"}`} />
                 </div>
-                <p className="text-sm text-slate-200 font-semibold mb-1">
+                <p className="text-sm text-[#F4F7FF] font-semibold mb-1">
                   {selectedFile ? selectedFile.name : "Drag and drop loan portfolio file here"}
                 </p>
-                <p className="text-xs text-slate-400 mb-3">
+                <p className="text-xs text-[#9AAAC2] mb-3">
                   {selectedFile
                     ? `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB • Ready for schema validation`
                     : "Supports Microsoft Excel (.xlsx) and CSV (.csv) up to 10 MB"}
@@ -332,9 +329,9 @@ export const ImportLoansModal = ({
                 />
                 <label
                   htmlFor="loan-import-file-input"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs border border-slate-600 cursor-pointer transition shadow-sm"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#08132D] hover:bg-[#14223A] text-[#F4F7FF] font-semibold text-xs border border-[#263957] cursor-pointer transition shadow-sm"
                 >
-                  <FileSpreadsheet className="w-3.5 h-3.5 text-cyan-400" />
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-[#315CFF]" />
                   <span>Browse From Computer</span>
                 </label>
               </div>
@@ -360,25 +357,25 @@ export const ImportLoansModal = ({
             </div>
 
             {errorMsg && (
-              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+              <div className="p-3.5 rounded-xl bg-[#FF527A]/15 border border-[#FF527A]/30 text-[#FF527A] text-xs flex items-center gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-[#FF527A] shrink-0" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
             {/* Actions */}
-            <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2.5">
+            <div className="pt-3 border-t border-[#263957] flex items-center justify-end gap-2.5">
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition"
+                className="px-4 py-2 text-xs font-semibold text-[#9AAAC2] hover:text-[#F4F7FF] rounded-xl hover:bg-[#14223A] border border-[#263957] transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading || !selectedFile}
-                className="px-5 py-2 text-xs font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-blue-600/20 flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
+                className="px-5 py-2 text-xs font-semibold text-[#F4F7FF] bg-gradient-to-r from-[#315CFF] to-[#5945F5] hover:from-[#2a50e0] hover:to-[#4e3cd4] rounded-xl shadow-lg shadow-[#315CFF]/20 flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
                 <span>Pre-Validate &amp; Generate Preview</span>

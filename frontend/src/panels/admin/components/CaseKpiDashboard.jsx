@@ -34,9 +34,8 @@ export default function CaseKpiDashboard({
                 Total Outstanding
               </span>
             </div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/25 whitespace-nowrap shadow-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              LIVE PORTFOLIO
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/25 whitespace-nowrap shadow-sm">
+              PORTFOLIO TOTAL
             </span>
           </div>
 
@@ -63,11 +62,11 @@ export default function CaseKpiDashboard({
             <div className="w-full h-2 rounded-full bg-slate-800/80 p-0.5 overflow-hidden flex border border-slate-700/50">
               <div
                 className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-l-full transition-all duration-500"
-                style={{ width: `${standardPct}%` }}
+                style={{ width: `${Math.min(100, Math.max(0, standardPct))}%` }}
               />
               <div
                 className="h-full bg-gradient-to-r from-rose-500 to-red-500 rounded-r-full transition-all duration-500"
-                style={{ width: `${criticalPct}%` }}
+                style={{ width: `${Math.min(100, Math.max(0, criticalPct))}%` }}
               />
             </div>
           </div>
@@ -77,7 +76,7 @@ export default function CaseKpiDashboard({
           <div className="flex justify-between items-center gap-2">
             <span className="text-slate-400 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-              Due (Standard Arrears):
+              Standard Arrears:
             </span>
             <span className="font-mono text-slate-200 font-semibold text-right">
               ₹{Number(standardDue).toLocaleString("en-IN")}.00
@@ -86,7 +85,7 @@ export default function CaseKpiDashboard({
           <div className="flex justify-between items-center gap-2">
             <span className="text-slate-400 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-              Overdue (Critical Delinquency):
+              Critical Delinquency:
             </span>
             <span className="font-mono text-rose-400 font-bold text-right">
               ₹{Number(criticalOverdue).toLocaleString("en-IN")}.00
@@ -120,7 +119,7 @@ export default function CaseKpiDashboard({
             </span>
           </div>
 
-          {/* Modern Dynamic Donut Chart & Legend */}
+          {/* Dynamic Donut Chart & Legend */}
           <div className="flex flex-row items-center justify-between gap-3 py-2">
             <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
               <svg className="w-full h-full transform -rotate-90 drop-shadow-md" viewBox="0 0 100 100">
@@ -179,7 +178,7 @@ export default function CaseKpiDashboard({
                 <span className="truncate">PTP ({adminOverview?.cases_by_status?.["Promise to Pay"] ?? 0})</span>
               </div>
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-[0_0_6px_rgba(160,185,129,0.5)]" />
                 <span className="truncate">Paid ({adminOverview?.cases_by_status?.["Fully Paid"] ?? 0})</span>
               </div>
               <div className="flex items-center gap-1.5 min-w-0">
@@ -253,14 +252,18 @@ export default function CaseKpiDashboard({
           <div>
             <div className="flex justify-between items-center text-slate-400 mb-1">
               <span>Resolution SLA target:</span>
-              <span className="text-emerald-400 font-mono font-bold">
-                {recoveryRate > 0 ? `${recoveryRate}%` : "94.2% on-time"}
+              <span className="font-mono font-bold text-slate-200">
+                {recoveryRate > 0 ? (
+                  <span className="text-emerald-400">{recoveryRate}% achieved</span>
+                ) : (
+                  <span className="text-slate-400">No SLA data</span>
+                )}
               </span>
             </div>
             <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
-                style={{ width: `${recoveryRate > 0 ? Math.min(100, recoveryRate) : 94.2}%` }}
+                style={{ width: `${recoveryRate > 0 ? Math.min(100, recoveryRate) : 0}%` }}
               />
             </div>
           </div>
@@ -281,51 +284,55 @@ export default function CaseKpiDashboard({
                 Calling Specialists
               </span>
             </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] text-emerald-400 font-bold bg-emerald-500/15 border border-emerald-500/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>ONLINE</span>
-            </div>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] text-indigo-300 font-semibold bg-indigo-500/15 border border-indigo-500/30">
+              SPECIALIST WORKLOAD
+            </span>
           </div>
 
-          {/* Specialist Avatars */}
-          <div className="grid grid-cols-4 gap-2 py-1 my-1">
-            {(displaySpecialists.length > 0 ? displaySpecialists : [
-              { id: "emp_1", fullName: "Rahul Sharma", active_cases_count: 0 },
-              { id: "emp_2", fullName: "Priya Patel", active_cases_count: 0 },
-              { id: "emp_3", fullName: "Vikram Singh", active_cases_count: 0 }
-            ]).map((emp) => (
-              <div
-                key={emp.employeeId || emp.id}
-                className="flex flex-col items-center text-center p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-indigo-500/50 hover:bg-slate-800/90 transition-all group/emp"
-              >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-[11px] flex items-center justify-center border border-slate-700 shadow-md group-hover/emp:scale-105 transition-transform">
-                  {emp.fullName?.slice(0, 2).toUpperCase() || "SP"}
+          {/* Specialist Avatars or Professional Empty State */}
+          {displaySpecialists.length > 0 ? (
+            <div className="grid grid-cols-4 gap-2 py-1 my-1">
+              {displaySpecialists.map((emp) => (
+                <div
+                  key={emp.employeeId || emp.id}
+                  className="flex flex-col items-center text-center p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:border-indigo-500/50 hover:bg-slate-800/90 transition-all group/emp"
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-[11px] flex items-center justify-center border border-slate-700 shadow-md group-hover/emp:scale-105 transition-transform">
+                    {emp.fullName?.slice(0, 2).toUpperCase() || "SP"}
+                  </div>
+                  <span className="text-[10px] text-slate-200 font-medium truncate w-full mt-1.5" title={emp.fullName}>
+                    {emp.fullName?.split(" ")[0] || emp.name}
+                  </span>
+                  <span className="text-[9px] text-indigo-400 font-mono font-semibold">
+                    {emp.active_cases_count ?? 0} accts
+                  </span>
                 </div>
-                <span className="text-[10px] text-slate-200 font-medium truncate w-full mt-1.5" title={emp.fullName}>
-                  {emp.fullName?.split(" ")[0]}
-                </span>
-                <span className="text-[9px] text-indigo-400 font-mono font-semibold">
-                  {emp.active_cases_count ?? 0} accts
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 text-slate-400 text-xs text-center my-2">
+              <Users className="w-5 h-5 text-slate-500 mb-1" />
+              <span>No calling specialists assigned</span>
+            </div>
+          )}
         </div>
 
         <div className="pt-3 mt-auto border-t border-slate-800 space-y-1.5 text-xs">
           <div className="flex justify-between items-center text-slate-400">
             <span>Avg Handling Time:</span>
-            <span className="text-indigo-400 font-mono font-semibold">{avgHandlingTime}</span>
+            <span className="text-indigo-400 font-mono font-semibold">{avgHandlingTime || "—"}</span>
           </div>
           <div>
             <div className="flex justify-between items-center text-slate-400 mb-1">
               <span>Team Connection Rate:</span>
-              <span className="text-emerald-400 font-mono font-bold">{connectionRate}%</span>
+              <span className="font-mono font-bold text-slate-200">
+                {connectionRate > 0 ? `${connectionRate}%` : "—"}
+              </span>
             </div>
             <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, Math.max(0, connectionRate))}%` }}
+                style={{ width: `${connectionRate > 0 ? Math.min(100, Math.max(0, connectionRate)) : 0}%` }}
               />
             </div>
           </div>
@@ -334,4 +341,3 @@ export default function CaseKpiDashboard({
     </div>
   );
 }
-

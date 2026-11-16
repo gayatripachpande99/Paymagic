@@ -79,25 +79,25 @@ export const SetTargetModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md max-h-[90vh] flex flex-col bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden text-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#050B20]/85 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-md max-h-[90vh] flex flex-col bg-[#0B1733] border border-[#263957] rounded-2xl shadow-2xl overflow-hidden text-[#F4F7FF]">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-800 bg-slate-950/60 shrink-0">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#263957] bg-[#08132D] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
-              {modalMode === "TARGET" ? <Target className="w-5 h-5" /> : <Calendar className="w-5 h-5" />}
+            <div className="w-9 h-9 rounded-xl bg-[#14223A] border border-[#315CFF]/30 text-[#315CFF] flex items-center justify-center shrink-0">
+              {modalMode === "TARGET" ? <Target className="w-5 h-5 text-[#00C995]" /> : <Calendar className="w-5 h-5 text-[#315CFF]" />}
             </div>
             <div>
-              <h3 className="font-semibold text-white text-sm sm:text-base">
+              <h3 className="font-semibold text-[#F4F7FF] text-sm sm:text-base">
                 {modalMode === "TARGET" ? "Set Recovery Target" : "Schedule Follow-up Date"}
               </h3>
-              <p className="text-xs text-slate-400">Operations performance &amp; timeline control</p>
+              <p className="text-xs text-[#9AAAC2]">Operations performance &amp; timeline control</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+            className="p-1.5 text-[#9AAAC2] hover:text-[#F4F7FF] rounded-lg hover:bg-[#14223A] transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -107,12 +107,12 @@ export const SetTargetModal = ({
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1">
           
           {/* Mode Switcher */}
-          <div className="flex p-1 rounded-xl bg-slate-800/80 border border-slate-700/60">
+          <div className="flex p-1 rounded-xl bg-[#08132D] border border-[#263957]">
             <button
               type="button"
               onClick={() => setModalMode("TARGET")}
-              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${
-                modalMode === "TARGET" ? "bg-indigo-600 text-white shadow" : "text-slate-400 hover:text-white"
+              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                modalMode === "TARGET" ? "bg-gradient-to-r from-[#315CFF] to-[#5945F5] text-white shadow" : "text-[#9AAAC2] hover:text-white"
               }`}
             >
               Set Recovery Target
@@ -120,8 +120,8 @@ export const SetTargetModal = ({
             <button
               type="button"
               onClick={() => setModalMode("FOLLOWUP")}
-              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${
-                modalMode === "FOLLOWUP" ? "bg-indigo-600 text-white shadow" : "text-slate-400 hover:text-white"
+              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                modalMode === "FOLLOWUP" ? "bg-gradient-to-r from-[#315CFF] to-[#5945F5] text-white shadow" : "text-[#9AAAC2] hover:text-white"
               }`}
             >
               Schedule Follow-up
@@ -245,14 +245,14 @@ export const SetTargetModal = ({
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="w-1/3 py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition"
+              className="w-1/3 py-2.5 px-4 rounded-xl bg-[#14223A] hover:bg-[#1b2e4f] text-[#9AAAC2] hover:text-[#F4F7FF] border border-[#263957] text-xs font-semibold transition cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="w-2/3 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition transform active:scale-98"
+              className="w-2/3 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#315CFF] to-[#5945F5] hover:from-[#2a50e0] hover:to-[#4e3cd4] disabled:opacity-50 text-[#F4F7FF] text-xs font-semibold flex items-center justify-center gap-2 shadow-lg shadow-[#315CFF]/30 transition transform active:scale-98 cursor-pointer"
             >
               {loading ? (
                 <>
@@ -261,7 +261,7 @@ export const SetTargetModal = ({
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4 text-[#00C995]" />
                   <span>{modalMode === "TARGET" ? "Set Recovery Target" : "Confirm Schedule"}</span>
                 </>
               )}

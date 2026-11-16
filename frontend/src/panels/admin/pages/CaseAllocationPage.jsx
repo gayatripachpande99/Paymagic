@@ -34,8 +34,6 @@ export default function CaseAllocationPage({
   handleInlineAssign,
   setSelectedCaseId,
   setShowCaseDetailModal,
-  setSelectedPaymentCase,
-  setShowPaymentModal,
   casePage = 1,
   setCasePage
 }) {
@@ -84,21 +82,22 @@ export default function CaseAllocationPage({
   const donutSegments = useMemo(() => {
     const statusMap = adminOverview?.cases_by_status || {};
     const statusColors = {
-      "Assigned": "#3b82f6",
-      "Contacted": "#6366f1",
-      "Promise to Pay": "#f59e0b",
-      "Fully Paid": "#10b981",
-      "Partially Paid": "#f97316",
-      "Disputed": "#f43f5e",
-      "Field Visit": "#a855f7",
-      "New": "#06b6d4",
-      "Not Reachable": "#64748b",
-      "Closed": "#71717a"
+      "Assigned": "#5945F5",
+      "Contacted": "#315CFF",
+      "Promise to Pay": "#FFB800",
+      "Fully Paid": "#00C995",
+      "Partially Paid": "#FF8A00",
+      "Disputed": "#FF527A",
+      "Field Visit": "#A855F7",
+      "New": "#06C7E8",
+      "Not Reachable": "#9AAAC2",
+      "Closed": "#64748B"
     };
     const circumference = 238.76; // 2 * PI * 38
     let currentOffset = 0;
     const segments = [];
-    const total = totalCasesCount || 1;
+    const sumOfStatusCounts = Object.values(statusMap).reduce((acc, v) => acc + Number(v || 0), 0);
+    const total = sumOfStatusCounts > 0 ? sumOfStatusCounts : (totalCasesCount || 1);
 
     Object.entries(statusMap).forEach(([st, cnt]) => {
       const num = Number(cnt || 0);
@@ -106,7 +105,7 @@ export default function CaseAllocationPage({
         const segLen = (num / total) * circumference;
         segments.push({
           status: st,
-          stroke: statusColors[st] || "#3b82f6",
+          stroke: statusColors[st] || "#315CFF",
           dashArray: `${segLen.toFixed(1)} ${(circumference - segLen).toFixed(1)}`,
           dashOffset: -currentOffset
         });
@@ -116,12 +115,15 @@ export default function CaseAllocationPage({
     return segments;
   }, [adminOverview, totalCasesCount]);
 
-  // Toggle selection for all visible cases on current page
+  // Page-scoped Selection Toggle: ensures accurate select all on current page only
+  const isAllCurrentPageSelected =
+    casesList.length > 0 && casesList.every((c) => selectedCaseIds.includes(c.id));
+
   const handleToggleSelectAll = () => {
-    if (selectedCaseIds.length === casesList.length) {
-      setSelectedCaseIds([]);
+    if (isAllCurrentPageSelected) {
+      setSelectedCaseIds((prev) => prev.filter((id) => !casesList.some((c) => c.id === id)));
     } else {
-      setSelectedCaseIds(casesList.map((c) => c.id));
+      setSelectedCaseIds((prev) => Array.from(new Set([...prev, ...casesList.map((c) => c.id)])));
     }
   };
 
@@ -163,14 +165,19 @@ export default function CaseAllocationPage({
   };
 
   // Intercept sensitive status changes to ensure mandatory remarks
-  const onStatusSelectChange = (caseId, newStatus) => {
+  const onStatusSelectChange = async (caseId, newStatus) => {
     if (["Disputed", "Closed", "Not Reachable"].includes(newStatus)) {
       setPendingStatusCaseId(caseId);
       setPendingStatusValue(newStatus);
       setStatusRemarksInput("");
       setRemarksModalOpen(true);
     } else {
-      handleQuickStatusChange(caseId, newStatus);
+      try {
+        await handleQuickStatusChange(caseId, newStatus);
+      } catch (err) {
+        setActionErrorMsg(err.message || "Failed to update case status.");
+        if (loadCases) loadCases(casePage);
+      }
     }
   };
 
@@ -194,7 +201,7 @@ export default function CaseAllocationPage({
     }
   };
 
-  // Download official template directly
+  // Download official template directly with error feedback & safe URL revocation
   const handleDownloadTemplate = (format = "xlsx") => {
     const token = localStorage.getItem("paymagic_token");
     const downloadUrl = `${API_URL}/upload/template?format=${format}`;
@@ -202,7 +209,7 @@ export default function CaseAllocationPage({
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     })
       .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to download template");
+        if (!res.ok) throw new Error(`Server returned ${res.status}: ${res.statusText}`);
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -211,43 +218,42 @@ export default function CaseAllocationPage({
         document.body.appendChild(a);
         a.click();
         a.remove();
-        window.URL.revokeObjectURL(url);
+        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
       })
       .catch((err) => {
         console.error("Template download error:", err);
+        setActionErrorMsg("Failed to download template. Please check server connection.");
       });
   };
 
   return (
-    <div className="portal-tab-content case-allocation-page relative w-full space-y-5 pb-12">
+    <div className="case-allocation-page relative w-full space-y-4 pb-12">
       {/* ── Action Notifications ── */}
       {actionSuccessMsg && (
-        <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between gap-2 shadow-lg">
+        <div className="p-3.5 rounded-xl bg-[#14223A] border border-[#00C995]/50 text-[#00C995] text-xs flex items-center justify-between gap-2 shadow-lg animate-in fade-in duration-200">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-[#00C995] shrink-0" />
             <span>{actionSuccessMsg}</span>
           </div>
-          <button onClick={() => setActionSuccessMsg("")} className="text-emerald-400 hover:text-white cursor-pointer">
+          <button onClick={() => setActionSuccessMsg("")} className="text-[#00C995] hover:text-white cursor-pointer p-1">
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {actionErrorMsg && (
-        <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between gap-2 shadow-lg">
+        <div className="p-3.5 rounded-xl bg-[#14223A] border border-[#FF527A]/50 text-[#FF527A] text-xs flex items-center justify-between gap-2 shadow-lg animate-in fade-in duration-200">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-[#FF527A] shrink-0" />
             <span>{actionErrorMsg}</span>
           </div>
-          <button onClick={() => setActionErrorMsg("")} className="text-rose-400 hover:text-white cursor-pointer">
+          <button onClick={() => setActionErrorMsg("")} className="text-[#FF527A] hover:text-white cursor-pointer p-1">
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════
-          1. TOP SUMMARY DASHBOARD (4-CARD BALANCED ENTERPRISE COMPOSITION)
-      ══════════════════════════════════════════════════════════════════ */}
+      {/* 1. TOP SUMMARY DASHBOARD (4-CARD BALANCED ENTERPRISE COMPOSITION) */}
       <CaseKpiDashboard
         totalOutstanding={totalOutstanding}
         standardDue={standardDue}
@@ -266,9 +272,7 @@ export default function CaseAllocationPage({
         connectionRate={connectionRate}
       />
 
-      {/* ══════════════════════════════════════════════════════════════════
-          2. ADMIN OPERATIONS TOOLBAR (Excel Upload, Rule Allocation, Transfer, Target, Export)
-      ══════════════════════════════════════════════════════════════════ */}
+      {/* 2. ADMIN OPERATIONS TOOLBAR (Import Loans, Rule Allocation, Transfer, Target, Export) */}
       <CaseOperationsToolbar
         fileUploadLoading={fileUploadLoading}
         setShowImportModal={setShowImportModal}
@@ -279,21 +283,20 @@ export default function CaseAllocationPage({
         handleExportCasesCSV={handleExportCasesCSV}
       />
 
-      {/* ══════════════════════════════════════════════════════════════════
-          3. CASE STATUS NAVIGATION TABS (ALL 10 STATUSES + ALL CASES)
-      ══════════════════════════════════════════════════════════════════ */}
+      {/* 3. CASE STATUS NAVIGATION TABS (ALL 10 STATUSES + ALL CASES) */}
       <CaseStatusTabs
         caseFilterStatus={caseFilterStatus}
-        setCaseFilterStatus={setCaseFilterStatus}
+        setCaseFilterStatus={(newStatus) => {
+          setCaseFilterStatus(newStatus);
+          setSelectedCaseIds([]);
+        }}
         CASE_STATUSES={CASE_STATUSES}
         adminOverview={adminOverview}
         totalCasesCount={totalCasesCount}
       />
 
-      {/* ══════════════════════════════════════════════════════════════════
-          4. 2-COLUMN SPLIT (LEFT: CASE MANAGEMENT TABLE | RIGHT: RECENT ACTIVITY)
-      ══════════════════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full items-start my-2">
+      {/* 4. 2-COLUMN SPLIT (LEFT: CASE MANAGEMENT TABLE | RIGHT: RECENT ACTIVITY) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 w-full items-start my-2">
         {/* LEFT COLUMN: Customer Case Management Table (8 cols) */}
         <div className="col-span-1 lg:col-span-8 space-y-4 w-full min-w-0">
           <CaseTable
@@ -301,10 +304,16 @@ export default function CaseAllocationPage({
             casesLoading={casesLoading}
             casesPagination={casesPagination}
             casePage={casePage}
-            setCasePage={setCasePage}
+            setCasePage={(newPage) => {
+              setCasePage(newPage);
+              setSelectedCaseIds([]);
+            }}
             loadCases={loadCases}
             caseSearchTerm={caseSearchTerm}
-            setCaseSearchTerm={setCaseSearchTerm}
+            setCaseSearchTerm={(term) => {
+              setCaseSearchTerm(term);
+              setSelectedCaseIds([]);
+            }}
             selectedCaseIds={selectedCaseIds}
             handleToggleSelectAll={handleToggleSelectAll}
             handleToggleSelectCase={handleToggleSelectCase}
@@ -329,9 +338,7 @@ export default function CaseAllocationPage({
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════
-          5. FLOATING BATCH SELECTION ACTION BAR (when cases are selected)
-      ══════════════════════════════════════════════════════════════════ */}
+      {/* 5. FLOATING BATCH SELECTION ACTION BAR (when cases are selected) */}
       <CaseBatchBar
         selectedCaseIds={selectedCaseIds}
         setSelectedCaseIds={setSelectedCaseIds}
