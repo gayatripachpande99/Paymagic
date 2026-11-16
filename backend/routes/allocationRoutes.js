@@ -1,6 +1,7 @@
 import express from "express";
 import { allocationController } from "../controllers/allocationController.js";
 import { authenticate, requireRoles } from "../middleware/authMiddleware.js";
+import { cacheService } from "../services/cacheService.js";
 
 const router = express.Router();
 
@@ -11,6 +12,7 @@ router.use(authenticate);
 router.get(
   "/eligible-employees",
   requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"),
+  cacheService.middleware(20, "allocation:eligible"),
   allocationController.getEligibleEmployees
 );
 
@@ -57,11 +59,13 @@ router.post(
 router.get(
   "/history",
   requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"),
+  cacheService.middleware(30, "allocation:history"),
   allocationController.getHistory
 );
 
 router.get(
   "/case/:caseId/history",
+  cacheService.middleware(30, "allocation:case-history"),
   allocationController.getCaseHistory
 );
 
@@ -75,6 +79,7 @@ router.post(
 router.get(
   "/sla/escalations",
   requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"),
+  cacheService.middleware(20, "allocation:sla"),
   allocationController.listSlaEscalations
 );
 

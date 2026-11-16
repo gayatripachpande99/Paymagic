@@ -16,7 +16,11 @@ class IndexService {
       customerByPhone: new Map(),
       callsByCase: new Map(),
       historyByCase: new Map(),
-      paymentsByCase: new Map()
+      paymentsByCase: new Map(),
+      ptpByCase: new Map(),
+      contactsByCase: new Map(),
+      receiptsByPayment: new Map(),
+      receiptsByNumber: new Map()
     };
   }
 
@@ -71,6 +75,38 @@ class IndexService {
           this.indexes.paymentsByCase.set(pay.case_id, []);
         }
         this.indexes.paymentsByCase.get(pay.case_id).push(pay);
+      }
+    }
+
+    // 6. Index PTP Commitments
+    if (Array.isArray(store.case_ptp_commitments)) {
+      for (const ptp of store.case_ptp_commitments) {
+        if (!this.indexes.ptpByCase.has(ptp.case_id)) {
+          this.indexes.ptpByCase.set(ptp.case_id, []);
+        }
+        this.indexes.ptpByCase.get(ptp.case_id).push(ptp);
+      }
+    }
+
+    // 7. Index Customer Contacts
+    if (Array.isArray(store.customer_contacts)) {
+      for (const contact of store.customer_contacts) {
+        if (!this.indexes.contactsByCase.has(contact.case_id)) {
+          this.indexes.contactsByCase.set(contact.case_id, []);
+        }
+        this.indexes.contactsByCase.get(contact.case_id).push(contact);
+      }
+    }
+
+    // 8. Index Payment Receipts
+    if (Array.isArray(store.payment_receipts)) {
+      for (const receipt of store.payment_receipts) {
+        if (receipt.payment_id) {
+          this.indexes.receiptsByPayment.set(receipt.payment_id, receipt);
+        }
+        if (receipt.receipt_number) {
+          this.indexes.receiptsByNumber.set(receipt.receipt_number, receipt);
+        }
       }
     }
 
@@ -182,6 +218,22 @@ class IndexService {
     return this.indexes.paymentsByCase.get(caseId) || [];
   }
 
+  getPTPForCase(caseId) {
+    return this.indexes.ptpByCase.get(caseId) || [];
+  }
+
+  getContactsForCase(caseId) {
+    return this.indexes.contactsByCase.get(caseId) || [];
+  }
+
+  getReceiptForPayment(paymentId) {
+    return this.indexes.receiptsByPayment.get(paymentId) || null;
+  }
+
+  getReceiptByNumber(receiptNumber) {
+    return this.indexes.receiptsByNumber.get(receiptNumber) || null;
+  }
+
   /**
    * Get indexing statistics
    */
@@ -193,7 +245,11 @@ class IndexService {
       indexedEmployeeGroups: this.indexes.casesByEmployee.size,
       indexedLenders: this.indexes.casesByLender.size,
       indexedHistoryRecords: this.indexes.historyByCase.size,
-      indexedCallRecords: this.indexes.callsByCase.size
+      indexedCallRecords: this.indexes.callsByCase.size,
+      indexedPaymentRecords: this.indexes.paymentsByCase.size,
+      indexedPTPRecords: this.indexes.ptpByCase.size,
+      indexedContactRecords: this.indexes.contactsByCase.size,
+      indexedReceiptRecords: this.indexes.receiptsByPayment.size
     };
   }
 }

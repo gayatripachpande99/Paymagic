@@ -21,20 +21,21 @@ import {
   completeFieldVisit
 } from "../controllers/caseController.js";
 import { authenticate, requireRoles } from "../middleware/authMiddleware.js";
+import { cacheService } from "../services/cacheService.js";
 
 const router = express.Router();
 
 // ── Specific GET endpoints (MUST precede /:id to avoid collision) ──
-router.get("/field-visits", authenticate, listFieldVisits);
-router.get("/payments/all", authenticate, listAllPayments);
-router.get("/targets", authenticate, listRecoveryTargets);
-router.get("/transfers/history", authenticate, requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"), getTransferHistory);
-router.get("/audit-history", authenticate, getCaseAuditHistory);
-router.get("/audit/history", authenticate, getCaseAuditHistory);
+router.get("/field-visits", authenticate, cacheService.middleware(20, "cases:field-visits"), listFieldVisits);
+router.get("/payments/all", authenticate, cacheService.middleware(15, "cases:payments-all"), listAllPayments);
+router.get("/targets", authenticate, cacheService.middleware(30, "cases:targets"), listRecoveryTargets);
+router.get("/transfers/history", authenticate, requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"), cacheService.middleware(30, "cases:transfers"), getTransferHistory);
+router.get("/audit-history", authenticate, cacheService.middleware(30, "cases:audit"), getCaseAuditHistory);
+router.get("/audit/history", authenticate, cacheService.middleware(30, "cases:audit"), getCaseAuditHistory);
 
 // ── Case Assignments & Transfer History Sub-routes ──
-router.get("/:id/assignments", authenticate, getCaseAssignments);
-router.get("/:caseId/assignments", authenticate, getCaseAssignments);
+router.get("/:id/assignments", authenticate, cacheService.middleware(20, "cases:assignments"), getCaseAssignments);
+router.get("/:caseId/assignments", authenticate, cacheService.middleware(20, "cases:assignments"), getCaseAssignments);
 
 // ── Rule-Based Allocation Engine ──
 router.post("/allocate/preview", authenticate, requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"), previewRuleAllocation);
@@ -56,8 +57,8 @@ router.post("/follow-up", authenticate, setFollowUpDate);
 router.post("/targets", authenticate, requireRoles("SUPER_ADMIN", "ADMIN", "SUPERVISOR"), setRecoveryTarget);
 
 // ── Case listing & Detail ──
-router.get("/", authenticate, listCases);
-router.get("/:id", authenticate, getCaseById);
+router.get("/", authenticate, cacheService.middleware(15, "cases:list"), listCases);
+router.get("/:id", authenticate, cacheService.middleware(30, "cases:detail"), getCaseById);
 
 // ── Status update (Critical Transaction Rule) ──
 router.patch("/:id/status", authenticate, updateCaseStatus);

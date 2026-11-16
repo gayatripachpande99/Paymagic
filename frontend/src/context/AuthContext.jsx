@@ -16,6 +16,16 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const handleExpired = () => {
+      setToken(null);
+      setUser(null);
+    };
+
+    window.addEventListener("paymagic:session_expired", handleExpired);
+    return () => window.removeEventListener("paymagic:session_expired", handleExpired);
+  }, []);
+
+  useEffect(() => {
     const verifyAuth = async () => {
       const storedToken = localStorage.getItem("paymagic_token");
       if (storedToken) {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Sparkles,
   Users,
@@ -11,7 +11,10 @@ import {
   Loader2,
   ShieldCheck,
   ChevronRight,
-  RotateCcw
+  RotateCcw,
+  Clock,
+  Check,
+  ChevronDown
 } from "lucide-react";
 import api from "../../services/api";
 
@@ -21,6 +24,7 @@ export const BulkAllocateModal = ({
   onClose,
   onSuccess
 }) => {
+  const [staffList, setStaffList] = useState(employees);
   const [allocationRule, setAllocationRule] = useState("AMOUNT_BALANCED");
   const [batchSize, setBatchSize] = useState("25");
   const [targetCity, setTargetCity] = useState("Mumbai");
@@ -29,6 +33,27 @@ export const BulkAllocateModal = ({
   const [singleEmployeeId, setSingleEmployeeId] = useState(employees[0]?.id || employees[0]?.employeeId || "");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Sync staff or fetch eligible if passed list is empty
+  useEffect(() => {
+    if (employees && employees.length > 0) {
+      setStaffList(employees);
+      if (!singleEmployeeId) {
+        setSingleEmployeeId(employees[0]?.id || employees[0]?.employeeId || "");
+      }
+    } else if (isOpen) {
+      api.get("/allocation/eligible-employees")
+        .then((res) => {
+          if (res?.success && res.employees && res.employees.length > 0) {
+            setStaffList(res.employees);
+            if (!singleEmployeeId) {
+              setSingleEmployeeId(res.employees[0]?.id || res.employees[0]?.employeeId || "");
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, [employees, isOpen]);
 
   // Preview state
   const [previewData, setPreviewData] = useState(null);
@@ -103,25 +128,25 @@ export const BulkAllocateModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl max-h-[90vh] flex flex-col bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden text-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl sm:max-w-3xl max-h-[92vh] flex flex-col bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden text-slate-100">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-800 bg-slate-950/60 shrink-0">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-800 bg-slate-950/80 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0 shadow-inner">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-semibold text-white text-sm sm:text-base">Rule-Based Case Allocation Engine</h3>
+              <h3 className="font-bold text-white text-base tracking-tight">Rule-Based Case Allocation Engine</h3>
               <p className="text-xs text-slate-400">
-                {step === "CONFIG" ? "Configure allocation criteria & strategy" : "Review proposed allocation before executing"}
+                {step === "CONFIG" ? "Configure portfolio distribution criteria, capacity guards & strategy" : "Review proposed allocation before executing"}
               </p>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -133,157 +158,242 @@ export const BulkAllocateModal = ({
             
             {/* Rule Selection Grid */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">
-                Allocation Strategy <span className="text-rose-400">*</span>
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-semibold text-slate-200 tracking-wide uppercase">
+                  Allocation Strategy <span className="text-rose-400">*</span>
+                </label>
+                <span className="text-[11px] text-slate-400">Select distribution algorithm</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 
+                {/* 1. Balanced Portfolio Amount */}
                 <button
                   type="button"
                   onClick={() => setAllocationRule("AMOUNT_BALANCED")}
-                  className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 ${
+                  className={`p-3.5 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer relative ${
                     allocationRule === "AMOUNT_BALANCED"
-                      ? "bg-indigo-600/20 border-indigo-500 text-white shadow-md shadow-indigo-600/10"
-                      : "bg-slate-800/60 border-slate-700/60 text-slate-400 hover:border-slate-600"
+                      ? "bg-indigo-950/60 border-indigo-500 text-white shadow-lg shadow-indigo-600/15 ring-1 ring-indigo-500/40"
+                      : "bg-slate-800/70 border-slate-700/70 text-slate-300 hover:bg-slate-800 hover:border-slate-600"
                   }`}
                 >
-                  <div className="flex items-center gap-2 font-semibold text-xs text-indigo-300">
-                    <TrendingDown className="w-4 h-4 text-amber-400" />
-                    <span>Balanced Portfolio Amount</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 font-semibold text-xs text-white">
+                      <div className="w-6 h-6 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0">
+                        <TrendingDown className="w-3.5 h-3.5" />
+                      </div>
+                      <span>Balanced Portfolio Amount</span>
+                    </div>
+                    {allocationRule === "AMOUNT_BALANCED" && (
+                      <span className="w-4 h-4 rounded-full bg-indigo-500 text-white flex items-center justify-center shrink-0">
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </span>
+                    )}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="text-[11px] text-slate-300 leading-relaxed pl-8">
                     Evenly balances high, medium &amp; low debt amounts across all specialists
                   </p>
                 </button>
 
+                {/* 2. Workload Capacity First */}
                 <button
                   type="button"
                   onClick={() => setAllocationRule("WORKLOAD_BASED")}
-                  className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 ${
+                  className={`p-3.5 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer relative ${
                     allocationRule === "WORKLOAD_BASED"
-                      ? "bg-indigo-600/20 border-indigo-500 text-white shadow-md shadow-indigo-600/10"
-                      : "bg-slate-800/60 border-slate-700/60 text-slate-400 hover:border-slate-600"
+                      ? "bg-indigo-950/60 border-indigo-500 text-white shadow-lg shadow-indigo-600/15 ring-1 ring-indigo-500/40"
+                      : "bg-slate-800/70 border-slate-700/70 text-slate-300 hover:bg-slate-800 hover:border-slate-600"
                   }`}
                 >
-                  <div className="flex items-center gap-2 font-semibold text-xs text-indigo-300">
-                    <Users className="w-4 h-4 text-emerald-400" />
-                    <span>Workload Capacity First</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 font-semibold text-xs text-white">
+                      <div className="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
+                        <Users className="w-3.5 h-3.5" />
+                      </div>
+                      <span>Workload Capacity First</span>
+                    </div>
+                    {allocationRule === "WORKLOAD_BASED" && (
+                      <span className="w-4 h-4 rounded-full bg-indigo-500 text-white flex items-center justify-center shrink-0">
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </span>
+                    )}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
-                    Prioritizes agents with lowest current active cases to prevent overload
+                  <p className="text-[11px] text-slate-300 leading-relaxed pl-8">
+                    Prioritizes agents with lowest current active cases to prevent burnout
                   </p>
                 </button>
 
+                {/* 3. Geographical / City Geo */}
                 <button
                   type="button"
                   onClick={() => setAllocationRule("LOCATION")}
-                  className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 ${
+                  className={`p-3.5 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer relative ${
                     allocationRule === "LOCATION"
-                      ? "bg-indigo-600/20 border-indigo-500 text-white shadow-md shadow-indigo-600/10"
-                      : "bg-slate-800/60 border-slate-700/60 text-slate-400 hover:border-slate-600"
+                      ? "bg-indigo-950/60 border-indigo-500 text-white shadow-lg shadow-indigo-600/15 ring-1 ring-indigo-500/40"
+                      : "bg-slate-800/70 border-slate-700/70 text-slate-300 hover:bg-slate-800 hover:border-slate-600"
                   }`}
                 >
-                  <div className="flex items-center gap-2 font-semibold text-xs text-indigo-300">
-                    <Building2 className="w-4 h-4 text-blue-400" />
-                    <span>Geographical / City Geo</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 font-semibold text-xs text-white">
+                      <div className="w-6 h-6 rounded-lg bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0">
+                        <Building2 className="w-3.5 h-3.5" />
+                      </div>
+                      <span>Geographical / City Geo</span>
+                    </div>
+                    {allocationRule === "LOCATION" && (
+                      <span className="w-4 h-4 rounded-full bg-indigo-500 text-white flex items-center justify-center shrink-0">
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </span>
+                    )}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
-                    Clusters borrowers by city for targeted recovery outreach
+                  <p className="text-[11px] text-slate-300 leading-relaxed pl-8">
+                    Clusters borrowers by city for localized recovery outreach
                   </p>
                 </button>
 
+                {/* 4. Equal Round-Robin */}
                 <button
                   type="button"
                   onClick={() => setAllocationRule("EQUAL")}
-                  className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 ${
+                  className={`p-3.5 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer relative ${
                     allocationRule === "EQUAL"
-                      ? "bg-indigo-600/20 border-indigo-500 text-white shadow-md shadow-indigo-600/10"
-                      : "bg-slate-800/60 border-slate-700/60 text-slate-400 hover:border-slate-600"
+                      ? "bg-indigo-950/60 border-indigo-500 text-white shadow-lg shadow-indigo-600/15 ring-1 ring-indigo-500/40"
+                      : "bg-slate-800/70 border-slate-700/70 text-slate-300 hover:bg-slate-800 hover:border-slate-600"
                   }`}
                 >
-                  <div className="flex items-center gap-2 font-semibold text-xs text-indigo-300">
-                    <Layers className="w-4 h-4 text-purple-400" />
-                    <span>Equal Round-Robin</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 font-semibold text-xs text-white">
+                      <div className="w-6 h-6 rounded-lg bg-purple-500/15 text-purple-400 flex items-center justify-center shrink-0">
+                        <Layers className="w-3.5 h-3.5" />
+                      </div>
+                      <span>Equal Round-Robin</span>
+                    </div>
+                    {allocationRule === "EQUAL" && (
+                      <span className="w-4 h-4 rounded-full bg-indigo-500 text-white flex items-center justify-center shrink-0">
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </span>
+                    )}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
-                    Strictly equal number of cases distributed across team members
+                  <p className="text-[11px] text-slate-300 leading-relaxed pl-8">
+                    Strictly equal number of cases distributed cyclically across staff
                   </p>
                 </button>
 
+                {/* 5. Priority & Risk-Weighted */}
                 <button
                   type="button"
                   onClick={() => setAllocationRule("PRIORITY_BASED")}
-                  className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 ${
+                  className={`p-3.5 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer relative ${
                     allocationRule === "PRIORITY_BASED"
-                      ? "bg-indigo-600/20 border-indigo-500 text-white shadow-md shadow-indigo-600/10"
-                      : "bg-slate-800/60 border-slate-700/60 text-slate-400 hover:border-slate-600"
+                      ? "bg-indigo-950/60 border-indigo-500 text-white shadow-lg shadow-indigo-600/15 ring-1 ring-indigo-500/40"
+                      : "bg-slate-800/70 border-slate-700/70 text-slate-300 hover:bg-slate-800 hover:border-slate-600"
                   }`}
                 >
-                  <div className="flex items-center gap-2 font-semibold text-xs text-indigo-300">
-                    <AlertTriangle className="w-4 h-4 text-rose-400" />
-                    <span>Priority &amp; Risk-Weighted</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 font-semibold text-xs text-white">
+                      <div className="w-6 h-6 rounded-lg bg-rose-500/15 text-rose-400 flex items-center justify-center shrink-0">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                      </div>
+                      <span>Priority &amp; Risk-Weighted</span>
+                    </div>
+                    {allocationRule === "PRIORITY_BASED" && (
+                      <span className="w-4 h-4 rounded-full bg-indigo-500 text-white flex items-center justify-center shrink-0">
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </span>
+                    )}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
+                  <p className="text-[11px] text-slate-300 leading-relaxed pl-8">
                     Critical and High severity overdue accounts allocated first
                   </p>
                 </button>
 
+                {/* 6. Overdue Bucket / DPD Stage */}
                 <button
                   type="button"
                   onClick={() => setAllocationRule("OVERDUE_BUCKET")}
-                  className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 ${
+                  className={`p-3.5 rounded-xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer relative ${
                     allocationRule === "OVERDUE_BUCKET"
-                      ? "bg-indigo-600/20 border-indigo-500 text-white shadow-md shadow-indigo-600/10"
-                      : "bg-slate-800/60 border-slate-700/60 text-slate-400 hover:border-slate-600"
+                      ? "bg-indigo-950/60 border-indigo-500 text-white shadow-lg shadow-indigo-600/15 ring-1 ring-indigo-500/40"
+                      : "bg-slate-800/70 border-slate-700/70 text-slate-300 hover:bg-slate-800 hover:border-slate-600"
                   }`}
                 >
-                  <div className="flex items-center gap-2 font-semibold text-xs text-indigo-300">
-                    <ShieldCheck className="w-4 h-4 text-teal-400" />
-                    <span>Overdue Bucket / DPD Stage</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 font-semibold text-xs text-white">
+                      <div className="w-6 h-6 rounded-lg bg-teal-500/15 text-teal-400 flex items-center justify-center shrink-0">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                      </div>
+                      <span>Overdue Bucket / DPD Stage</span>
+                    </div>
+                    {allocationRule === "OVERDUE_BUCKET" && (
+                      <span className="w-4 h-4 rounded-full bg-indigo-500 text-white flex items-center justify-center shrink-0">
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </span>
+                    )}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
-                    Distributes by delinquency stage from 90+ DPD (NPA) to B1
+                  <p className="text-[11px] text-slate-300 leading-relaxed pl-8">
+                    Distributes by delinquency stage from 90+ DPD (NPA) to early buckets
                   </p>
                 </button>
 
+                {/* 7. Shift-Aware Active Staff (Full 2-Column Span for visual balance) */}
                 <button
                   type="button"
                   onClick={() => setAllocationRule("SHIFT_AWARE")}
-                  className={`p-3 rounded-xl border text-left transition flex flex-col gap-1 ${
+                  className={`sm:col-span-2 p-3.5 rounded-xl border text-left transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 cursor-pointer relative ${
                     allocationRule === "SHIFT_AWARE"
-                      ? "bg-indigo-600/20 border-indigo-500 text-white shadow-md shadow-indigo-600/10"
-                      : "bg-slate-800/60 border-slate-700/60 text-slate-400 hover:border-slate-600"
+                      ? "bg-indigo-950/60 border-indigo-500 text-white shadow-lg shadow-indigo-600/15 ring-1 ring-indigo-500/40"
+                      : "bg-slate-800/70 border-slate-700/70 text-slate-300 hover:bg-slate-800 hover:border-slate-600"
                   }`}
                 >
-                  <div className="flex items-center gap-2 font-semibold text-xs text-indigo-300">
-                    <Sparkles className="w-4 h-4 text-sky-400" />
-                    <span>Shift-Aware Active Staff</span>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-7 h-7 rounded-lg bg-sky-500/15 text-sky-400 flex items-center justify-center shrink-0">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-xs text-white">Shift-Aware Active Staff</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                          LIVE ATTENDANCE
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 leading-tight mt-0.5">
+                        Allocates strictly to specialists who are currently marked ON_SHIFT or PRESENT today
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-tight">
-                    Allocates strictly to agents who are currently marked ON_SHIFT or PRESENT today
-                  </p>
+                  {allocationRule === "SHIFT_AWARE" && (
+                    <span className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center shrink-0 self-end sm:self-center">
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    </span>
+                  )}
                 </button>
+
               </div>
             </div>
 
-            {/* Shift Aware Toggle */}
-            <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-800/40 border border-slate-700/50">
-              <input
-                type="checkbox"
-                id="shiftAwareToggle"
-                checked={shiftAwareOnly}
-                onChange={(e) => setShiftAwareOnly(e.target.checked)}
-                className="w-4 h-4 rounded text-indigo-600 bg-slate-700 border-slate-600 focus:ring-indigo-500"
-              />
-              <label htmlFor="shiftAwareToggle" className="text-xs text-slate-300 cursor-pointer">
-                Strict Shift Restriction: Exclude staff whose shift is OFF_SHIFT or on approved leave
-              </label>
+            {/* Interactive Shift Restriction Switch */}
+            <div
+              onClick={() => setShiftAwareOnly(!shiftAwareOnly)}
+              className="flex items-center justify-between p-3.5 rounded-xl bg-slate-800/60 hover:bg-slate-800/80 border border-slate-700/60 transition cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${shiftAwareOnly ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30" : "bg-slate-700/40 text-slate-400"}`}>
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-slate-200">Strict Shift &amp; Leave Guard</div>
+                  <p className="text-[11px] text-slate-400">Exclude staff whose shift is OFF_SHIFT or on approved leave</p>
+                </div>
+              </div>
+              <div className={`w-11 h-6 rounded-full transition-colors flex items-center p-0.5 ${shiftAwareOnly ? "bg-indigo-600 justify-end" : "bg-slate-700 justify-start"}`}>
+                <div className="w-5 h-5 rounded-full bg-white shadow-md transform transition-transform" />
+              </div>
             </div>
 
             {/* City Field if Location Rule */}
             {allocationRule === "LOCATION" && (
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <div className="p-3.5 rounded-xl bg-slate-800/40 border border-slate-700/60 space-y-1.5">
+                <label className="block text-xs font-semibold text-slate-200">
                   Target City / Territory
                 </label>
                 <input
@@ -291,34 +401,35 @@ export const BulkAllocateModal = ({
                   value={targetCity}
                   onChange={(e) => setTargetCity(e.target.value)}
                   placeholder="e.g. Mumbai, Pune, Delhi, Bangalore"
-                  className="w-full px-3.5 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500 shadow-inner"
                 />
               </div>
             )}
 
             {/* Target Scope */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-200 mb-1.5">
                 Staff Allocation Scope
               </label>
               <div className="grid grid-cols-2 gap-2 mb-2">
                 <button
                   type="button"
                   onClick={() => setSelectedStaffScope("ALL_ELIGIBLE")}
-                  className={`py-2 px-3 rounded-xl text-xs font-semibold border text-center transition ${
+                  className={`py-2 px-3 rounded-xl text-xs font-semibold border text-center transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     selectedStaffScope === "ALL_ELIGIBLE"
-                      ? "bg-indigo-600/20 border-indigo-500 text-white"
+                      ? "bg-indigo-600/25 border-indigo-500 text-white shadow-sm"
                       : "bg-slate-800/60 border-slate-700/60 text-slate-400 hover:border-slate-600"
                   }`}
                 >
-                  All Eligible Active Staff ({employees.length})
+                  <span className={`w-1.5 h-1.5 rounded-full ${staffList.length > 0 ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+                  <span>All Eligible Active Staff ({staffList.length})</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setSelectedStaffScope("SINGLE")}
-                  className={`py-2 px-3 rounded-xl text-xs font-semibold border text-center transition ${
+                  className={`py-2 px-3 rounded-xl text-xs font-semibold border text-center transition cursor-pointer ${
                     selectedStaffScope === "SINGLE"
-                      ? "bg-indigo-600/20 border-indigo-500 text-white"
+                      ? "bg-indigo-600/25 border-indigo-500 text-white shadow-sm"
                       : "bg-slate-800/60 border-slate-700/60 text-slate-400 hover:border-slate-600"
                   }`}
                 >
@@ -327,57 +438,63 @@ export const BulkAllocateModal = ({
               </div>
 
               {selectedStaffScope === "SINGLE" && (
-                <select
-                  value={singleEmployeeId}
-                  onChange={(e) => setSingleEmployeeId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
-                >
-                  {employees.map((emp) => (
-                    <option key={emp.id || emp.employeeId} value={emp.id || emp.employeeId}>
-                      {emp.fullName || emp.name} ({emp.employeeId || emp.role})
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={singleEmployeeId}
+                    onChange={(e) => setSingleEmployeeId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500 appearance-none pr-10 cursor-pointer shadow-inner"
+                  >
+                    {staffList.map((emp) => (
+                      <option key={emp.id || emp.employeeId} value={emp.id || emp.employeeId} className="bg-slate-900 text-white">
+                        {emp.fullName || emp.name} ({emp.employeeId || emp.role})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
               )}
             </div>
 
             {/* Batch Size */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-200 mb-1.5">
                 Maximum Cases to Allocate
               </label>
-              <select
-                value={batchSize}
-                onChange={(e) => setBatchSize(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
-              >
-                <option value="10">10 Cases</option>
-                <option value="25">25 Cases (Standard Batch)</option>
-                <option value="50">50 Cases</option>
-                <option value="100">100 Cases (Full Portfolio)</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={batchSize}
+                  onChange={(e) => setBatchSize(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500 appearance-none pr-10 cursor-pointer shadow-inner"
+                >
+                  <option value="10" className="bg-slate-900 text-white">10 Cases</option>
+                  <option value="25" className="bg-slate-900 text-white">25 Cases (Standard Batch)</option>
+                  <option value="50" className="bg-slate-900 text-white">50 Cases</option>
+                  <option value="100" className="bg-slate-900 text-white">100 Cases (Full Portfolio)</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
 
             {errorMsg && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 shrink-0" />
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
                 <span>{errorMsg}</span>
               </div>
             )}
 
             {/* Footer Buttons */}
-            <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2.5">
+            <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3 mt-4">
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition"
+                className="px-4 py-2.5 text-xs font-semibold text-slate-300 hover:text-white rounded-xl hover:bg-slate-800 transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-md shadow-indigo-600/20 flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
+                className="px-5 py-2.5 text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 rounded-xl shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition disabled:opacity-50 cursor-pointer active:scale-98"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
                 <span>Preview Allocation</span>

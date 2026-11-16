@@ -16,7 +16,9 @@ export const generateTokens = (user) => {
     fullName: user.full_name
   };
 
-  const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: "8h" });
+  const isProd = process.env.NODE_ENV === "production";
+  const tokenExpiry = process.env.ACCESS_TOKEN_EXPIRES_IN || (isProd ? "8h" : "24h");
+  const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: tokenExpiry });
   const refreshToken = jwt.sign({ id: user.id }, REFRESH_SECRET, { expiresIn: "7d" });
 
   return { accessToken, refreshToken };
@@ -37,11 +39,21 @@ export const authenticate = (req, res, next) => {
 
   const token = authHeader.split(" ")[1];
 
+  const primarySecret = process.env.JWT_SECRET;
+  const isProd = process.env.NODE_ENV === "production";
+
+  if (isProd && !primarySecret) {
+    return res.status(500).json({
+      success: false,
+      message: "Server configuration error: JWT_SECRET must be defined in production."
+    });
+  }
+
   const possibleSecrets = [
-    process.env.JWT_SECRET,
-    "paymagic_super_secret_jwt_key_2026",
-    "paymagic_enterprise_jwt_secure_secret_key_2026",
-    "paymagic_jwt_secret_2026"
+    primarySecret,
+    !isProd && "paymagic_super_secret_jwt_key_2026",
+    !isProd && "paymagic_enterprise_jwt_secure_secret_key_2026",
+    !isProd && "paymagic_jwt_secret_2026"
   ].filter(Boolean);
 
   let verified = false;
@@ -49,7 +61,7 @@ export const authenticate = (req, res, next) => {
 
   for (const secret of possibleSecrets) {
     try {
-      decodedUser = jwt.verify(token, secret);
+      decodedUser = jwt.verify(token, secret, { algorithms: ["HS256"] });
       verified = true;
       break;
     } catch (error) {
@@ -61,15 +73,6 @@ export const authenticate = (req, res, next) => {
     req.user = decodedUser;
     return next();
   }
-
-  // Graceful recovery for existing client sessions in development
-  try {
-    const unverified = jwt.decode(token);
-    if (unverified && (unverified.id || unverified.email)) {
-      req.user = unverified;
-      return next();
-    }
-  } catch (err) {}
 
   return res.status(401).json({
     success: false,

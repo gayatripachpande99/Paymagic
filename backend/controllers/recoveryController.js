@@ -2,6 +2,7 @@ import { recoveryService } from "../services/recoveryService.js";
 import { reconciliationService } from "../services/reconciliationService.js";
 import { paymentRepository } from "../repositories/paymentRepository.js";
 import { recoveryRepository } from "../repositories/recoveryRepository.js";
+import { cacheService } from "../services/cacheService.js";
 
 /**
  * Enterprise Recovery & Collection Tracking Controller
@@ -62,6 +63,11 @@ export const recoveryController = {
         ? `Collection of ₹${paymentAmount.toLocaleString()} recorded and submitted for supervisor verification.`
         : `Payment of ₹${paymentAmount.toLocaleString()} recorded and verified. Case status is now '${result.case?.status}'.`;
 
+      // Invalidate relevant cache partitions
+      cacheService.delPattern("cases:*");
+      cacheService.delPattern("dashboard:*");
+      cacheService.delPattern("recovery:*");
+
       return res.status(201).json({
         success: true,
         message,
@@ -102,6 +108,11 @@ export const recoveryController = {
         notes
       });
 
+      // Invalidate relevant cache partitions
+      cacheService.delPattern("cases:*");
+      cacheService.delPattern("dashboard:*");
+      cacheService.delPattern("recovery:*");
+
       return res.status(200).json({
         success: true,
         message: `Payment ${paymentId} successfully verified. Case balance updated.`,
@@ -133,6 +144,11 @@ export const recoveryController = {
         reason
       });
 
+      // Invalidate relevant cache partitions
+      cacheService.delPattern("cases:*");
+      cacheService.delPattern("dashboard:*");
+      cacheService.delPattern("recovery:*");
+
       return res.status(200).json({
         success: true,
         message: `Payment ${paymentId} has been rejected.`,
@@ -163,6 +179,11 @@ export const recoveryController = {
         userRole: req.user.role,
         reason
       });
+
+      // Invalidate relevant cache partitions
+      cacheService.delPattern("cases:*");
+      cacheService.delPattern("dashboard:*");
+      cacheService.delPattern("recovery:*");
 
       return res.status(200).json({
         success: true,
@@ -323,6 +344,11 @@ export const recoveryController = {
         remarks
       });
 
+      // Invalidate relevant cache partitions
+      cacheService.delPattern("cases:*");
+      cacheService.delPattern("dashboard:*");
+      cacheService.delPattern("recovery:*");
+
       return res.status(201).json({
         success: true,
         message: `PTP commitment of ₹${Number(ptp.promised_amount).toLocaleString()} recorded for ${ptp.promised_date.slice(0, 10)}.`,
@@ -394,6 +420,12 @@ export const recoveryController = {
   async checkBrokenPTPs(req, res) {
     try {
       const broken = await recoveryRepository.checkBrokenPTPs();
+
+      // Invalidate relevant cache partitions
+      cacheService.delPattern("cases:*");
+      cacheService.delPattern("dashboard:*");
+      cacheService.delPattern("recovery:*");
+
       return res.status(200).json({
         success: true,
         message: `Identified and marked ${broken.length} overdue PTP(s) as BROKEN.`,
@@ -442,6 +474,10 @@ export const recoveryController = {
         discussionNotes: discussionNotes || discussion_notes || "",
         nextCallbackDate: nextCallbackDate || next_callback_date
       });
+
+      // Invalidate relevant cache partitions
+      cacheService.delPattern("cases:*");
+      cacheService.delPattern("recovery:*");
 
       return res.status(201).json({
         success: true,
@@ -557,6 +593,11 @@ export const recoveryController = {
         userRole: req.user.role,
         autoReconcileMatched
       });
+
+      // Invalidate relevant cache partitions
+      cacheService.delPattern("cases:*");
+      cacheService.delPattern("dashboard:*");
+      cacheService.delPattern("recovery:*");
 
       return res.status(200).json({
         success: true,

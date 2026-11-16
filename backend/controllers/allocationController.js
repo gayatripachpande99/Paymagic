@@ -1,6 +1,7 @@
 import { caseAllocationService } from "../services/caseAllocationService.js";
 import { slaEscalationService } from "../services/slaEscalationService.js";
 import { employeeRepository } from "../repositories/employeeRepository.js";
+import { cacheService } from "../services/cacheService.js";
 
 /**
  * Controller for Case Allocation, Workload Management, and Reassignment Engine
@@ -97,6 +98,11 @@ export const allocationController = {
         actor: req.user
       });
 
+      // Invalidate relevant cache partitions
+      cacheService.delPattern("cases:*");
+      cacheService.delPattern("dashboard:*");
+      cacheService.delPattern("allocation:*");
+
       return res.status(200).json({
         success: true,
         message: `Successfully allocated ${result.total_assigned} cases using strategy '${result.strategy}'.`,
@@ -140,6 +146,11 @@ export const allocationController = {
         actor: req.user,
         remarks: remarks || "Manual Case Assignment"
       });
+
+      // Invalidate relevant cache partitions
+      cacheService.delPattern("cases:*");
+      cacheService.delPattern("dashboard:*");
+      cacheService.delPattern("allocation:*");
 
       return res.status(200).json({
         success: true,
@@ -216,6 +227,11 @@ export const allocationController = {
         });
         executedCount++;
       }
+
+      // Invalidate relevant cache partitions
+      cacheService.delPattern("cases:*");
+      cacheService.delPattern("dashboard:*");
+      cacheService.delPattern("allocation:*");
 
       return res.status(200).json({
         success: true,

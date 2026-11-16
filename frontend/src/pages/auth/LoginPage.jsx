@@ -24,6 +24,8 @@ export const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const isSessionExpired = new URLSearchParams(location.search).get("session_expired") === "true";
+
   const demoAccounts = [
     {
       role: "SUPER_ADMIN",
@@ -152,6 +154,16 @@ export const LoginPage = () => {
 
         {/* Login Form Box */}
         <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl">
+          {isSessionExpired && !error && (
+            <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 text-amber-300 text-sm">
+              <AlertCircle size={18} className="shrink-0 mt-0.5 text-amber-400" />
+              <div>
+                <p className="font-semibold">Session Expired</p>
+                <p className="text-xs text-amber-400/90 mt-0.5">Your security token expired. Please select a role or sign in again to continue.</p>
+              </div>
+            </div>
+          )}
+
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-3 text-red-400 text-sm">
               <AlertCircle size={18} className="shrink-0 mt-0.5" />
