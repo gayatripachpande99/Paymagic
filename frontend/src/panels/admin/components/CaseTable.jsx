@@ -94,7 +94,7 @@ export default function CaseTable({
 
       {/* ── DESKTOP TABLE VIEW ── */}
       <div className="hidden sm:block overflow-x-auto w-full">
-        <table className="portal-table w-full text-left border-collapse text-xs">
+        <table className="portal-table w-full min-w-[820px] text-left border-collapse text-xs">
           <thead>
             <tr className="border-b border-[#263957] bg-[#08132D] text-[#9AAAC2] text-[11px] font-semibold uppercase tracking-wider">
               <th className="py-3 px-3.5 text-center w-10">

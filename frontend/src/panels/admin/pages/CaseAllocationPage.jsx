@@ -296,9 +296,9 @@ export default function CaseAllocationPage({
       />
 
       {/* 4. 2-COLUMN SPLIT (LEFT: CASE MANAGEMENT TABLE | RIGHT: RECENT ACTIVITY) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 w-full items-start my-2">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 w-full items-start my-2">
         {/* LEFT COLUMN: Customer Case Management Table (8 cols) */}
-        <div className="col-span-1 lg:col-span-8 space-y-4 w-full min-w-0">
+        <div className="col-span-1 xl:col-span-8 space-y-4 w-full min-w-0">
           <CaseTable
             casesList={casesList}
             casesLoading={casesLoading}
@@ -328,7 +328,7 @@ export default function CaseAllocationPage({
         </div>
 
         {/* RIGHT COLUMN: RECENT ACTIVITY & AUDIT TRAIL (4 cols) */}
-        <div className="col-span-1 lg:col-span-4 space-y-4 w-full relative lg:sticky lg:top-4 self-start">
+        <div className="col-span-1 xl:col-span-4 space-y-4 w-full relative xl:sticky xl:top-4 self-start">
           <CaseAuditFeed
             recentStatusHistory={adminOverview?.recent_status_history || []}
             casesList={casesList}

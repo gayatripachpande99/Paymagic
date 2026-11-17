@@ -1,9 +1,39 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import api from "./services/api";
-import EmployeeDashboard from "./components/EmployeeDashboard";
-import AdminDashboard from "./components/AdminDashboard";
 import WebsitePanel from "./panels/website/WebsitePanel";
 import "./App.css";
+
+const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
+const EmployeeDashboard = lazy(() => import("./components/EmployeeDashboard"));
+
+function PortalLoadingFallback() {
+  return (
+    <div style={{
+      display: "flex",
+      height: "100vh",
+      width: "100vw",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#0b0f19",
+      color: "#f8fafc",
+      fontFamily: "Inter, sans-serif"
+    }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
+        <div style={{
+          width: "44px",
+          height: "44px",
+          borderRadius: "50%",
+          border: "4px solid rgba(99, 102, 241, 0.2)",
+          borderTopColor: "#6366f1",
+          animation: "spin 0.8s linear infinite"
+        }} />
+        <p style={{ fontSize: "14px", color: "#94a3b8", letterSpacing: "0.02em" }}>
+          Loading PayMagic Enterprise Portal...
+        </p>
+      </div>
+    </div>
+  );
+}
 
 const SERVICES = [
   {
@@ -106,7 +136,11 @@ const FAQS = [
 ];
 
 export default function App() {
-  const [appMode, setAppMode] = useState("website"); // "website" | "portal"
+  // Determine initial mode from URL path for deep-link support
+  const initialPath = window.location.pathname;
+  const isDeepLinkedPortal = initialPath.startsWith("/admin/") || initialPath.startsWith("/employee/");
+
+  const [appMode, setAppMode] = useState(isDeepLinkedPortal ? "portal" : "website"); // "website" | "portal"
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginView, setLoginView] = useState("select-role");
   const [selectedAdmin, setSelectedAdmin] = useState(null);
@@ -117,6 +151,16 @@ export default function App() {
   const [scrolled, setScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Set website title when in website mode
+  useEffect(() => {
+    if (appMode === "website") {
+      document.title = "PayMagic PVT LTD | Finance Made Simple";
+      if (window.location.pathname !== "/") {
+        window.history.replaceState(null, "", "/");
+      }
+    }
+  }, [appMode]);
 
 
   useEffect(() => {
@@ -215,29 +259,39 @@ export default function App() {
     setLoginView("select-role");
     setShowLoginModal(false);
     setAppMode("website");
+    document.title = "PayMagic PVT LTD | Finance Made Simple";
+    window.history.replaceState(null, "", "/");
   };
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  // If user is logged in and portal mode is active, render the rich dashboard
+  const handleBackToHome = () => {
+    setAppMode("website");
+    document.title = "PayMagic PVT LTD | Finance Made Simple";
+    window.history.pushState(null, "", "/");
+  };
+
+  // If user is logged in and portal mode is active, render the rich dashboard with Suspense
   if (appMode === "portal" && loggedInUser) {
-    if (loggedInUser.role === "ADMIN" || loggedInUser.role === "HR") {
-      return (
-        <AdminDashboard
-          user={loggedInUser}
-          onLogout={handleLogout}
-          onBackToHome={() => setAppMode("website")}
-        />
-      );
-    }
+    const isLeadershipOrSupervisor = ["SUPER_ADMIN", "ADMIN", "SUPERVISOR", "HR"].includes(loggedInUser.role);
     return (
-      <EmployeeDashboard
-        user={loggedInUser}
-        onLogout={handleLogout}
-        onBackToHome={() => setAppMode("website")}
-      />
+      <Suspense fallback={<PortalLoadingFallback />}>
+        {isLeadershipOrSupervisor ? (
+          <AdminDashboard
+            user={loggedInUser}
+            onLogout={handleLogout}
+            onBackToHome={handleBackToHome}
+          />
+        ) : (
+          <EmployeeDashboard
+            user={loggedInUser}
+            onLogout={handleLogout}
+            onBackToHome={handleBackToHome}
+          />
+        )}
+      </Suspense>
     );
   }
 

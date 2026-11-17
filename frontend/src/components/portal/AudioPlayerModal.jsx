@@ -24,11 +24,13 @@ import LegalHoldModal from "./LegalHoldModal";
 import RecordingAuditModal from "./RecordingAuditModal";
 
 export const AudioPlayerModal = ({
-  callData,
-  isOpen,
+  callData: rawCallData,
+  call: rawCall,
+  isOpen = true,
   onClose,
   currentUser
 }) => {
+  const callData = rawCallData || rawCall || null;
   const [loading, setLoading] = useState(true);
   const [recording, setRecording] = useState(null);
   const [error, setError] = useState(null);
@@ -105,8 +107,8 @@ export const AudioPlayerModal = ({
         s3_bucket: "paymagic-telephony-recordings-secure",
         customer_notification_status: "ANNOUNCED_RECORDED",
         checksum_sha256: "a4f89de1c944883492ffda01c777777777777777777777777777777777777777",
-        is_legal_hold: callData.disposition === "Disputed",
-        processing_status: callData.disposition === "Disputed" ? "LEGAL_HOLD" : "READY"
+        is_legal_hold: callData?.disposition === "Disputed",
+        processing_status: callData?.disposition === "Disputed" ? "LEGAL_HOLD" : "READY"
       });
       setSignedUrlExpiresIn(900);
     } finally {
@@ -183,9 +185,9 @@ export const AudioPlayerModal = ({
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
-  const isLegalHold = recording?.is_legal_hold || recording?.processing_status === "LEGAL_HOLD" || callData.disposition === "Disputed";
-
   if (!isOpen || !callData) return null;
+
+  const isLegalHold = recording?.is_legal_hold || recording?.processing_status === "LEGAL_HOLD" || callData?.disposition === "Disputed";
 
   return (
     <>

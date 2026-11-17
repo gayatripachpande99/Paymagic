@@ -28,13 +28,13 @@ export default function CaseOperationsToolbar({
         </div>
 
         {/* Action Buttons: Primary & Secondary Group */}
-        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0">
+        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap w-full sm:w-auto">
           {/* Primary Action 1: Import Customer Loans */}
           <button
             type="button"
             onClick={() => setShowImportModal(true)}
             disabled={fileUploadLoading}
-            className="inline-flex items-center justify-center gap-2 text-xs py-2 px-3.5 min-h-[38px] bg-gradient-to-r from-[#315CFF] to-[#5945F5] hover:from-[#2a50e0] hover:to-[#4e3cd4] text-[#F4F7FF] rounded-xl font-semibold shadow-lg shadow-[#315CFF]/25 transition-all active:scale-98 cursor-pointer disabled:opacity-50"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 text-xs py-2 px-3.5 min-h-[38px] bg-gradient-to-r from-[#315CFF] to-[#5945F5] hover:from-[#2a50e0] hover:to-[#4e3cd4] text-[#F4F7FF] rounded-xl font-semibold shadow-lg shadow-[#315CFF]/25 transition-all active:scale-98 cursor-pointer disabled:opacity-50"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />
             <span>Import Loans</span>
@@ -44,7 +44,7 @@ export default function CaseOperationsToolbar({
           <button
             type="button"
             onClick={() => setShowBulkAllocateModal(true)}
-            className="inline-flex items-center justify-center gap-2 text-xs py-2 px-3.5 min-h-[38px] bg-gradient-to-r from-[#5945F5] to-[#315CFF] hover:from-[#4e3cd4] hover:to-[#2a50e0] text-[#F4F7FF] rounded-xl font-semibold shadow-lg shadow-[#5945F5]/25 transition-all active:scale-98 cursor-pointer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 text-xs py-2 px-3.5 min-h-[38px] bg-gradient-to-r from-[#5945F5] to-[#315CFF] hover:from-[#4e3cd4] hover:to-[#2a50e0] text-[#F4F7FF] rounded-xl font-semibold shadow-lg shadow-[#5945F5]/25 transition-all active:scale-98 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 shrink-0 text-[#FFB800]" />
             <span>Rule Allocation</span>
@@ -54,7 +54,7 @@ export default function CaseOperationsToolbar({
           <button
             type="button"
             onClick={() => handleDownloadTemplate("xlsx")}
-            className="inline-flex items-center justify-center gap-1.5 text-xs py-2 px-3 min-h-[38px] bg-[#14223A] hover:bg-[#1b2e4f] text-[#F4F7FF] border border-[#263957] hover:border-[#315CFF]/50 rounded-xl font-medium transition-all active:scale-98 cursor-pointer shadow-sm"
+            className="flex-1 sm:flex-initial min-w-[80px] inline-flex items-center justify-center gap-1.5 text-xs py-2 px-3 min-h-[38px] bg-[#14223A] hover:bg-[#1b2e4f] text-[#F4F7FF] border border-[#263957] hover:border-[#315CFF]/50 rounded-xl font-medium transition-all active:scale-98 cursor-pointer shadow-sm"
             title="Download official loan import template"
           >
             <Download className="w-3.5 h-3.5 text-[#9AAAC2] shrink-0" />
@@ -65,7 +65,7 @@ export default function CaseOperationsToolbar({
           <button
             type="button"
             onClick={() => setShowTransferModal(true)}
-            className="inline-flex items-center justify-center gap-1.5 text-xs py-2 px-3 min-h-[38px] bg-[#14223A] hover:bg-[#1b2e4f] text-[#F4F7FF] border border-[#263957] hover:border-[#315CFF]/50 rounded-xl font-medium transition-all active:scale-98 cursor-pointer shadow-sm"
+            className="flex-1 sm:flex-initial min-w-[80px] inline-flex items-center justify-center gap-1.5 text-xs py-2 px-3 min-h-[38px] bg-[#14223A] hover:bg-[#1b2e4f] text-[#F4F7FF] border border-[#263957] hover:border-[#315CFF]/50 rounded-xl font-medium transition-all active:scale-98 cursor-pointer shadow-sm"
           >
             <ArrowRightLeft className="w-3.5 h-3.5 text-[#315CFF] shrink-0" />
             <span>Transfer</span>
@@ -75,7 +75,7 @@ export default function CaseOperationsToolbar({
           <button
             type="button"
             onClick={() => setShowTargetModal(true)}
-            className="inline-flex items-center justify-center gap-1.5 text-xs py-2 px-3 min-h-[38px] bg-[#14223A] hover:bg-[#1b2e4f] text-[#F4F7FF] border border-[#263957] hover:border-[#00C995]/50 rounded-xl font-medium transition-all active:scale-98 cursor-pointer shadow-sm"
+            className="flex-1 sm:flex-initial min-w-[80px] inline-flex items-center justify-center gap-1.5 text-xs py-2 px-3 min-h-[38px] bg-[#14223A] hover:bg-[#1b2e4f] text-[#F4F7FF] border border-[#263957] hover:border-[#00C995]/50 rounded-xl font-medium transition-all active:scale-98 cursor-pointer shadow-sm"
           >
             <Calendar className="w-3.5 h-3.5 text-[#00C995] shrink-0" />
             <span>Set Target</span>
@@ -85,7 +85,7 @@ export default function CaseOperationsToolbar({
           <button
             type="button"
             onClick={handleExportCasesCSV}
-            className="inline-flex items-center justify-center gap-1.5 text-xs py-2 px-3 min-h-[38px] bg-[#14223A] hover:bg-[#1b2e4f] text-[#F4F7FF] border border-[#263957] hover:border-[#FFB800]/50 rounded-xl font-medium transition-all active:scale-98 cursor-pointer shadow-sm"
+            className="flex-1 sm:flex-initial min-w-[80px] inline-flex items-center justify-center gap-1.5 text-xs py-2 px-3 min-h-[38px] bg-[#14223A] hover:bg-[#1b2e4f] text-[#F4F7FF] border border-[#263957] hover:border-[#FFB800]/50 rounded-xl font-medium transition-all active:scale-98 cursor-pointer shadow-sm"
             title="Export complete case dataset"
           >
             <Download className="w-3.5 h-3.5 text-[#FFB800] shrink-0" />

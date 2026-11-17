@@ -265,6 +265,11 @@ export const recoveryController = {
 
       return res.status(200).json({
         success: true,
+        payments: result.payments,
+        summary: {
+          total_count: result.total,
+          total_collected: result.totalCollected
+        },
         data: {
           payments: result.payments,
           summary: {

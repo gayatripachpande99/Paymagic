@@ -3926,13 +3926,13 @@ footer {
     flex: 1;
   }
 
-  .topbar-title-wrap {
+  .topbar-title-wrap, .topbar-welcome {
     min-width: 0;
     flex: 1;
   }
 
-  .topbar-title-wrap h2 {
-    font-size: 18px !important;
+  .topbar-title-wrap h2, .topbar-welcome h2 {
+    font-size: 17px !important;
     line-height: 1.25;
     white-space: nowrap;
     overflow: hidden;
@@ -4000,8 +4000,8 @@ footer {
 
 /* ── 7. Ultra-Compact Mobile (< 440px) ── */
 @media (max-width: 440px) {
-  .topbar-title-wrap h2 {
-    font-size: 15.5px !important;
+  .topbar-title-wrap h2, .topbar-welcome h2 {
+    font-size: 15px !important;
   }
 
   .topbar-subtitle {
@@ -4207,6 +4207,24 @@ footer {
   }
   .case-allocation-page .case-audit-box {
     padding: 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .case-allocation-page .case-kpi-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+  .case-allocation-page .case-operations-box {
+    padding: 14px;
+    border-radius: 14px;
+  }
+  .case-allocation-page .case-audit-box {
+    padding: 14px;
+    border-radius: 14px;
+  }
+  .case-allocation-page .case-table-card {
+    border-radius: 14px;
   }
 }
 

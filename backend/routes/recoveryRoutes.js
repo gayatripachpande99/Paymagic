@@ -1,5 +1,6 @@
 import express from "express";
 import { recoveryController } from "../controllers/recoveryController.js";
+import { getManagementReports } from "../controllers/dashboardController.js";
 import { authenticate, requireRoles } from "../middleware/authMiddleware.js";
 import { cacheService } from "../services/cacheService.js";
 
@@ -81,6 +82,7 @@ router.get(
 );
 
 // ── Performance & Reports ──
+router.get("/reports", authenticate, cacheService.middleware(30, "dashboard:reports"), getManagementReports);
 router.get("/performance", authenticate, cacheService.middleware(20, "recovery:performance"), recoveryController.getPerformance);
 router.get("/reports/export", authenticate, recoveryController.exportReport);
 

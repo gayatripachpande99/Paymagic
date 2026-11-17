@@ -45,8 +45,44 @@ const STATUS_PILL_CLASSES = {
   Closed: "bg-green-500/10 text-green-400 border border-green-500/20"
 };
 
+// ── Admin tab-to-route and tab-to-title mappings ──
+const ADMIN_TAB_ROUTES = {
+  "cases": "/admin/cases",
+  "analytics": "/admin/analytics",
+  "payments": "/admin/payments",
+  "telephony": "/admin/telephony",
+  "field-recovery": "/admin/field-recovery",
+  "complaints": "/admin/complaints",
+  "reminders": "/admin/reminders",
+  "attendance": "/admin/attendance",
+  "leave-approvals": "/admin/leave-approvals",
+  "employees": "/admin/employees",
+  "records": "/admin/records"
+};
+
+const ADMIN_TAB_TITLES = {
+  "cases": "PayMagic | Recovery Case Management & Allocation",
+  "analytics": "PayMagic | Portfolio Analytics & DPD Buckets",
+  "payments": "PayMagic | Payment Recovery & Collections Desk",
+  "telephony": "PayMagic | Voice Telephony CDR & Evidence Vault",
+  "field-recovery": "PayMagic | Field Recovery Operations & Radar",
+  "complaints": "PayMagic | Customer Grievance & Disputes Desk",
+  "reminders": "PayMagic | Sentinel Jobs & Notification Hub",
+  "attendance": "PayMagic | Live Staff Attendance Roster",
+  "leave-approvals": "PayMagic | HR Leave Approval Desk",
+  "employees": "PayMagic | Staff Directory & Access Control",
+  "records": "PayMagic | Customer Records & File Allocation"
+};
+
+// Resolve initial tab from URL path for deep-link support
+function getInitialAdminTab() {
+  const path = window.location.pathname;
+  const match = Object.entries(ADMIN_TAB_ROUTES).find(([, route]) => path === route);
+  return match ? match[0] : "cases";
+}
+
 export default function AdminDashboard({ user, onLogout, onBackToHome }) {
-  const [activeTab, setActiveTab] = useState("cases");
+  const [activeTab, setActiveTab] = useState(getInitialAdminTab);
   const [attendanceData, setAttendanceData] = useState([]);
   const [employeesList, setEmployeesList] = useState([]);
   const [summary, setSummary] = useState({
@@ -154,13 +190,47 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
   const [recordFilterEmp, setRecordFilterEmp] = useState("ALL");
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
 
+  // ── Dynamic URL & Title Synchronization ──
+  useEffect(() => {
+    const route = ADMIN_TAB_ROUTES[activeTab] || "/admin/cases";
+    const title = ADMIN_TAB_TITLES[activeTab] || "PayMagic | Admin Command Center";
+    document.title = title;
+    if (window.location.pathname !== route) {
+      window.history.replaceState({ tab: activeTab, portal: "admin" }, "", route);
+    }
+  }, [activeTab]);
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = (e) => {
+      if (e.state?.portal === "admin" && e.state?.tab) {
+        setActiveTab(e.state.tab);
+      } else {
+        const path = window.location.pathname;
+        const match = Object.entries(ADMIN_TAB_ROUTES).find(([, r]) => path === r);
+        if (match) setActiveTab(match[0]);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // Helper: switch tab with pushState for browser history
+  const switchTab = (tab) => {
+    const route = ADMIN_TAB_ROUTES[tab] || "/admin/cases";
+    window.history.pushState({ tab, portal: "admin" }, "", route);
+    setActiveTab(tab);
+    setErrorMsg("");
+    setMobileSidebarOpen(false);
+  };
+
   const loadAdminRecords = async () => {
     try {
       const res = await api.get("/admin/records");
       if (res && res.success) {
-        setRecordsData(res.records || []);
+        setRecordsData(Array.isArray(res.records) ? res.records : Array.isArray(res.data) ? res.data : []);
         setRecordsSummary(res.summary || {});
-        setRecordColumns(res.columns || []);
+        setRecordColumns(Array.isArray(res.columns) ? res.columns : []);
       }
     } catch (err) {
       console.error("Admin records fetch error:", err);
@@ -177,13 +247,13 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
         api.get("/admin/employees")
       ]);
 
-      if (attRes.status === "fulfilled" && attRes.value.success) {
+      if (attRes.status === "fulfilled" && attRes.value?.success) {
         setSummary(attRes.value.summary || {});
-        setAttendanceData(attRes.value.attendance || []);
+        setAttendanceData(Array.isArray(attRes.value.attendance) ? attRes.value.attendance : []);
       }
 
-      if (empRes.status === "fulfilled" && empRes.value.success) {
-        setEmployeesList(empRes.value.employees || []);
+      if (empRes.status === "fulfilled" && empRes.value?.success) {
+        setEmployeesList(Array.isArray(empRes.value.employees) ? empRes.value.employees : []);
       }
 
       await loadAdminRecords();
@@ -311,9 +381,17 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
     try {
       setPaymentsLoading(true);
       const res = await api.get("/recovery/payments");
-      if (res.success) {
-        setPaymentsList(res.payments || res.data || []);
-        if (res.summary) setPaymentsSummary(res.summary);
+      if (res && res.success) {
+        const paymentsArray = Array.isArray(res.payments)
+          ? res.payments
+          : Array.isArray(res.data?.payments)
+          ? res.data.payments
+          : Array.isArray(res.data)
+          ? res.data
+          : [];
+        setPaymentsList(paymentsArray);
+        const summaryObj = res.summary || res.data?.summary || null;
+        if (summaryObj) setPaymentsSummary(summaryObj);
       }
     } catch (err) {
       console.error("Failed to load payments", err);
@@ -371,8 +449,10 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
   const loadReports = async () => {
     try {
       setReportsLoading(true);
-      const res = await api.get("/recovery/reports");
-      if (res.success) setReportsData(res.reports || res.data || res);
+      const res = await api.get("/dashboard/reports");
+      if (res && res.success) {
+        setReportsData(res.data || res.reports || res);
+      }
     } catch (e) {
       console.error("Error loading reports", e);
     } finally {
@@ -692,7 +772,8 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
   };
 
   // Filter attendance records
-  const filteredRecords = attendanceData.filter((item) => {
+  const safeAttendance = Array.isArray(attendanceData) ? attendanceData : [];
+  const filteredRecords = safeAttendance.filter((item) => {
     const matchesSearch =
       item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.employeeId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -708,7 +789,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
   });
 
   const departments = Array.from(
-    new Set(attendanceData.map((d) => d.department).filter(Boolean))
+    new Set(safeAttendance.map((d) => d.department).filter(Boolean))
   );
 
   return (
@@ -749,7 +830,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
         <nav className="portal-nav">
           <button
             className={`portal-nav-item ${activeTab === "cases" ? "active" : ""}`}
-            onClick={() => { setActiveTab("cases"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("cases")}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
@@ -761,7 +842,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "analytics" ? "active" : ""}`}
-            onClick={() => { setActiveTab("analytics"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("analytics")}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="20" x2="18" y2="10" />
@@ -773,7 +854,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "payments" ? "active" : ""}`}
-            onClick={() => { setActiveTab("payments"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("payments")}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="2" y="5" width="20" height="14" rx="2" />
@@ -784,7 +865,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "telephony" ? "active" : ""}`}
-            onClick={() => { setActiveTab("telephony"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("telephony")}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
@@ -794,7 +875,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "field-recovery" ? "active" : ""}`}
-            onClick={() => { setActiveTab("field-recovery"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("field-recovery")}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -805,7 +886,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "complaints" ? "active" : ""}`}
-            onClick={() => { setActiveTab("complaints"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("complaints")}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -817,7 +898,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "reminders" ? "active" : ""}`}
-            onClick={() => { setActiveTab("reminders"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("reminders")}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -828,7 +909,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "attendance" ? "active" : ""}`}
-            onClick={() => { setActiveTab("attendance"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("attendance")}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10" />
@@ -839,7 +920,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
           <button
             className={`portal-nav-item ${activeTab === "leave-approvals" ? "active" : ""}`}
-            onClick={() => { setActiveTab("leave-approvals"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("leave-approvals")}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -855,7 +936,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             <>
               <button
                 className={`portal-nav-item ${activeTab === "employees" ? "active" : ""}`}
-                onClick={() => { setActiveTab("employees"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+                onClick={() => switchTab("employees")}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -867,7 +948,7 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
               <button
                 className={`portal-nav-item ${activeTab === "records" ? "active" : ""}`}
-                onClick={() => { setActiveTab("records"); setErrorMsg(""); setMobileSidebarOpen(false); }}
+                onClick={() => switchTab("records")}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -2036,7 +2117,9 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
 
       {showAudioModal && selectedCallAudio && (
         <AudioPlayerModal
-          call={selectedCallAudio}
+          callData={selectedCallAudio}
+          isOpen={showAudioModal}
+          currentUser={user}
           onClose={() => {
             setShowAudioModal(false);
             setSelectedCallAudio(null);

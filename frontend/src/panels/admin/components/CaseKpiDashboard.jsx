@@ -19,9 +19,9 @@ export default function CaseKpiDashboard({
   connectionRate = 0
 }) {
   return (
-    <div className="case-kpi-grid grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-5 w-full">
+    <div className="case-kpi-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5 w-full">
       {/* ── CARD A: OUTSTANDING AMOUNT & ARREARS RATIO ── */}
-      <div className="case-kpi-card xl:col-span-3 p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08] hover:border-blue-500/30 shadow-2xl flex flex-col justify-between transition-all duration-300 relative overflow-hidden group min-h-[220px]">
+      <div className="case-kpi-card p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08] hover:border-blue-500/30 shadow-2xl flex flex-col justify-between transition-all duration-300 relative overflow-hidden group min-h-[220px]">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent pointer-events-none" />
         
         <div>
@@ -101,7 +101,7 @@ export default function CaseKpiDashboard({
       </div>
 
       {/* ── CARD B: ACCOUNTS STATUS DONUT CHART & DISTRIBUTION ── */}
-      <div className="case-kpi-card xl:col-span-3 p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08] hover:border-blue-500/30 shadow-2xl flex flex-col justify-between transition-all duration-300 relative overflow-hidden group min-h-[220px]">
+      <div className="case-kpi-card p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08] hover:border-blue-500/30 shadow-2xl flex flex-col justify-between transition-all duration-300 relative overflow-hidden group min-h-[220px]">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent pointer-events-none" />
         
         <div>
@@ -120,7 +120,7 @@ export default function CaseKpiDashboard({
           </div>
 
           {/* Dynamic Donut Chart & Legend */}
-          <div className="flex flex-row items-center justify-between gap-3 py-2">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 py-2">
             <div className="relative w-24 h-24 flex items-center justify-center shrink-0">
               <svg className="w-full h-full transform -rotate-90 drop-shadow-md" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="38" fill="none" stroke="#1e293b" strokeWidth="10" />
@@ -201,7 +201,7 @@ export default function CaseKpiDashboard({
       </div>
 
       {/* ── CARD C: OPERATIONAL PRIORITIES & ACTION QUEUE ── */}
-      <div className="case-kpi-card xl:col-span-3 p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08] hover:border-blue-500/30 shadow-2xl flex flex-col justify-between transition-all duration-300 relative overflow-hidden group min-h-[220px]">
+      <div className="case-kpi-card p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08] hover:border-blue-500/30 shadow-2xl flex flex-col justify-between transition-all duration-300 relative overflow-hidden group min-h-[220px]">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-rose-500/40 to-transparent pointer-events-none" />
         
         <div>
@@ -271,7 +271,7 @@ export default function CaseKpiDashboard({
       </div>
 
       {/* ── CARD D: ACTIVE CALLING SPECIALISTS & WORKLOAD ── */}
-      <div className="case-kpi-card xl:col-span-3 p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08] hover:border-blue-500/30 shadow-2xl flex flex-col justify-between transition-all duration-300 relative overflow-hidden group min-h-[220px]">
+      <div className="case-kpi-card p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-950/98 border border-white/[0.08] hover:border-blue-500/30 shadow-2xl flex flex-col justify-between transition-all duration-300 relative overflow-hidden group min-h-[220px]">
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-purple-500/40 to-transparent pointer-events-none" />
         
         <div>
@@ -291,7 +291,7 @@ export default function CaseKpiDashboard({
 
           {/* Specialist Avatars or Professional Empty State */}
           {displaySpecialists.length > 0 ? (
-            <div className="grid grid-cols-4 gap-2 py-1 my-1">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 py-1 my-1">
               {displaySpecialists.map((emp) => (
                 <div
                   key={emp.employeeId || emp.id}

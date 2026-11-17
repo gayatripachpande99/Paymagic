@@ -76,9 +76,38 @@ const STATUS_PILL_CLASSES = {
   Closed: "bg-teal-500/10 text-teal-400 border border-teal-500/20"
 };
 
+// ── Employee tab-to-route and tab-to-title mappings ──
+const EMP_TAB_ROUTES = {
+  "dashboard": "/employee/dashboard",
+  "cases": "/employee/cases",
+  "field-visits": "/employee/field-visits",
+  "calls": "/employee/calls",
+  "attendance": "/employee/attendance",
+  "leave": "/employee/leave",
+  "profile": "/employee/profile",
+  "documents": "/employee/documents"
+};
+
+const EMP_TAB_TITLES = {
+  "dashboard": "PayMagic | Employee Recovery Performance",
+  "cases": "PayMagic | My Assigned Loan Recovery Cases",
+  "field-visits": "PayMagic | Field Recovery Visits & On-Site Collections",
+  "calls": "PayMagic | My Outbound Call Records",
+  "attendance": "PayMagic | Daily Shift Attendance & Productivity",
+  "leave": "PayMagic | Employee Leave Portal",
+  "profile": "PayMagic | My Profile & Employment Details",
+  "documents": "PayMagic | Regulatory Guidelines & Training"
+};
+
+function getInitialEmployeeTab() {
+  const path = window.location.pathname;
+  const match = Object.entries(EMP_TAB_ROUTES).find(([, route]) => path === route);
+  return match ? match[0] : "dashboard";
+}
+
 export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
   // Navigation tabs: dashboard | cases | calls | attendance | leave | profile | documents
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(getInitialEmployeeTab);
   const [profile, setProfile] = useState(user || null);
   const [todayAttendance, setTodayAttendance] = useState(null);
   const [history, setHistory] = useState([]);
@@ -88,6 +117,41 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
   const [successMsg, setSuccessMsg] = useState("");
   const [liveWorkingTime, setLiveWorkingTime] = useState("");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // ── Dynamic URL & Title Synchronization ──
+  useEffect(() => {
+    const route = EMP_TAB_ROUTES[activeTab] || "/employee/dashboard";
+    const title = EMP_TAB_TITLES[activeTab] || "PayMagic | Employee Portal";
+    document.title = title;
+    if (window.location.pathname !== route) {
+      window.history.replaceState({ tab: activeTab, portal: "employee" }, "", route);
+    }
+  }, [activeTab]);
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handlePopState = (e) => {
+      if (e.state?.portal === "employee" && e.state?.tab) {
+        setActiveTab(e.state.tab);
+      } else {
+        const path = window.location.pathname;
+        const match = Object.entries(EMP_TAB_ROUTES).find(([, r]) => path === r);
+        if (match) setActiveTab(match[0]);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  // Helper: switch tab with pushState for browser history
+  const switchTab = (tab) => {
+    const route = EMP_TAB_ROUTES[tab] || "/employee/dashboard";
+    window.history.pushState({ tab, portal: "employee" }, "", route);
+    setActiveTab(tab);
+    setErrorMsg("");
+    setSuccessMsg("");
+    setMobileSidebarOpen(false);
+  };
 
   // ── 1. EMPLOYEE PERFORMANCE KPIS (Feature 6) ──
   const [kpiData, setKpiData] = useState({
@@ -490,7 +554,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
           {/* Feature 6: Employee Performance Dashboard */}
           <button
             className={`portal-nav-item ${activeTab === "dashboard" ? "active" : ""}`}
-            onClick={() => { setActiveTab("dashboard"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("dashboard")}
           >
             <TrendingUp className="w-5 h-5 shrink-0" />
             <span>Performance Dashboard</span>
@@ -499,7 +563,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
           {/* Feature 3: Recovery Cases & Click-to-call */}
           <button
             className={`portal-nav-item ${activeTab === "cases" ? "active" : ""}`}
-            onClick={() => { setActiveTab("cases"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("cases")}
           >
             <Layers className="w-5 h-5 shrink-0" />
             <span>My Recovery Cases</span>
@@ -508,7 +572,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
           {/* Module D: Field Recovery Visits */}
           <button
             className={`portal-nav-item ${activeTab === "field-visits" ? "active" : ""}`}
-            onClick={() => { setActiveTab("field-visits"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("field-visits")}
           >
             <MapPin className="w-5 h-5 shrink-0" />
             <span>Field Visits &amp; GPS</span>
@@ -517,7 +581,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
           {/* Feature 4: Call History & Audio */}
           <button
             className={`portal-nav-item ${activeTab === "calls" ? "active" : ""}`}
-            onClick={() => { setActiveTab("calls"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("calls")}
           >
             <PhoneCall className="w-5 h-5 shrink-0" />
             <span>My Call History</span>
@@ -526,7 +590,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
           {/* Feature 2: Attendance & Shifts */}
           <button
             className={`portal-nav-item ${activeTab === "attendance" ? "active" : ""}`}
-            onClick={() => { setActiveTab("attendance"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("attendance")}
           >
             <Clock className="w-5 h-5 shrink-0" />
             <span>Attendance &amp; Shifts</span>
@@ -535,7 +599,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
           {/* Feature 2: Leave Management */}
           <button
             className={`portal-nav-item ${activeTab === "leave" ? "active" : ""}`}
-            onClick={() => { setActiveTab("leave"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("leave")}
           >
             <Calendar className="w-5 h-5 shrink-0" />
             <span>Leave Management</span>
@@ -544,7 +608,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
           {/* Profile */}
           <button
             className={`portal-nav-item ${activeTab === "profile" ? "active" : ""}`}
-            onClick={() => { setActiveTab("profile"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("profile")}
           >
             <User className="w-5 h-5 shrink-0" />
             <span>My Profile</span>
@@ -553,7 +617,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
           {/* Documents */}
           <button
             className={`portal-nav-item ${activeTab === "documents" ? "active" : ""}`}
-            onClick={() => { setActiveTab("documents"); setErrorMsg(""); setSuccessMsg(""); setMobileSidebarOpen(false); }}
+            onClick={() => switchTab("documents")}
           >
             <FileText className="w-5 h-5 shrink-0" />
             <span>Regulatory &amp; SOP</span>
@@ -644,7 +708,7 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
             setDashboardMode={setDashboardMode}
             kpiData={kpiData}
             myCases={myCases}
-            setActiveTab={setActiveTab}
+            setActiveTab={switchTab}
           />
         )}
 

@@ -738,57 +738,57 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
 
                       {/* Disposition */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        {call.disposition === "Completed" && (
+                        {call?.disposition === "Completed" && (
                           <span className="inline-flex items-center gap-1 text-emerald-400 text-[11px]">
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>Completed</span>
                           </span>
                         )}
-                        {call.disposition === "Promise to Pay" && (
+                        {call?.disposition === "Promise to Pay" && (
                           <span className="inline-flex items-center gap-1 text-emerald-300 font-semibold text-[11px] bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                             <Check className="w-3.5 h-3.5" />
                             <span>Promise to Pay</span>
                           </span>
                         )}
-                        {call.disposition === "Answered" && (
+                        {call?.disposition === "Answered" && (
                           <span className="inline-flex items-center gap-1 text-blue-400 text-[11px]">
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>Answered</span>
                           </span>
                         )}
-                        {call.disposition === "No Answer" && (
+                        {call?.disposition === "No Answer" && (
                           <span className="inline-flex items-center gap-1 text-rose-400 text-[11px]">
                             <XCircle className="w-3.5 h-3.5" />
                             <span>No Answer</span>
                           </span>
                         )}
-                        {call.disposition === "Busy" && (
+                        {call?.disposition === "Busy" && (
                           <span className="inline-flex items-center gap-1 text-amber-400 text-[11px]">
                             <AlertCircle className="w-3.5 h-3.5" />
                             <span>Busy</span>
                           </span>
                         )}
-                        {call.disposition === "Voicemail" && (
+                        {call?.disposition === "Voicemail" && (
                           <span className="inline-flex items-center gap-1 text-purple-400 text-[11px]">
                             <Headphones className="w-3.5 h-3.5" />
                             <span>Voicemail</span>
                           </span>
                         )}
-                        {call.disposition === "Interested" && (
+                        {call?.disposition === "Interested" && (
                           <span className="inline-flex items-center gap-1 text-sky-400 text-[11px]">
                             <Star className="w-3.5 h-3.5 fill-sky-400/20" />
                             <span>Interested</span>
                           </span>
                         )}
-                        {call.disposition === "Disputed" && (
+                        {call?.disposition === "Disputed" && (
                           <span className="inline-flex items-center gap-1 text-rose-400 text-[11px] bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
                             <AlertCircle className="w-3.5 h-3.5" />
                             <span>Disputed</span>
                           </span>
                         )}
-                        {!["Completed", "Promise to Pay", "Answered", "No Answer", "Busy", "Voicemail", "Interested", "Disputed"].includes(call.disposition) && (
+                        {!["Completed", "Promise to Pay", "Answered", "No Answer", "Busy", "Voicemail", "Interested", "Disputed"].includes(call?.disposition) && (
                           <span className="text-slate-300 text-[11px]">
-                            {call.disposition || "—"}
+                            {call?.disposition || "—"}
                           </span>
                         )}
                       </td>
@@ -1111,14 +1111,14 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
             {[
-              { label: "Completed / Settled", count: calls.filter(c => c.disposition === "Completed").length, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-              { label: "Promise to Pay (PTP)", count: calls.filter(c => c.disposition === "Promise to Pay").length, color: "text-teal-400", bg: "bg-teal-500/10", border: "border-teal-500/20" },
-              { label: "Interested in Plan", count: calls.filter(c => c.disposition === "Interested").length, color: "text-sky-400", bg: "bg-sky-500/10", border: "border-sky-500/20" },
-              { label: "Customer Disputed", count: calls.filter(c => c.disposition === "Disputed").length, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" },
-              { label: "Line Busy", count: calls.filter(c => c.disposition === "Busy").length, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
-              { label: "No Answer / Unreachable", count: calls.filter(c => c.disposition === "No Answer").length, color: "text-slate-400", bg: "bg-slate-500/10", border: "border-slate-500/20" },
-              { label: "Left Voicemail", count: calls.filter(c => c.disposition === "Voicemail").length, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20" },
-              { label: "Abandoned Call", count: calls.filter(c => c.disposition === "Abandoned").length, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" }
+              { label: "Completed / Settled", count: calls.filter(c => c && c.disposition === "Completed").length, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+              { label: "Promise to Pay (PTP)", count: calls.filter(c => c && c.disposition === "Promise to Pay").length, color: "text-teal-400", bg: "bg-teal-500/10", border: "border-teal-500/20" },
+              { label: "Interested in Plan", count: calls.filter(c => c && c.disposition === "Interested").length, color: "text-sky-400", bg: "bg-sky-500/10", border: "border-sky-500/20" },
+              { label: "Customer Disputed", count: calls.filter(c => c && c.disposition === "Disputed").length, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" },
+              { label: "Line Busy", count: calls.filter(c => c && c.disposition === "Busy").length, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
+              { label: "No Answer / Unreachable", count: calls.filter(c => c && c.disposition === "No Answer").length, color: "text-slate-400", bg: "bg-slate-500/10", border: "border-slate-500/20" },
+              { label: "Left Voicemail", count: calls.filter(c => c && c.disposition === "Voicemail").length, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20" },
+              { label: "Abandoned Call", count: calls.filter(c => c && c.disposition === "Abandoned").length, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" }
             ].map((d, i) => (
               <div key={i} className={`p-4 rounded-xl border ${d.border} ${d.bg} transition hover:scale-[1.01]`}>
                 <div className={`text-2xl font-bold font-mono ${d.color}`}>{d.count}</div>
