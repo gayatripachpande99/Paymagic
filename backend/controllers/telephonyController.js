@@ -1,6 +1,19 @@
 import { v4 as uuidv4 } from "uuid";
-import { memoryStore, updateCaseStatusWithHistory } from "../config/db.js";
+import db, { memoryStore, updateCaseStatusWithHistory } from "../config/db.js";
 import { telephonyProvider } from "../adapters/telephonyAdapter.js";
+import { maskPhone } from "../services/piiMaskingService.js";
+import { telephonyRepository } from "../repositories/telephonyRepository.js";
+import { evidenceRepository } from "../repositories/evidenceRepository.js";
+import { webhookEventRepository } from "../repositories/webhookEventRepository.js";
+
+// Webhook Idempotency & Replay Attack Cache
+const webhookIdempotencyCache = new Map();
+setInterval(() => {
+  const oneHourAgo = Date.now() - 3600000;
+  for (const [key, ts] of webhookIdempotencyCache.entries()) {
+    if (ts < oneHourAgo) webhookIdempotencyCache.delete(key);
+  }
+}, 1800000);
 
 /**
  * Check if current time is within IST calling hours (08:00 - 19:00).
@@ -95,7 +108,7 @@ export const initiateCall = async (req, res) => {
       created_at: now
     };
 
-    memoryStore.calls.push(callRecord);
+    await telephonyRepository.createCall(callRecord);
 
     return res.status(200).json({
       success: true,
@@ -147,7 +160,8 @@ export const handleWebhook = async (req, res) => {
       });
     }
 
-    if (!telephonyProvider.verifyWebhookSignature(req.body, webhookSignature, req.headers)) {
+    const payloadToVerify = req.rawBody || req.body;
+    if (!telephonyProvider.verifyWebhookSignature(payloadToVerify, webhookSignature, req.headers)) {
       return res.status(401).json({
         success: false,
         message: "Invalid or forged webhook signature. Event rejected."
@@ -158,8 +172,34 @@ export const handleWebhook = async (req, res) => {
       return res.status(400).json({ success: false, message: "telephony_call_id is required." });
     }
 
+    // SECURITY P0: Durable idempotency filter preventing duplicate webhook processing
+    const idempotencyKey = `${telephony_call_id}:${status}:${duration_seconds}`;
+    if (webhookIdempotencyCache.has(idempotencyKey)) {
+      return res.status(200).json({
+        success: true,
+        message: `Duplicate webhook event acknowledged for call ${telephony_call_id}.`,
+        duplicate: true
+      });
+    }
+    webhookIdempotencyCache.set(idempotencyKey, Date.now());
+
+    // Durable PostgreSQL & memoryStore idempotency registration
+    const durableEvent = await webhookEventRepository.recordReceivedEvent({
+      provider: "TELEPHONY",
+      providerEventId: idempotencyKey,
+      eventType: `call.${status}`,
+      payload: req.rawBody || req.body
+    });
+    if (durableEvent.duplicate) {
+      return res.status(200).json({
+        success: true,
+        message: `Duplicate webhook event acknowledged for call ${telephony_call_id}.`,
+        duplicate: true
+      });
+    }
+
     // Find the call record
-    const callRecord = memoryStore.calls.find(c => c.telephony_call_id === telephony_call_id);
+    const callRecord = await telephonyRepository.getCallByTelephonyId(telephony_call_id);
     if (!callRecord) {
       return res.status(404).json({ success: false, message: `Call with telephony ID '${telephony_call_id}' not found.` });
     }
@@ -172,17 +212,18 @@ export const handleWebhook = async (req, res) => {
         ? "unanswered"
         : status || "answered";
 
-    // Update call record
-    callRecord.status = callStatus;
-    callRecord.duration_seconds = callDuration;
-    callRecord.ended_at = ended_at || now;
+    // Update call record in PostgreSQL & memoryStore
+    await telephonyRepository.updateCallStatus(telephony_call_id, {
+      status: callStatus,
+      durationSeconds: callDuration,
+      endedAt: ended_at || now
+    });
 
     // Create recording entry if call was answered
     if (callStatus === "answered" && callDuration > 0) {
       const s3Key = recording_s3_key || `recordings/${new Date().getFullYear()}/${String(new Date().getMonth() + 1).padStart(2, "0")}/${telephony_call_id}.mp3`;
 
-      const recording = {
-        id: `rec_${uuidv4()}`,
+      await evidenceRepository.createRecording({
         call_id: callRecord.id,
         s3_bucket: "paymagic-telephony-recordings-secure",
         s3_key: s3Key,
@@ -192,13 +233,12 @@ export const handleWebhook = async (req, res) => {
         mime_type: "audio/mp3",
         encryption_type: "aws:kms:sse",
         processing_status: "READY",
-        is_legal_hold: false,
-        retention_until: new Date(Date.now() + 365 * 86400000).toISOString(),
-        created_at: now
-      };
-
-      memoryStore.call_recordings.push(recording);
+        is_legal_hold: false
+      });
     }
+
+    // Mark durable event processed
+    await webhookEventRepository.markProcessed(idempotencyKey);
 
     return res.status(200).json({
       success: true,
@@ -250,6 +290,12 @@ export const submitCallOutcome = async (req, res) => {
     callRecord.call_outcome = call_outcome;
     callRecord.call_notes = call_notes || callRecord.call_notes;
     callRecord.next_follow_up_date = next_follow_up_date || callRecord.next_follow_up_date;
+
+    await telephonyRepository.updateCallOutcome(callId, {
+      outcome: call_outcome,
+      notes: call_notes || callRecord.call_notes,
+      nextFollowUpDate: next_follow_up_date || callRecord.next_follow_up_date
+    });
 
     // Update follow-up on the case
     if (next_follow_up_date) {
@@ -347,7 +393,7 @@ export const simulateCall = async (req, res) => {
       created_at: now
     };
 
-    memoryStore.calls.push(callRecord);
+    await telephonyRepository.createCall(callRecord);
 
     // Create recording if call was answered
     if (simCall.recording_available && simCall.duration_seconds > 0) {
@@ -590,7 +636,8 @@ export const getCallHistory = async (req, res) => {
         formatted_call_id: formattedCallId,
         case_number: loanCase ? loanCase.case_number : "CASE-GEN",
         customer_name: customer ? customer.full_name : "Direct Customer",
-        customer_phone: customer ? customer.phone_raw : "+91 98765 43210",
+        customer_phone: customer ? (["SUPER_ADMIN", "ADMIN"].includes(req.user?.role) ? (customer.phone_raw || customer.phone) : (customer.phone_masked || maskPhone(customer.phone_raw || customer.phone))) : "+91 98765 *****",
+        customer_phone_masked: customer ? (customer.phone_masked || maskPhone(customer.phone_raw || customer.phone)) : "+91 98765 *****",
         agent_name: callerUser ? callerUser.full_name : "Telecaller Staff",
         agent_extension: rawExt,
         direction: (call.direction || "OUTBOUND").toUpperCase(),

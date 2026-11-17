@@ -31,17 +31,24 @@ export class BaseTelephonyProvider {
 }
 
 /**
- * Helper: Compute genuine HMAC SHA-256 signature for a payload
+ * Compute genuine HMAC SHA-256 signature for a webhook payload
  */
 export const computeWebhookSignature = (payload, secret) => {
   const secretKey = secret || process.env.TELEPHONY_WEBHOOK_SECRET || "paymagic_telephony_hmac_secret_key_2026";
-  const rawString = typeof payload === "string" ? payload : JSON.stringify(payload);
+  let rawString = "";
+  if (Buffer.isBuffer(payload)) {
+    rawString = payload.toString("utf-8");
+  } else if (typeof payload === "string") {
+    rawString = payload;
+  } else {
+    rawString = JSON.stringify(payload);
+  }
   return crypto.createHmac("sha256", secretKey).update(rawString).digest("hex");
 };
 
 /**
- * Mock Telephony Provider (Development & Automated Staging)
- * Implements full telephony lifecycle with genuine HMAC-SHA256 signature security.
+ * Mock Telephony Provider (Development, CI/CD, & Automated Staging)
+ * Implements complete carrier telephony lifecycle with genuine HMAC-SHA256 signature security.
  */
 export class MockTelephonyProvider extends BaseTelephonyProvider {
   constructor() {
@@ -49,11 +56,8 @@ export class MockTelephonyProvider extends BaseTelephonyProvider {
     this.activeCalls = new Map();
   }
 
-  /**
-   * Initiate an outbound call from an agent to a customer phone number.
-   */
-  async initiateCall(fromAgent, toCustomerPhone) {
-    const telephonyCallId = `TEL-${Date.now()}-${uuidv4().slice(0, 8)}`;
+  async initiateCall(fromAgent, toCustomerPhone, options = {}) {
+    const telephonyCallId = `TEL-MOCK-${Date.now()}-${uuidv4().slice(0, 8)}`;
 
     const callRecord = {
       telephony_call_id: telephonyCallId,
@@ -70,35 +74,6 @@ export class MockTelephonyProvider extends BaseTelephonyProvider {
     };
 
     this.activeCalls.set(telephonyCallId, callRecord);
-
-    // Simulate async connection
-    setTimeout(() => {
-      const call = this.activeCalls.get(telephonyCallId);
-      if (call && call.status === "RINGING") {
-        const isConnected = Math.random() < 0.8;
-        if (isConnected) {
-          call.status = "CONNECTED";
-          call.connected_at = new Date().toISOString();
-          const duration = Math.floor(30 + Math.random() * 270);
-          call.simulated_duration = duration;
-          call.recording_available = true;
-          call.recording_s3_key = `recordings/${new Date().getFullYear()}/${String(new Date().getMonth() + 1).padStart(2, "0")}/${telephonyCallId}.mp3`;
-
-          setTimeout(() => {
-            const endingCall = this.activeCalls.get(telephonyCallId);
-            if (endingCall && endingCall.status === "CONNECTED") {
-              endingCall.status = "COMPLETED";
-              endingCall.ended_at = new Date().toISOString();
-              endingCall.duration_seconds = duration;
-            }
-          }, 300);
-        } else {
-          call.status = "UNANSWERED";
-          call.ended_at = new Date().toISOString();
-          call.duration_seconds = 0;
-        }
-      }
-    }, 100);
 
     return {
       success: true,
@@ -157,7 +132,23 @@ export class MockTelephonyProvider extends BaseTelephonyProvider {
     };
   }
 
-  async generateSignedUrl(s3Key, expiresIn = 3600) {
+  async simulateFullCallLifecycle(fromAgent, toCustomerPhone, options = {}) {
+    const init = await this.initiateCall(fromAgent, toCustomerPhone, options);
+    const call = this.activeCalls.get(init.telephony_call_id);
+    const duration = options.duration || 65;
+    call.status = "COMPLETED";
+    call.connected_at = new Date(Date.now() - duration * 1000).toISOString();
+    call.ended_at = new Date().toISOString();
+    call.duration_seconds = duration;
+    call.recording_available = true;
+    call.recording_s3_key = `recordings/2026/11/${init.telephony_call_id}.mp3`;
+    return {
+      success: true,
+      call
+    };
+  }
+
+  async generateSignedUrl(s3Key, expiresIn = 900) {
     const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
     const mockSignature = crypto.randomBytes(16).toString("hex");
 
@@ -169,50 +160,6 @@ export class MockTelephonyProvider extends BaseTelephonyProvider {
     };
   }
 
-  async simulateFullCallLifecycle(fromAgent, toCustomerPhone) {
-    const telephonyCallId = `TEL-SIM-${Date.now()}-${uuidv4().slice(0, 6)}`;
-    const isConnected = Math.random() < 0.8;
-    const duration = isConnected ? Math.floor(30 + Math.random() * 300) : 0;
-    const now = new Date();
-    const startedAt = new Date(now.getTime() - (duration + 10) * 1000).toISOString();
-    const connectedAt = isConnected ? new Date(now.getTime() - duration * 1000).toISOString() : null;
-    const endedAt = now.toISOString();
-
-    const s3Key = isConnected
-      ? `recordings/${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}/${telephonyCallId}.mp3`
-      : null;
-
-    const callData = {
-      telephony_call_id: telephonyCallId,
-      from_agent: fromAgent,
-      to_phone: toCustomerPhone,
-      provider: this.providerName,
-      status: isConnected ? "COMPLETED" : "UNANSWERED",
-      initiated_at: startedAt,
-      connected_at: connectedAt,
-      ended_at: endedAt,
-      duration_seconds: duration,
-      recording_available: isConnected,
-      recording_s3_key: s3Key,
-      recording_url: s3Key
-        ? `https://paymagic-telephony-recordings-secure.s3.ap-south-1.amazonaws.com/${s3Key}`
-        : null,
-      file_size_bytes: isConnected ? duration * 16000 : 0
-    };
-
-    this.activeCalls.set(telephonyCallId, callData);
-
-    return {
-      success: true,
-      simulated: true,
-      call: callData
-    };
-  }
-
-  /**
-   * SECURITY P0: Provider-specific HMAC-SHA256 signature verification.
-   * Completely rejects missing signatures and non-matching signatures.
-   */
   verifyWebhookSignature(payload, signature, headers = {}) {
     if (!signature || typeof signature !== "string") {
       return false;
@@ -221,7 +168,6 @@ export class MockTelephonyProvider extends BaseTelephonyProvider {
     const secret = process.env.TELEPHONY_WEBHOOK_SECRET || "paymagic_telephony_hmac_secret_key_2026";
     const expected = computeWebhookSignature(payload, secret);
 
-    // Support standard hex or "sha256=" prefix
     const cleanSig = signature.trim().startsWith("sha256=")
       ? signature.trim().slice(7)
       : signature.trim();
@@ -234,37 +180,44 @@ export class MockTelephonyProvider extends BaseTelephonyProvider {
         return false;
       }
       return crypto.timingSafeEqual(expectedBuf, actualBuf);
-    } catch (err) {
+    } catch {
       return false;
     }
   }
 }
 
 /**
- * Production Telephony Provider (Exotel / Twilio / Knowlarity Gateway)
+ * Exotel Production Telephony Provider (India Telecom Primary Gateway)
+ * API Docs: https://developer.exotel.com/api/
  */
-export class ProductionTelephonyProvider extends BaseTelephonyProvider {
+export class ExotelTelephonyProvider extends BaseTelephonyProvider {
   constructor() {
-    super(process.env.TELEPHONY_PROVIDER_NAME || "ExotelCloudTelephony");
-    this.apiKey = process.env.TELEPHONY_API_KEY;
-    this.apiToken = process.env.TELEPHONY_API_TOKEN;
-    this.subdomain = process.env.TELEPHONY_SUBDOMAIN || "api.exotel.com";
-    this.accountSid = process.env.TELEPHONY_ACCOUNT_SID;
-    this.callerId = process.env.TELEPHONY_CALLER_ID;
+    super("ExotelEnterpriseGateway");
+    this.apiKey = process.env.EXOTEL_API_KEY || process.env.TELEPHONY_API_KEY;
+    this.apiToken = process.env.EXOTEL_API_TOKEN || process.env.TELEPHONY_API_TOKEN;
+    this.subdomain = process.env.EXOTEL_SUBDOMAIN || process.env.TELEPHONY_SUBDOMAIN || "api.exotel.com";
+    this.accountSid = process.env.EXOTEL_ACCOUNT_SID || process.env.TELEPHONY_ACCOUNT_SID;
+    this.callerId = process.env.EXOTEL_CALLER_ID || process.env.TELEPHONY_CALLER_ID || "02071171000";
+  }
+
+  isConfigured() {
+    return Boolean(this.apiKey && this.apiToken && this.accountSid);
   }
 
   async initiateCall(fromAgent, toCustomerPhone, options = {}) {
-    if (!this.apiKey || !this.accountSid) {
-      throw new Error("Production telephony credentials unconfigured (TELEPHONY_API_KEY / TELEPHONY_ACCOUNT_SID missing).");
+    if (!this.isConfigured()) {
+      throw new Error("Exotel credentials unconfigured. Set EXOTEL_API_KEY, EXOTEL_API_TOKEN, EXOTEL_ACCOUNT_SID.");
     }
 
     const endpoint = `https://${this.subdomain}/v1/Accounts/${this.accountSid}/Calls/connect.json`;
+    const webhookUrl = options.webhookUrl || `${process.env.APP_URL || "https://paymagic.in"}/api/telephony/webhook`;
+
     const body = new URLSearchParams({
       From: fromAgent,
       To: toCustomerPhone,
-      CallerId: this.callerId || "02071171000",
+      CallerId: this.callerId,
       CallType: "trans",
-      StatusCallback: options.webhookUrl || `${process.env.APP_URL || "https://paymagic.in"}/api/telephony/webhook`,
+      StatusCallback: webhookUrl,
       StatusCallbackEvents: "terminal",
       Record: "true"
     });
@@ -272,7 +225,7 @@ export class ProductionTelephonyProvider extends BaseTelephonyProvider {
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
-        "Authorization": "Basic " + Buffer.from(`${this.apiKey}:${this.apiToken}`).toString("base64"),
+        Authorization: "Basic " + Buffer.from(`${this.apiKey}:${this.apiToken}`).toString("base64"),
         "Content-Type": "application/x-www-form-urlencoded"
       },
       body: body.toString()
@@ -280,7 +233,7 @@ export class ProductionTelephonyProvider extends BaseTelephonyProvider {
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`Telephony provider gateway rejected call initiation: ${errText}`);
+      throw new Error(`Exotel API rejected call initiation (${response.status}): ${errText}`);
     }
 
     const data = await response.json();
@@ -289,16 +242,20 @@ export class ProductionTelephonyProvider extends BaseTelephonyProvider {
       telephony_call_id: data.Call?.Sid || data.CallSid,
       provider: this.providerName,
       status: "RINGING",
-      message: "Outbound call queued on telephony gateway.",
+      message: "Exotel outbound call queued successfully.",
       initiated_at: new Date().toISOString()
     };
   }
 
   async getCallStatus(telephonyCallId) {
+    if (!this.isConfigured()) {
+      return { success: false, status: "NOT_CONFIGURED" };
+    }
+
     const endpoint = `https://${this.subdomain}/v1/Accounts/${this.accountSid}/Calls/${telephonyCallId}.json`;
     const response = await fetch(endpoint, {
       headers: {
-        "Authorization": "Basic " + Buffer.from(`${this.apiKey}:${this.apiToken}`).toString("base64")
+        Authorization: "Basic " + Buffer.from(`${this.apiKey}:${this.apiToken}`).toString("base64")
       }
     });
 
@@ -307,52 +264,36 @@ export class ProductionTelephonyProvider extends BaseTelephonyProvider {
     }
 
     const data = await response.json();
+    const status = data.Call?.Status?.toLowerCase() || "unknown";
+    const mappedStatus = status === "completed" ? "answered" : status;
+
     return {
       success: true,
       telephony_call_id: telephonyCallId,
-      status: data.Call?.Status?.toUpperCase() || "UNKNOWN",
+      status: mappedStatus,
       duration_seconds: parseInt(data.Call?.Duration || "0", 10),
-      recording_available: !!data.Call?.RecordingUrl
+      recording_available: Boolean(data.Call?.RecordingUrl),
+      recording_url: data.Call?.RecordingUrl || null
     };
   }
 
   async getRecordingUrl(telephonyCallId) {
     const statusData = await this.getCallStatus(telephonyCallId);
     if (!statusData.success || !statusData.recording_available) {
-      return { success: false, message: "Recording not available." };
+      return { success: false, message: "Recording not available from Exotel." };
     }
     return {
       success: true,
       telephony_call_id: telephonyCallId,
-      recording_url: `https://${this.subdomain}/v1/Accounts/${this.accountSid}/Calls/${telephonyCallId}.mp3`,
+      recording_url: statusData.recording_url,
       duration_seconds: statusData.duration_seconds
     };
   }
 
-  async generateSignedUrl(s3Key, expiresIn = 3600) {
-    // AWS KMS Signed URL for Production Telephony Vault
-    const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
-    return {
-      success: true,
-      signed_url: `https://${process.env.S3_BUCKET || "paymagic-telephony-vault"}.s3.${process.env.AWS_REGION || "ap-south-1"}.amazonaws.com/${s3Key}?expires=${expiresAt}`,
-      expires_at: expiresAt,
-      expires_in_seconds: expiresIn
-    };
-  }
-
-  /**
-   * Production HMAC-SHA256 signature validation with timing-safe comparison
-   */
   verifyWebhookSignature(payload, signature, headers = {}) {
-    if (!signature || typeof signature !== "string") {
-      return false;
-    }
-
+    if (!signature || typeof signature !== "string") return false;
     const secret = process.env.TELEPHONY_WEBHOOK_SECRET;
-    if (!secret) {
-      console.error("CRITICAL: TELEPHONY_WEBHOOK_SECRET is not configured in production environment!");
-      return false;
-    }
+    if (!secret) return false;
 
     const expected = computeWebhookSignature(payload, secret);
     const cleanSig = signature.trim().startsWith("sha256=")
@@ -362,21 +303,162 @@ export class ProductionTelephonyProvider extends BaseTelephonyProvider {
     try {
       const expectedBuf = Buffer.from(expected, "hex");
       const actualBuf = Buffer.from(cleanSig, "hex");
-
-      if (expectedBuf.length !== actualBuf.length) {
-        return false;
-      }
+      if (expectedBuf.length !== actualBuf.length) return false;
       return crypto.timingSafeEqual(expectedBuf, actualBuf);
-    } catch (err) {
+    } catch {
       return false;
     }
   }
 }
 
-// Select provider based on configuration
-export const telephonyProvider =
-  process.env.TELEPHONY_PROVIDER === "production"
-    ? new ProductionTelephonyProvider()
-    : new MockTelephonyProvider();
+/**
+ * Twilio Production Telephony Provider (Global Carrier Gateway)
+ */
+export class TwilioTelephonyProvider extends BaseTelephonyProvider {
+  constructor() {
+    super("TwilioVoiceGateway");
+    this.accountSid = process.env.TWILIO_ACCOUNT_SID;
+    this.authToken = process.env.TWILIO_AUTH_TOKEN;
+    this.fromNumber = process.env.TWILIO_FROM_NUMBER;
+  }
 
+  isConfigured() {
+    return Boolean(this.accountSid && this.authToken && this.fromNumber);
+  }
+
+  async initiateCall(fromAgent, toCustomerPhone, options = {}) {
+    if (!this.isConfigured()) {
+      throw new Error("Twilio credentials unconfigured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER.");
+    }
+
+    const endpoint = `https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Calls.json`;
+    const webhookUrl = options.webhookUrl || `${process.env.APP_URL || "https://paymagic.in"}/api/telephony/webhook`;
+
+    const body = new URLSearchParams({
+      From: this.fromNumber,
+      To: toCustomerPhone,
+      Url: `${process.env.APP_URL || "https://paymagic.in"}/api/telephony/twiml/bridge?agent=${encodeURIComponent(fromAgent)}`,
+      StatusCallback: webhookUrl,
+      StatusCallbackEvent: ["initiated", "ringing", "answered", "completed"],
+      Record: "true"
+    });
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        Authorization: "Basic " + Buffer.from(`${this.accountSid}:${this.authToken}`).toString("base64"),
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: body.toString()
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Twilio rejected call (${response.status}): ${err}`);
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      telephony_call_id: data.sid,
+      provider: this.providerName,
+      status: "RINGING",
+      message: "Twilio outbound call initiated.",
+      initiated_at: new Date().toISOString()
+    };
+  }
+
+  verifyWebhookSignature(payload, signature, headers = {}) {
+    if (!signature) return false;
+    const secret = process.env.TWILIO_AUTH_TOKEN || process.env.TELEPHONY_WEBHOOK_SECRET;
+    if (!secret) return false;
+
+    const expected = computeWebhookSignature(payload, secret);
+    try {
+      const expectedBuf = Buffer.from(expected, "hex");
+      const actualBuf = Buffer.from(signature.trim(), "hex");
+      if (expectedBuf.length !== actualBuf.length) return false;
+      return crypto.timingSafeEqual(expectedBuf, actualBuf);
+    } catch {
+      return false;
+    }
+  }
+}
+
+/**
+ * Standalone HMAC SHA-256 signature verifier
+ */
+export const verifyWebhookSignature = (payload, signature, secret) => {
+  if (!signature || typeof signature !== "string") return false;
+  const expected = computeWebhookSignature(payload, secret);
+  const cleanSig = signature.trim().startsWith("sha256=")
+    ? signature.trim().slice(7)
+    : signature.trim();
+  try {
+    const expectedBuf = Buffer.from(expected, "hex");
+    const actualBuf = Buffer.from(cleanSig, "hex");
+    if (expectedBuf.length !== actualBuf.length) return false;
+    return crypto.timingSafeEqual(expectedBuf, actualBuf);
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Universal Telephony Gateway Dispatcher
+ * Selects active carrier provider based on TELEPHONY_PROVIDER environment configuration
+ */
+export class TelephonyGateway extends BaseTelephonyProvider {
+  constructor() {
+    super("UniversalTelephonyGateway");
+    this.mock = new MockTelephonyProvider();
+    this.exotel = new ExotelTelephonyProvider();
+    this.twilio = new TwilioTelephonyProvider();
+  }
+
+  getActiveProvider() {
+    const configured = (process.env.TELEPHONY_PROVIDER || "mock").toLowerCase();
+    if (configured === "exotel" && this.exotel.isConfigured()) return this.exotel;
+    if (configured === "twilio" && this.twilio.isConfigured()) return this.twilio;
+    if (configured === "production" && this.exotel.isConfigured()) return this.exotel;
+    return this.mock;
+  }
+
+  getProvider() {
+    return this.getActiveProvider();
+  }
+
+  async initiateCall(fromAgent, toCustomerPhone, options = {}) {
+    return await this.getActiveProvider().initiateCall(fromAgent, toCustomerPhone, options);
+  }
+
+  async getCallStatus(telephonyCallId) {
+    return await this.getActiveProvider().getCallStatus(telephonyCallId);
+  }
+
+  async getRecordingUrl(telephonyCallId) {
+    return await this.getActiveProvider().getRecordingUrl(telephonyCallId);
+  }
+
+  async generateSignedUrl(s3Key, expiresIn = 900) {
+    return await this.getActiveProvider().generateSignedUrl(s3Key, expiresIn);
+  }
+
+  async simulateFullCallLifecycle(fromAgent, toCustomerPhone, options = {}) {
+    const active = this.getActiveProvider();
+    if (active.simulateFullCallLifecycle) {
+      return await active.simulateFullCallLifecycle(fromAgent, toCustomerPhone, options);
+    }
+    return await this.mock.simulateFullCallLifecycle(fromAgent, toCustomerPhone, options);
+  }
+
+  verifyWebhookSignature(payload, signature, headers = {}) {
+    // Check against active provider, or fallback to mock
+    const active = this.getActiveProvider();
+    return active.verifyWebhookSignature(payload, signature, headers);
+  }
+}
+
+export const telephonyProvider = new TelephonyGateway();
+export const telephonyGateway = telephonyProvider;
 export default telephonyProvider;

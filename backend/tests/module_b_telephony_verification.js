@@ -121,6 +121,7 @@ async function runModuleBVerification() {
   console.log("==================================================");
   console.log("🎉 ALL MODULE B TELEPHONY TESTS PASSED (7/7)");
   console.log("==================================================");
+  process.exit(0);
 }
 
 runModuleBVerification().catch(err => {
