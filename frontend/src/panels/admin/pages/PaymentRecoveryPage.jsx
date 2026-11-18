@@ -59,7 +59,7 @@ export default function PaymentRecoveryPage({
         <div className="card-header">
           <div className="header-left">
             <IndianRupee className="w-5 h-5 text-emerald-400" />
-            <h4>Reconciled Recovery Collections ({paymentsList.length})</h4>
+            <h4>Reconciled Recovery Collections ({Array.isArray(paymentsList) ? paymentsList.length : 0})</h4>
           </div>
           <button
             type="button"
@@ -97,14 +97,14 @@ export default function PaymentRecoveryPage({
                     Loading recovery transactions...
                   </td>
                 </tr>
-              ) : paymentsList.length === 0 ? (
+              ) : !Array.isArray(paymentsList) || paymentsList.length === 0 ? (
                 <tr>
                   <td colSpan="8" style={{ textAlign: "center", padding: "30px", color: "#94a3b8" }}>
                     No payment transactions recorded yet.
                   </td>
                 </tr>
               ) : (
-                paymentsList.map((p) => (
+                (Array.isArray(paymentsList) ? paymentsList : []).map((p) => (
                   <tr key={p.id}>
                     <td>
                       <span className="font-mono text-emerald-400 font-bold text-xs">

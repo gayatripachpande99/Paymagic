@@ -346,63 +346,84 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
   return (
     <div className="space-y-5 animate-in fade-in duration-200">
       
-      {/* ── 1. Top KPI Summary Grid (Standard Enterprise Cards) ── */}
-      <div className="admin-kpi-grid">
+      {/* ── 1. Top KPI Summary Grid ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Total Calls */}
-        <div className="admin-kpi-card">
-          <div className="kpi-icon-wrap purple-wrap">📞</div>
-          <div className="kpi-data">
-            <span className="kpi-label">Total Calls Logged</span>
-            <div className="kpi-val text-purple font-mono">{metrics.total_calls.toLocaleString()}</div>
-            <span className="text-[11px] text-slate-400">
-              {metrics.outbound_calls} Outbound &bull; {metrics.inbound_calls} Inbound
-            </span>
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl hover:border-[#5945F5]/50 transition-all relative overflow-hidden group">
+          <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#5945F5] to-transparent pointer-events-none" />
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-[#14223A] border border-[#263957] flex items-center justify-center text-lg text-[#5945F5] shadow-inner shrink-0">
+              📞
+            </div>
+            <div className="min-w-0">
+              <span className="text-xs font-semibold text-[#9AAAC2] uppercase tracking-wider block truncate">Total Calls Logged</span>
+              <div className="text-2xl font-bold font-mono text-[#F4F7FF] tracking-tight">{metrics.total_calls.toLocaleString()}</div>
+              <span className="text-[11px] text-[#9AAAC2] truncate block mt-0.5">
+                {metrics.outbound_calls} Outbound &bull; {metrics.inbound_calls} Inbound
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Card 2: Answered / Connection Rate */}
-        <div className="admin-kpi-card">
-          <div className="kpi-icon-wrap green-wrap">⚡</div>
-          <div className="kpi-data">
-            <span className="kpi-label">Connection Rate</span>
-            <div className="kpi-val text-green font-mono">
-              {metrics.total_calls > 0 ? ((metrics.answered_calls / metrics.total_calls) * 100).toFixed(1) : "0.0"}%
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl hover:border-[#00C995]/50 transition-all relative overflow-hidden group">
+          <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#00C995] to-transparent pointer-events-none" />
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-[#14223A] border border-[#263957] flex items-center justify-center text-lg text-[#00C995] shadow-inner shrink-0">
+              ⚡
             </div>
-            <span className="text-[11px] text-emerald-400 font-semibold">
-              {metrics.answered_calls.toLocaleString()} Connected Calls
-            </span>
+            <div className="min-w-0">
+              <span className="text-xs font-semibold text-[#9AAAC2] uppercase tracking-wider block truncate">Connection Rate</span>
+              <div className="text-2xl font-bold font-mono text-[#00C995] tracking-tight">
+                {metrics.total_calls > 0 ? ((metrics.answered_calls / metrics.total_calls) * 100).toFixed(1) : "0.0"}%
+              </div>
+              <span className="text-[11px] text-[#00C995] font-semibold truncate block mt-0.5">
+                {metrics.answered_calls.toLocaleString()} Connected Calls
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Card 3: Total Duration */}
-        <div className="admin-kpi-card">
-          <div className="kpi-icon-wrap gold-wrap">⏱️</div>
-          <div className="kpi-data">
-            <span className="kpi-label">Total Duration</span>
-            <div className="kpi-val text-gold font-mono">{metrics.total_duration_formatted}</div>
-            <span className="text-[11px] text-slate-400">Recorded talk time</span>
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl hover:border-[#FFB800]/50 transition-all relative overflow-hidden group">
+          <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#FFB800] to-transparent pointer-events-none" />
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-[#14223A] border border-[#263957] flex items-center justify-center text-lg text-[#FFB800] shadow-inner shrink-0">
+              ⏱️
+            </div>
+            <div className="min-w-0">
+              <span className="text-xs font-semibold text-[#9AAAC2] uppercase tracking-wider block truncate">Total Duration</span>
+              <div className="text-2xl font-bold font-mono text-[#FFB800] tracking-tight">{metrics.total_duration_formatted}</div>
+              <span className="text-[11px] text-[#9AAAC2] truncate block mt-0.5">Recorded talk time</span>
+            </div>
           </div>
         </div>
 
         {/* Card 4: Vault Security (Module F) */}
-        <div className="admin-kpi-card">
-          <div className="kpi-icon-wrap blue-wrap">🛡️</div>
-          <div className="kpi-data">
-            <span className="kpi-label">Evidence Vault</span>
-            <div className="kpi-val text-blue font-mono" style={{ fontSize: "19px" }}>AWS KMS SSE</div>
-            <span className="text-[11px] text-blue-300 font-semibold">
-              Statutory Notice &bull; WORM Encrypted
-            </span>
+        <div className="p-4 sm:p-5 rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl hover:border-[#315CFF]/50 transition-all relative overflow-hidden group">
+          <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#315CFF] to-transparent pointer-events-none" />
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-[#14223A] border border-[#263957] flex items-center justify-center text-lg text-[#315CFF] shadow-inner shrink-0">
+              🛡️
+            </div>
+            <div className="min-w-0">
+              <span className="text-xs font-semibold text-[#9AAAC2] uppercase tracking-wider block truncate">Evidence Vault</span>
+              <div className="text-xl font-bold font-mono text-[#315CFF] tracking-tight">AWS KMS SSE</div>
+              <span className="text-[11px] text-[#315CFF]/90 font-semibold truncate block mt-0.5">
+                Statutory Notice &bull; WORM Encrypted
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* ── 2. Operations & Sub-Navigation Header Bar ── */}
-      <div className="portal-card" style={{ marginBottom: "16px", padding: "16px 20px" }}>
+      <div className="w-full rounded-2xl bg-[#0B1733] border border-[#263957] p-4 shadow-xl mb-4 relative overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#315CFF]/40 to-transparent pointer-events-none" />
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           
           {/* Sub-Navigation Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
             {[
               { id: "call_activity", label: "Call Activity (CDR)", icon: <PhoneCall className="w-3.5 h-3.5" />, count: pagination.totalCount || calls.length },
               { id: "agent_activity", label: "Agent Performance", icon: <Users className="w-3.5 h-3.5" /> },
@@ -414,17 +435,17 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveSubTab(tab.id)}
-                className={`px-3.5 py-2 text-xs font-semibold rounded-xl flex items-center gap-2 transition-all whitespace-nowrap ${
+                className={`px-3.5 py-2 text-xs font-semibold rounded-xl flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
                   activeSubTab === tab.id
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30"
-                    : "bg-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-800"
+                    ? "bg-gradient-to-r from-[#315CFF] to-[#5945F5] text-[#F4F7FF] shadow-lg shadow-[#315CFF]/25 font-bold"
+                    : "bg-[#14223A] text-[#9AAAC2] hover:text-[#F4F7FF] hover:bg-[#1b2e4f] border border-[#263957]"
                 }`}
               >
                 {tab.icon}
                 <span>{tab.label}</span>
                 {tab.count !== undefined && (
-                  <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                    activeSubTab === tab.id ? "bg-white/20 text-white" : "bg-slate-700 text-slate-300"
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                    activeSubTab === tab.id ? "bg-white/20 text-white" : "bg-[#08132D] text-[#9AAAC2] border border-[#263957]"
                   }`}>
                     {tab.count}
                   </span>
@@ -442,19 +463,19 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                 if (activeSubTab === "agent_activity") fetchAgentReports();
                 if (activeSubTab === "recordings") fetchEvidenceVault();
               }}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white transition"
+              className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-[#14223A] hover:bg-[#1b2e4f] border border-[#263957] hover:border-[#315CFF]/50 text-[#9AAAC2] hover:text-[#F4F7FF] transition cursor-pointer shadow-sm"
               title="Refresh Call Activity Data"
             >
-              <RefreshCw className={`w-4 h-4 ${loading || evidenceLoading || agentLoading ? "animate-spin text-indigo-400" : ""}`} />
+              <RefreshCw className={`w-4 h-4 ${loading || evidenceLoading || agentLoading ? "animate-spin text-[#315CFF]" : ""}`} />
             </button>
 
             <button
               type="button"
               onClick={handleExportCSV}
-              className="secondary-btn inline-flex items-center gap-1.5 text-xs py-2 px-3.5"
+              className="inline-flex items-center justify-center gap-1.5 text-xs py-2 px-3.5 min-h-[38px] bg-[#14223A] hover:bg-[#1b2e4f] text-[#F4F7FF] border border-[#263957] hover:border-[#315CFF]/50 rounded-xl font-medium transition cursor-pointer shadow-sm"
               title="Export datasets to Excel/CSV"
             >
-              <Download className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <Download className="w-3.5 h-3.5 text-[#315CFF] shrink-0" />
               <span>Export CSV</span>
             </button>
           </div>
@@ -463,12 +484,13 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
 
       {/* ── 3. Filter Controls Row (Visible on Call Activity) ── */}
       {activeSubTab === "call_activity" && (
-        <div className="portal-card" style={{ marginBottom: "20px", padding: "16px 20px" }}>
+        <div className="w-full rounded-2xl bg-[#0B1733] border border-[#263957] p-4 shadow-xl mb-5 relative overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#315CFF]/30 to-transparent pointer-events-none" />
           <div className="space-y-3.5">
             {/* Row 1: Time filter buttons + Search bar */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               {/* Time Range Pills */}
-              <div className="flex items-center p-1 bg-slate-950/80 rounded-xl border border-slate-800 overflow-x-auto scrollbar-thin">
+              <div className="flex items-center p-1 bg-[#08132D] rounded-xl border border-[#263957] overflow-x-auto scrollbar-thin gap-1">
                 {[
                   { id: "today", label: "Today" },
                   { id: "7d", label: "7 Days" },
@@ -483,10 +505,10 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                       setTimeFilter(tf.id);
                       setPage(1);
                     }}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap ${
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer ${
                       timeFilter === tf.id
-                        ? "bg-indigo-600 text-white shadow-sm"
-                        : "text-slate-400 hover:text-slate-200"
+                        ? "bg-gradient-to-r from-[#315CFF] to-[#5945F5] text-[#F4F7FF] shadow-sm font-bold"
+                        : "text-[#9AAAC2] hover:text-[#F4F7FF] hover:bg-[#14223A]"
                     }`}
                   >
                     {tf.label}
@@ -495,21 +517,22 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
               </div>
 
               {/* Search Bar */}
-              <form onSubmit={handleSearchSubmit} className="search-box w-full sm:max-w-[280px]">
-                <Search className="search-icon w-3.5 h-3.5" />
+              <form onSubmit={handleSearchSubmit} className="relative flex-1 sm:max-w-[280px]">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#9AAAC2] pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Search caller phone, borrower, ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-[#08132D] border border-[#263957] rounded-xl pl-9 pr-3 py-2 text-xs text-[#F4F7FF] placeholder-[#9AAAC2]/60 focus:outline-none focus:border-[#315CFF] font-medium transition"
                 />
               </form>
             </div>
 
             {/* Row 2: Filter Dropdowns */}
-            <div className="flex items-center gap-2.5 flex-wrap pt-2 border-t border-slate-800/80">
-              <span className="text-xs font-semibold text-slate-400 flex items-center gap-1.5 shrink-0">
-                <Filter className="w-3.5 h-3.5 text-indigo-400" />
+            <div className="flex items-center gap-2.5 flex-wrap pt-2.5 border-t border-[#263957]">
+              <span className="text-xs font-semibold text-[#9AAAC2] flex items-center gap-1.5 shrink-0">
+                <Filter className="w-3.5 h-3.5 text-[#315CFF]" />
                 <span>Filters:</span>
               </span>
 
@@ -520,11 +543,11 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                   setDirectionFilter(e.target.value);
                   setPage(1);
                 }}
-                className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs flex-1 sm:flex-initial focus:outline-none focus:border-indigo-500"
+                className="px-3 py-2 min-h-[36px] rounded-xl bg-[#08132D] border border-[#263957] text-[#F4F7FF] text-xs flex-1 sm:flex-initial focus:outline-none focus:border-[#315CFF] font-medium cursor-pointer"
               >
-                <option value="ALL">All Directions</option>
-                <option value="OUTBOUND">Outbound</option>
-                <option value="INBOUND">Inbound</option>
+                <option value="ALL" className="bg-[#08132D] text-[#F4F7FF]">All Directions</option>
+                <option value="OUTBOUND" className="bg-[#08132D] text-[#F4F7FF]">Outbound</option>
+                <option value="INBOUND" className="bg-[#08132D] text-[#F4F7FF]">Inbound</option>
               </select>
 
               {/* Type Filter */}
@@ -534,14 +557,14 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                   setTypeFilter(e.target.value);
                   setPage(1);
                 }}
-                className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs flex-1 sm:flex-initial focus:outline-none focus:border-indigo-500"
+                className="px-3 py-2 min-h-[36px] rounded-xl bg-[#08132D] border border-[#263957] text-[#F4F7FF] text-xs flex-1 sm:flex-initial focus:outline-none focus:border-[#315CFF] font-medium cursor-pointer"
               >
-                <option value="ALL">All Call Types</option>
-                <option value="answered">Answered</option>
-                <option value="unanswered">No Answer</option>
-                <option value="busy">Busy</option>
-                <option value="voicemail">Voicemail</option>
-                <option value="rejected">Abandoned</option>
+                <option value="ALL" className="bg-[#08132D] text-[#F4F7FF]">All Call Types</option>
+                <option value="answered" className="bg-[#08132D] text-[#F4F7FF]">Answered</option>
+                <option value="unanswered" className="bg-[#08132D] text-[#F4F7FF]">No Answer</option>
+                <option value="busy" className="bg-[#08132D] text-[#F4F7FF]">Busy</option>
+                <option value="voicemail" className="bg-[#08132D] text-[#F4F7FF]">Voicemail</option>
+                <option value="rejected" className="bg-[#08132D] text-[#F4F7FF]">Abandoned</option>
               </select>
 
               {/* Campaigns Filter */}
@@ -551,10 +574,10 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                   setCampaignFilter(e.target.value);
                   setPage(1);
                 }}
-                className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs flex-1 sm:flex-initial focus:outline-none focus:border-indigo-500 max-w-[160px] truncate"
+                className="px-3 py-2 min-h-[36px] rounded-xl bg-[#08132D] border border-[#263957] text-[#F4F7FF] text-xs flex-1 sm:flex-initial focus:outline-none focus:border-[#315CFF] max-w-[160px] truncate font-medium cursor-pointer"
               >
                 {availableCampaigns.map((camp) => (
-                  <option key={camp} value={camp === "All Campaigns" ? "ALL" : camp}>
+                  <option key={camp} value={camp === "All Campaigns" ? "ALL" : camp} className="bg-[#08132D] text-[#F4F7FF]">
                     {camp}
                   </option>
                 ))}
@@ -567,10 +590,10 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                   setDispositionFilter(e.target.value);
                   setPage(1);
                 }}
-                className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs flex-1 sm:flex-initial focus:outline-none focus:border-indigo-500 max-w-[160px] truncate"
+                className="px-3 py-2 min-h-[36px] rounded-xl bg-[#08132D] border border-[#263957] text-[#F4F7FF] text-xs flex-1 sm:flex-initial focus:outline-none focus:border-[#315CFF] max-w-[160px] truncate font-medium cursor-pointer"
               >
                 {availableDispositions.map((disp) => (
-                  <option key={disp} value={disp === "All Dispositions" ? "ALL" : disp}>
+                  <option key={disp} value={disp === "All Dispositions" ? "ALL" : disp} className="bg-[#08132D] text-[#F4F7FF]">
                     {disp}
                   </option>
                 ))}
@@ -589,7 +612,7 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                     setPage(1);
                     fetchCalls();
                   }}
-                  className="px-2.5 py-1.5 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition ml-auto"
+                  className="px-3 py-1.5 min-h-[36px] rounded-xl text-xs font-semibold text-[#FF527A] hover:text-white bg-[#FF527A]/10 hover:bg-[#FF527A]/20 border border-[#FF527A]/30 transition ml-auto cursor-pointer"
                 >
                   Reset Filters &times;
                 </button>
@@ -603,25 +626,25 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
           SUB-TAB 1: CALL ACTIVITY (Main CDR Table View)
       ═══════════════════════════════════════════════════════ */}
       {activeSubTab === "call_activity" && (
-        <div className="portal-card overflow-hidden">
-          <div className="card-header flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-slate-800">
+        <div className="w-full rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 sm:p-5 border-b border-[#263957] bg-[#08132D]">
             <div className="flex items-center gap-2">
-              <PhoneCall className="w-4 h-4 text-indigo-400" />
-              <h3 className="text-sm font-bold text-white">Call Detail Records (CDR) &amp; Telephony Evidence</h3>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 font-mono font-semibold border border-indigo-500/20">
+              <PhoneCall className="w-4 h-4 text-[#315CFF]" />
+              <h3 className="text-xs sm:text-sm font-bold text-[#F4F7FF]">Call Detail Records (CDR) &amp; Telephony Evidence</h3>
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#315CFF]/15 text-[#315CFF] font-mono font-semibold border border-[#315CFF]/30">
                 {pagination.totalCount || calls.length} Calls
               </span>
             </div>
-            <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <div className="flex items-center gap-2 text-xs font-mono text-[#9AAAC2]">
+              <span className="w-2 h-2 rounded-full bg-[#00C995] animate-pulse"></span>
               <span>100% Notice Played &bull; Encrypted Storage</span>
             </div>
           </div>
 
-          <div className="portal-table-container">
-            <table className="portal-table min-w-[1150px]">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full min-w-[1150px] text-left border-collapse text-xs">
               <thead>
-                <tr>
+                <tr className="border-b border-[#263957] bg-[#08132D] text-[#9AAAC2] text-[11px] font-semibold uppercase tracking-wider">
                   <th className="py-3 px-4">CALL ID</th>
                   <th className="py-3 px-4">DIRECTION</th>
                   <th className="py-3 px-4">NUMBER &amp; CONTACT NAME</th>
@@ -635,19 +658,19 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                   <th className="py-3 px-3 text-right"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-medium">
+              <tbody className="divide-y divide-[#263957]/50 font-medium">
                 {loading ? (
                   <tr>
-                    <td colSpan="11" className="py-12 text-center text-slate-400">
+                    <td colSpan="11" className="py-12 text-center text-[#9AAAC2]">
                       <div className="flex items-center justify-center gap-2">
-                        <RefreshCw className="w-4 h-4 animate-spin text-indigo-400" />
+                        <RefreshCw className="w-4 h-4 animate-spin text-[#315CFF]" />
                         <span>Loading call activity records...</span>
                       </div>
                     </td>
                   </tr>
                 ) : calls.length === 0 ? (
                   <tr>
-                    <td colSpan="11" className="py-12 text-center text-slate-500">
+                    <td colSpan="11" className="py-12 text-center text-[#9AAAC2]">
                       No call records match the current filter criteria.
                     </td>
                   </tr>
@@ -655,22 +678,22 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                   calls.map((call) => (
                     <tr
                       key={call.id}
-                      className="hover:bg-slate-800/40 transition-colors group text-slate-200"
+                      className="hover:bg-[#14223A]/50 transition-colors group text-[#F4F7FF]"
                     >
                       {/* Call ID */}
-                      <td className="py-3.5 px-4 font-mono text-slate-300 text-[11px] whitespace-nowrap">
+                      <td className="py-3.5 px-4 font-mono text-[#F4F7FF] text-[11px] whitespace-nowrap">
                         {call.formatted_call_id || call.id?.slice(0, 16)}
                       </td>
 
                       {/* Direction */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         {call.direction === "OUTBOUND" ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#00C995] bg-[#00C995]/10 px-2 py-0.5 rounded-full border border-[#00C995]/20">
                             <ArrowUpRight className="w-3 h-3" />
                             Outbound
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#315CFF] bg-[#315CFF]/10 px-2 py-0.5 rounded-full border border-[#315CFF]/20">
                             <ArrowDownLeft className="w-3 h-3" />
                             Inbound
                           </span>
@@ -679,47 +702,47 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
 
                       {/* Number & Contact Name */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <div className="font-semibold text-slate-100 font-mono text-[11px]">
+                        <div className="font-semibold text-[#F4F7FF] font-mono text-[11px]">
                           {call.customer_phone || "+91 98765 43210"}
                         </div>
-                        <div className="text-[11px] text-slate-400 font-sans">
+                        <div className="text-[11px] text-[#9AAAC2] font-sans">
                           {call.customer_name || "Direct Customer"}
                         </div>
                       </td>
 
                       {/* Extension */}
-                      <td className="py-3.5 px-4 font-mono text-slate-300 text-xs">
+                      <td className="py-3.5 px-4 font-mono text-[#315CFF] text-xs">
                         {call.agent_extension || "1012"}
                       </td>
 
                       {/* Call Type */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         {call.call_type === "Answered" && (
-                          <span className="inline-flex items-center gap-1.5 text-emerald-400">
+                          <span className="inline-flex items-center gap-1.5 text-[#00C995]">
                             <PhoneCall className="w-3.5 h-3.5" />
                             <span>Answered</span>
                           </span>
                         )}
                         {call.call_type === "No Answer" && (
-                          <span className="inline-flex items-center gap-1.5 text-rose-400">
+                          <span className="inline-flex items-center gap-1.5 text-[#FF527A]">
                             <PhoneMissed className="w-3.5 h-3.5" />
                             <span>No Answer</span>
                           </span>
                         )}
                         {call.call_type === "Busy" && (
-                          <span className="inline-flex items-center gap-1.5 text-amber-400">
+                          <span className="inline-flex items-center gap-1.5 text-[#FFB800]">
                             <PhoneOff className="w-3.5 h-3.5" />
                             <span>Busy</span>
                           </span>
                         )}
                         {call.call_type === "Voicemail" && (
-                          <span className="inline-flex items-center gap-1.5 text-purple-400">
+                          <span className="inline-flex items-center gap-1.5 text-[#5945F5]">
                             <Headphones className="w-3.5 h-3.5" />
                             <span>Voicemail</span>
                           </span>
                         )}
                         {call.call_type === "Abandoned" && (
-                          <span className="inline-flex items-center gap-1.5 text-rose-400">
+                          <span className="inline-flex items-center gap-1.5 text-[#FF527A]">
                             <PhoneMissed className="w-3.5 h-3.5" />
                             <span>Abandoned</span>
                           </span>
@@ -727,67 +750,67 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                       </td>
 
                       {/* Campaign */}
-                      <td className="py-3.5 px-4 whitespace-nowrap text-slate-300 text-[11px]">
+                      <td className="py-3.5 px-4 whitespace-nowrap text-[#9AAAC2] text-[11px]">
                         {call.campaign || "—"}
                       </td>
 
                       {/* Duration */}
-                      <td className="py-3.5 px-4 whitespace-nowrap font-mono text-slate-200">
+                      <td className="py-3.5 px-4 whitespace-nowrap font-mono text-[#F4F7FF]">
                         {call.duration_formatted || "00:00"}
                       </td>
 
                       {/* Disposition */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         {call?.disposition === "Completed" && (
-                          <span className="inline-flex items-center gap-1 text-emerald-400 text-[11px]">
+                          <span className="inline-flex items-center gap-1 text-[#00C995] text-[11px]">
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>Completed</span>
                           </span>
                         )}
                         {call?.disposition === "Promise to Pay" && (
-                          <span className="inline-flex items-center gap-1 text-emerald-300 font-semibold text-[11px] bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                          <span className="inline-flex items-center gap-1 text-[#06C7E8] font-semibold text-[11px] bg-[#06C7E8]/10 px-2 py-0.5 rounded-full border border-[#06C7E8]/20">
                             <Check className="w-3.5 h-3.5" />
                             <span>Promise to Pay</span>
                           </span>
                         )}
                         {call?.disposition === "Answered" && (
-                          <span className="inline-flex items-center gap-1 text-blue-400 text-[11px]">
+                          <span className="inline-flex items-center gap-1 text-[#315CFF] text-[11px]">
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>Answered</span>
                           </span>
                         )}
                         {call?.disposition === "No Answer" && (
-                          <span className="inline-flex items-center gap-1 text-rose-400 text-[11px]">
+                          <span className="inline-flex items-center gap-1 text-[#FF527A] text-[11px]">
                             <XCircle className="w-3.5 h-3.5" />
                             <span>No Answer</span>
                           </span>
                         )}
                         {call?.disposition === "Busy" && (
-                          <span className="inline-flex items-center gap-1 text-amber-400 text-[11px]">
+                          <span className="inline-flex items-center gap-1 text-[#FFB800] text-[11px]">
                             <AlertCircle className="w-3.5 h-3.5" />
                             <span>Busy</span>
                           </span>
                         )}
                         {call?.disposition === "Voicemail" && (
-                          <span className="inline-flex items-center gap-1 text-purple-400 text-[11px]">
+                          <span className="inline-flex items-center gap-1 text-[#5945F5] text-[11px]">
                             <Headphones className="w-3.5 h-3.5" />
                             <span>Voicemail</span>
                           </span>
                         )}
                         {call?.disposition === "Interested" && (
-                          <span className="inline-flex items-center gap-1 text-sky-400 text-[11px]">
-                            <Star className="w-3.5 h-3.5 fill-sky-400/20" />
+                          <span className="inline-flex items-center gap-1 text-[#315CFF] text-[11px]">
+                            <Star className="w-3.5 h-3.5 fill-[#315CFF]/20" />
                             <span>Interested</span>
                           </span>
                         )}
                         {call?.disposition === "Disputed" && (
-                          <span className="inline-flex items-center gap-1 text-rose-400 text-[11px] bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
+                          <span className="inline-flex items-center gap-1 text-[#FF527A] text-[11px] bg-[#FF527A]/10 px-2 py-0.5 rounded-full border border-[#FF527A]/20">
                             <AlertCircle className="w-3.5 h-3.5" />
                             <span>Disputed</span>
                           </span>
                         )}
                         {!["Completed", "Promise to Pay", "Answered", "No Answer", "Busy", "Voicemail", "Interested", "Disputed"].includes(call?.disposition) && (
-                          <span className="text-slate-300 text-[11px]">
+                          <span className="text-[#9AAAC2] text-[11px]">
                             {call?.disposition || "—"}
                           </span>
                         )}
@@ -795,10 +818,10 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
 
                       {/* Date / Time */}
                       <td className="py-3.5 px-4 whitespace-nowrap">
-                        <div className="text-slate-200 text-[11px]">
+                        <div className="text-[#F4F7FF] text-[11px]">
                           {call.date_formatted}
                         </div>
-                        <div className="text-slate-400 text-[10px]">
+                        <div className="text-[#9AAAC2] text-[10px]">
                           {call.time_formatted}
                         </div>
                       </td>
@@ -809,20 +832,20 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => handlePlayRecording(call)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800 hover:bg-indigo-600/30 text-indigo-300 hover:text-white border border-slate-700 hover:border-indigo-500/40 transition-all font-mono text-[11px] group-hover:border-indigo-500/50"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#14223A] hover:bg-[#315CFF]/20 text-[#315CFF] hover:text-[#F4F7FF] border border-[#263957] hover:border-[#315CFF]/40 transition-all font-mono text-[11px] group-hover:border-[#315CFF]/50 cursor-pointer"
                               title="Play Tamper-Proof Recording (KMS Signed S3 Session)"
                             >
-                              <Play className="w-3 h-3 fill-indigo-400 text-indigo-400" />
+                              <Play className="w-3 h-3 fill-[#315CFF] text-[#315CFF]" />
                               <span>{call.recording_duration || call.duration_formatted}</span>
                             </button>
                             {call.disposition === "Disputed" && (
-                              <span title="Evidence Locked on Legal Hold" className="p-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center">
+                              <span title="Evidence Locked on Legal Hold" className="p-1 rounded-full bg-[#FFB800]/20 text-[#FFB800] border border-[#FFB800]/30 flex items-center justify-center">
                                 <Lock className="w-3 h-3" />
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-slate-600 font-mono">—</span>
+                          <span className="text-[#9AAAC2]/60 font-mono">—</span>
                         )}
                       </td>
 
@@ -830,7 +853,7 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                       <td className="py-3.5 px-3 text-right whitespace-nowrap">
                         <button
                           onClick={() => alert(`Call ID: ${call.formatted_call_id || call.id}\nCustomer: ${call.customer_name}\nNotes: ${call.call_notes || "N/A"}`)}
-                          className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
+                          className="p-1 rounded text-[#9AAAC2] hover:text-[#F4F7FF] hover:bg-[#14223A] transition-colors cursor-pointer"
                           title="Actions & Audit"
                         >
                           <MoreVertical className="w-4 h-4" />
@@ -844,11 +867,11 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
           </div>
 
           {/* Pagination Footer */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 bg-slate-950/60 border-t border-slate-800 text-xs text-slate-400">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 bg-[#08132D] border-t border-[#263957] text-xs text-[#9AAAC2]">
             <div>
               Showing {calls.length > 0 ? (page - 1) * limit + 1 : 0} to{" "}
               {Math.min(page * limit, pagination.totalCount)} of{" "}
-              <span className="font-mono text-slate-200 font-semibold">{pagination.totalCount.toLocaleString()}</span> results
+              <span className="font-mono text-[#F4F7FF] font-semibold">{pagination.totalCount.toLocaleString()}</span> results
             </div>
 
             <div className="flex items-center gap-3">
@@ -860,7 +883,7 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                     setLimit(Number(e.target.value));
                     setPage(1);
                   }}
-                  className="bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-slate-300 focus:outline-none"
+                  className="bg-[#14223A] border border-[#263957] rounded-lg px-2 py-1 text-[#F4F7FF] focus:outline-none focus:border-[#315CFF] cursor-pointer"
                 >
                   <option value={10}>10 per page</option>
                   <option value={25}>25 per page</option>
@@ -872,21 +895,23 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                 <button
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="p-1.5 rounded-lg border border-slate-800 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-slate-300"
+                  className="p-1.5 min-h-[30px] min-w-[30px] flex items-center justify-center rounded-lg border border-[#263957] bg-[#14223A] hover:bg-[#1b2e4f] disabled:opacity-40 disabled:cursor-not-allowed text-[#F4F7FF] transition cursor-pointer"
+                  aria-label="Previous Page"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                 </button>
 
-                <span className="px-2.5 py-1 rounded-lg bg-indigo-600/20 text-indigo-300 font-mono font-semibold border border-indigo-500/30">
+                <span className="px-2.5 py-1 rounded-lg bg-[#315CFF]/15 text-[#315CFF] font-mono font-semibold border border-[#315CFF]/30">
                   {page}
                 </span>
-                <span className="text-slate-500">/</span>
-                <span className="font-mono text-slate-400">{pagination.totalPages || 1}</span>
+                <span className="text-[#263957]">/</span>
+                <span className="font-mono text-[#9AAAC2]">{pagination.totalPages || 1}</span>
 
                 <button
                   disabled={page >= pagination.totalPages}
                   onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                  className="p-1.5 rounded-lg border border-slate-800 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-slate-300"
+                  className="p-1.5 min-h-[30px] min-w-[30px] flex items-center justify-center rounded-lg border border-[#263957] bg-[#14223A] hover:bg-[#1b2e4f] disabled:opacity-40 disabled:cursor-not-allowed text-[#F4F7FF] transition cursor-pointer"
+                  aria-label="Next Page"
                 >
                   <ChevronRight className="w-3.5 h-3.5" />
                 </button>
@@ -901,21 +926,21 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
       ═══════════════════════════════════════════════════════ */}
       {activeSubTab === "agent_activity" && (
         <div className="space-y-4">
-          <div className="portal-card overflow-hidden">
-            <div className="card-header flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-slate-800">
+          <div className="w-full rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl overflow-hidden">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 sm:p-5 border-b border-[#263957] bg-[#08132D]">
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-indigo-400" />
-                <h3 className="text-sm font-bold text-white">Employee-Wise Telecalling Performance</h3>
+                <Users className="w-4 h-4 text-[#315CFF]" />
+                <h3 className="text-xs sm:text-sm font-bold text-[#F4F7FF]">Employee-Wise Telecalling Performance</h3>
               </div>
-              <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-semibold">
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#00C995]/15 border border-[#00C995]/30 text-[#00C995] font-semibold">
                 100% Statutory Notice Compliant
               </span>
             </div>
 
-            <div className="portal-table-container">
-              <table className="portal-table min-w-[1020px]">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full min-w-[1020px] text-left border-collapse text-xs">
                 <thead>
-                  <tr>
+                  <tr className="border-b border-[#263957] bg-[#08132D] text-[#9AAAC2] text-[11px] font-semibold uppercase tracking-wider">
                     <th className="py-3 px-4">STAFF / AGENT</th>
                     <th className="py-3 px-4">EXTENSION</th>
                     <th className="py-3 px-4">TOTAL CALLS</th>
@@ -928,70 +953,73 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                     <th className="py-3 px-4">QUALITY SCORE</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-medium">
+                <tbody className="divide-y divide-[#263957]/50 font-medium">
                   {agentLoading ? (
                     <tr>
-                      <td colSpan="10" className="py-10 text-center text-slate-400">
-                        Loading employee calling reports...
+                      <td colSpan="10" className="py-12 text-center text-[#9AAAC2]">
+                        <div className="flex items-center justify-center gap-2">
+                          <RefreshCw className="w-4 h-4 animate-spin text-[#315CFF]" />
+                          <span>Loading employee calling reports...</span>
+                        </div>
                       </td>
                     </tr>
                   ) : agentReports.length === 0 ? (
                     <tr>
-                      <td colSpan="10" className="py-10 text-center text-slate-500">
+                      <td colSpan="10" className="py-12 text-center text-[#9AAAC2]">
                         No agent activity records found.
                       </td>
                     </tr>
                   ) : (
                     agentReports.map((agent) => (
-                      <tr key={agent.employee_id} className="hover:bg-slate-800/40 text-slate-200">
+                      <tr key={agent.employee_id} className="hover:bg-[#14223A]/50 transition-colors group text-[#F4F7FF]">
                         <td className="py-3.5 px-4 whitespace-nowrap">
-                          <div className="font-semibold text-white">{agent.name}</div>
-                          <div className="text-[10px] text-slate-400 font-mono">
+                          <div className="font-semibold text-[#F4F7FF]">{agent.name}</div>
+                          <div className="text-[10px] text-[#9AAAC2] font-mono">
                             {agent.emp_code} • {agent.role}
                           </div>
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-indigo-400 font-semibold">
+                        <td className="py-3.5 px-4 font-mono text-[#315CFF] font-semibold">
                           {agent.extension}
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-slate-100">
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#F4F7FF]">
                           {agent.total_calls}
-                          <span className="text-[10px] font-normal text-slate-400 ml-1.5">
+                          <span className="text-[10px] font-normal text-[#9AAAC2] ml-1.5">
                             ({agent.outbound_calls} out / {agent.inbound_calls} in)
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-emerald-400 font-semibold">
+                        <td className="py-3.5 px-4 font-mono text-[#00C995] font-semibold">
                           {agent.answered_calls}
                         </td>
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-2">
-                            <div className="w-16 h-2 rounded-full bg-slate-800 overflow-hidden">
+                            <div className="w-16 h-2 rounded-full bg-[#14223A] border border-[#263957] overflow-hidden">
                               <div
-                                className="h-full bg-emerald-500 rounded-full"
+                                className="h-full bg-[#00C995] rounded-full"
                                 style={{ width: `${Math.min(100, agent.connection_rate)}%` }}
                               />
                             </div>
-                            <span className="font-mono text-xs text-emerald-300 font-bold">
+                            <span className="font-mono text-xs text-[#00C995] font-bold">
                               {agent.connection_rate}%
                             </span>
                           </div>
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-amber-300 font-semibold">
+                        <td className="py-3.5 px-4 font-mono text-[#FFB800] font-semibold">
                           {agent.total_duration_formatted}
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-slate-300">
+                        <td className="py-3.5 px-4 font-mono text-[#9AAAC2]">
                           {agent.avg_duration_formatted}
                         </td>
                         <td className="py-3.5 px-4">
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 font-mono font-bold border border-emerald-500/20 text-[11px]">
+                          <span className="px-2 py-0.5 rounded-full bg-[#00C995]/15 text-[#00C995] font-mono font-bold border border-[#00C995]/30 text-[11px]">
                             {agent.ptp_conversions} PTP
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-rose-400">
+                        <td className="py-3.5 px-4 font-mono text-[#FF527A]">
                           {agent.disputes_handled}
                         </td>
                         <td className="py-3.5 px-4">
-                          <span className="inline-flex items-center gap-1 text-indigo-300 font-mono text-xs font-semibold">
-                            <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+                          <span className="inline-flex items-center gap-1 text-[#315CFF] font-mono text-xs font-semibold">
+                            <ShieldCheck className="w-3.5 h-3.5 text-[#315CFF]" />
                             {agent.quality_score}%
                           </span>
                         </td>
@@ -1010,34 +1038,35 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
       ═══════════════════════════════════════════════════════ */}
       {activeSubTab === "overview" && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="portal-card p-5 space-y-3">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+          <div className="p-5 rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl space-y-3 relative overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#00C995] to-transparent pointer-events-none" />
+            <h4 className="text-xs font-bold text-[#9AAAC2] uppercase tracking-wider flex items-center justify-between">
               <span>Call Direction Split</span>
-              <ArrowUpRight className="w-3.5 h-3.5 text-slate-500" />
+              <ArrowUpRight className="w-3.5 h-3.5 text-[#9AAAC2]" />
             </h4>
             <div className="flex items-center justify-between pt-2">
               <div>
-                <div className="text-2xl font-bold font-mono text-emerald-400">
+                <div className="text-2xl font-bold font-mono text-[#00C995]">
                   {metrics.outbound_calls}
                 </div>
-                <div className="text-xs text-slate-400">Outbound Calls (Recovery)</div>
+                <div className="text-xs text-[#9AAAC2]">Outbound Calls (Recovery)</div>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold font-mono text-blue-400">
+                <div className="text-2xl font-bold font-mono text-[#315CFF]">
                   {metrics.inbound_calls}
                 </div>
-                <div className="text-xs text-slate-400">Inbound (Borrower Returns)</div>
+                <div className="text-xs text-[#9AAAC2]">Inbound (Borrower Returns)</div>
               </div>
             </div>
-            <div className="w-full h-3 rounded-full bg-slate-800 overflow-hidden flex">
+            <div className="w-full h-3 rounded-full bg-[#14223A] border border-[#263957] overflow-hidden flex">
               <div
-                className="bg-emerald-500 h-full"
+                className="bg-[#00C995] h-full"
                 style={{
                   width: `${metrics.total_calls > 0 ? (metrics.outbound_calls / metrics.total_calls) * 100 : 75}%`
                 }}
               />
               <div
-                className="bg-blue-500 h-full"
+                className="bg-[#315CFF] h-full"
                 style={{
                   width: `${metrics.total_calls > 0 ? (metrics.inbound_calls / metrics.total_calls) * 100 : 25}%`
                 }}
@@ -1045,28 +1074,29 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
             </div>
           </div>
 
-          <div className="portal-card p-5 space-y-3">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+          <div className="p-5 rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl space-y-3 relative overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#5945F5] to-transparent pointer-events-none" />
+            <h4 className="text-xs font-bold text-[#9AAAC2] uppercase tracking-wider flex items-center justify-between">
               <span>Connection Rate Efficiency</span>
-              <PhoneCall className="w-3.5 h-3.5 text-slate-500" />
+              <PhoneCall className="w-3.5 h-3.5 text-[#9AAAC2]" />
             </h4>
             <div className="flex items-center justify-between pt-2">
               <div>
-                <div className="text-2xl font-bold font-mono text-purple-400">
+                <div className="text-2xl font-bold font-mono text-[#5945F5]">
                   {metrics.total_calls > 0
                     ? ((metrics.answered_calls / metrics.total_calls) * 100).toFixed(1)
                     : "0.0"}%
                 </div>
-                <div className="text-xs text-slate-400">Connected to Customer</div>
+                <div className="text-xs text-[#9AAAC2]">Connected to Customer</div>
               </div>
-              <div className="text-right font-mono text-xs text-slate-300">
-                <div>Answered: {metrics.answered_calls}</div>
-                <div className="text-rose-400">Unanswered: {metrics.total_calls - metrics.answered_calls}</div>
+              <div className="text-right font-mono text-xs text-[#9AAAC2]">
+                <div>Answered: <strong className="text-[#00C995]">{metrics.answered_calls}</strong></div>
+                <div className="text-[#FF527A]">Unanswered: {metrics.total_calls - metrics.answered_calls}</div>
               </div>
             </div>
-            <div className="w-full h-3 rounded-full bg-slate-800 overflow-hidden">
+            <div className="w-full h-3 rounded-full bg-[#14223A] border border-[#263957] overflow-hidden">
               <div
-                className="bg-purple-500 h-full rounded-full"
+                className="bg-[#5945F5] h-full rounded-full"
                 style={{
                   width: `${metrics.total_calls > 0 ? (metrics.answered_calls / metrics.total_calls) * 100 : 0}%`
                 }}
@@ -1074,21 +1104,22 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
             </div>
           </div>
 
-          <div className="portal-card p-5 space-y-3">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+          <div className="p-5 rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl space-y-3 relative overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#00C995] to-transparent pointer-events-none" />
+            <h4 className="text-xs font-bold text-[#9AAAC2] uppercase tracking-wider flex items-center justify-between">
               <span>Statutory RBI Compliance</span>
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <ShieldCheck className="w-3.5 h-3.5 text-[#00C995]" />
             </h4>
             <div className="flex items-center gap-3 pt-2">
-              <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-[#00C995]/10 border border-[#00C995]/30 flex items-center justify-center text-[#00C995] shrink-0 shadow-inner">
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <div>
-                <div className="text-base sm:text-lg font-bold text-white">100% Encrypted &amp; Audited</div>
-                <div className="text-xs text-emerald-400">ANNOUNCED_RECORDED Notice Played</div>
+                <div className="text-base sm:text-lg font-bold text-[#F4F7FF]">100% Encrypted &amp; Audited</div>
+                <div className="text-xs text-[#00C995] font-semibold">ANNOUNCED_RECORDED Notice Played</div>
               </div>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
+            <p className="text-[11px] text-[#9AAAC2] leading-relaxed">
               AWS S3 KMS SSE encryption enabled with automatic 365-day statutory retention.
             </p>
           </div>
@@ -1099,30 +1130,31 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
           SUB-TAB 4: DISPOSITIONS BREAKDOWN
       ═══════════════════════════════════════════════════════ */}
       {activeSubTab === "dispositions" && (
-        <div className="portal-card p-5 sm:p-6">
-          <div className="flex items-center justify-between mb-4 border-b border-slate-800/80 pb-3">
+        <div className="p-5 sm:p-6 rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl relative overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#315CFF]/30 to-transparent pointer-events-none" />
+          <div className="flex items-center justify-between mb-4 border-b border-[#263957] pb-3">
             <div className="flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4 text-indigo-400" />
-              <h3 className="text-sm font-bold text-white">Call Outcome &amp; Disposition Distribution</h3>
+              <SlidersHorizontal className="w-4 h-4 text-[#315CFF]" />
+              <h3 className="text-sm font-bold text-[#F4F7FF]">Call Outcome &amp; Disposition Distribution</h3>
             </div>
-            <span className="text-xs font-mono text-slate-400">
+            <span className="text-xs font-mono text-[#9AAAC2]">
               {calls.length} Samples Analyzed
             </span>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
             {[
-              { label: "Completed / Settled", count: calls.filter(c => c && c.disposition === "Completed").length, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-              { label: "Promise to Pay (PTP)", count: calls.filter(c => c && c.disposition === "Promise to Pay").length, color: "text-teal-400", bg: "bg-teal-500/10", border: "border-teal-500/20" },
-              { label: "Interested in Plan", count: calls.filter(c => c && c.disposition === "Interested").length, color: "text-sky-400", bg: "bg-sky-500/10", border: "border-sky-500/20" },
-              { label: "Customer Disputed", count: calls.filter(c => c && c.disposition === "Disputed").length, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" },
-              { label: "Line Busy", count: calls.filter(c => c && c.disposition === "Busy").length, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20" },
-              { label: "No Answer / Unreachable", count: calls.filter(c => c && c.disposition === "No Answer").length, color: "text-slate-400", bg: "bg-slate-500/10", border: "border-slate-500/20" },
-              { label: "Left Voicemail", count: calls.filter(c => c && c.disposition === "Voicemail").length, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20" },
-              { label: "Abandoned Call", count: calls.filter(c => c && c.disposition === "Abandoned").length, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" }
+              { label: "Completed / Settled", count: calls.filter(c => c && c.disposition === "Completed").length, color: "text-[#00C995]", bg: "bg-[#00C995]/10", border: "border-[#00C995]/30" },
+              { label: "Promise to Pay (PTP)", count: calls.filter(c => c && c.disposition === "Promise to Pay").length, color: "text-[#06C7E8]", bg: "bg-[#06C7E8]/10", border: "border-[#06C7E8]/30" },
+              { label: "Interested in Plan", count: calls.filter(c => c && c.disposition === "Interested").length, color: "text-[#315CFF]", bg: "bg-[#315CFF]/10", border: "border-[#315CFF]/30" },
+              { label: "Customer Disputed", count: calls.filter(c => c && c.disposition === "Disputed").length, color: "text-[#FF527A]", bg: "bg-[#FF527A]/10", border: "border-[#FF527A]/30" },
+              { label: "Line Busy", count: calls.filter(c => c && c.disposition === "Busy").length, color: "text-[#FFB800]", bg: "bg-[#FFB800]/10", border: "border-[#FFB800]/30" },
+              { label: "No Answer / Unreachable", count: calls.filter(c => c && c.disposition === "No Answer").length, color: "text-[#9AAAC2]", bg: "bg-[#14223A]", border: "border-[#263957]" },
+              { label: "Left Voicemail", count: calls.filter(c => c && c.disposition === "Voicemail").length, color: "text-[#5945F5]", bg: "bg-[#5945F5]/10", border: "border-[#5945F5]/30" },
+              { label: "Abandoned Call", count: calls.filter(c => c && c.disposition === "Abandoned").length, color: "text-[#FF527A]", bg: "bg-[#FF527A]/10", border: "border-[#FF527A]/30" }
             ].map((d, i) => (
               <div key={i} className={`p-4 rounded-xl border ${d.border} ${d.bg} transition hover:scale-[1.01]`}>
                 <div className={`text-2xl font-bold font-mono ${d.color}`}>{d.count}</div>
-                <div className="text-xs text-slate-300 font-medium mt-1">{d.label}</div>
+                <div className="text-xs text-[#F4F7FF] font-medium mt-1">{d.label}</div>
               </div>
             ))}
           </div>
@@ -1137,89 +1169,105 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
           {/* Telemetry Overview Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
             {/* Tile 1: Total Evidence Records */}
-            <div className="portal-card p-4 space-y-1">
-              <div className="flex items-center justify-between text-slate-400 text-xs">
+            <div className="p-4 rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl space-y-1 relative overflow-hidden group hover:border-[#315CFF]/50 transition-all">
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#315CFF] to-transparent pointer-events-none" />
+              <div className="flex items-center justify-between text-[#9AAAC2] text-xs font-medium">
                 <span>Total Recordings</span>
-                <FileAudio className="w-4 h-4 text-indigo-400" />
+                <div className="w-7 h-7 rounded-lg bg-[#14223A] border border-[#263957] flex items-center justify-center text-[#315CFF]">
+                  <FileAudio className="w-3.5 h-3.5" />
+                </div>
               </div>
-              <div className="text-2xl font-bold font-mono text-white">
+              <div className="text-2xl font-bold font-mono text-[#F4F7FF]">
                 {evidenceOverview?.total_recordings || recordingsList.length || 76}
               </div>
-              <div className="text-[11px] text-slate-400 font-mono">
-                Storage: <span className="text-slate-200">{evidenceOverview?.total_storage_formatted || "390.41 MB"}</span>
+              <div className="text-[11px] text-[#9AAAC2] font-mono">
+                Storage: <span className="text-[#F4F7FF] font-semibold">{evidenceOverview?.total_storage_formatted || "390.41 MB"}</span>
               </div>
             </div>
 
             {/* Tile 2: AWS KMS Encryption */}
-            <div className="portal-card p-4 space-y-1">
-              <div className="flex items-center justify-between text-slate-400 text-xs">
+            <div className="p-4 rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl space-y-1 relative overflow-hidden group hover:border-[#00C995]/50 transition-all">
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#00C995] to-transparent pointer-events-none" />
+              <div className="flex items-center justify-between text-[#9AAAC2] text-xs font-medium">
                 <span>Vault Encryption</span>
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <div className="w-7 h-7 rounded-lg bg-[#14223A] border border-[#263957] flex items-center justify-center text-[#00C995]">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                </div>
               </div>
-              <div className="text-2xl font-bold font-mono text-emerald-400">
+              <div className="text-2xl font-bold font-mono text-[#00C995]">
                 100%
               </div>
-              <div className="text-[11px] text-emerald-300/80 font-mono truncate">
+              <div className="text-[11px] text-[#00C995]/80 font-mono truncate">
                 AWS KMS SSE (AES-256)
               </div>
             </div>
 
             {/* Tile 3: Statutory Notice Compliance */}
-            <div className="portal-card p-4 space-y-1">
-              <div className="flex items-center justify-between text-slate-400 text-xs">
+            <div className="p-4 rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl space-y-1 relative overflow-hidden group hover:border-[#5945F5]/50 transition-all">
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#5945F5] to-transparent pointer-events-none" />
+              <div className="flex items-center justify-between text-[#9AAAC2] text-xs font-medium">
                 <span>Statutory Notice</span>
-                <CheckCircle2 className="w-4 h-4 text-purple-400" />
+                <div className="w-7 h-7 rounded-lg bg-[#14223A] border border-[#263957] flex items-center justify-center text-[#5945F5]">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                </div>
               </div>
-              <div className="text-2xl font-bold font-mono text-purple-300">
+              <div className="text-2xl font-bold font-mono text-[#5945F5]">
                 100%
               </div>
-              <div className="text-[11px] text-purple-300/80 font-mono">
+              <div className="text-[11px] text-[#5945F5]/80 font-mono">
                 ANNOUNCED_RECORDED
               </div>
             </div>
 
             {/* Tile 4: Active Legal Holds */}
-            <div className="portal-card p-4 space-y-1">
-              <div className="flex items-center justify-between text-slate-400 text-xs">
+            <div className="p-4 rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl space-y-1 relative overflow-hidden group hover:border-[#FFB800]/50 transition-all">
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#FFB800] to-transparent pointer-events-none" />
+              <div className="flex items-center justify-between text-[#9AAAC2] text-xs font-medium">
                 <span>Active Legal Holds</span>
-                <Scale className="w-4 h-4 text-amber-400" />
+                <div className="w-7 h-7 rounded-lg bg-[#14223A] border border-[#263957] flex items-center justify-center text-[#FFB800]">
+                  <Scale className="w-3.5 h-3.5" />
+                </div>
               </div>
-              <div className="text-2xl font-bold font-mono text-amber-300">
+              <div className="text-2xl font-bold font-mono text-[#FFB800]">
                 {evidenceOverview?.legal_holds_active || recordingsList.filter(r => r.is_legal_hold).length || 19}
               </div>
-              <div className="text-[11px] text-amber-400/80 font-mono">
+              <div className="text-[11px] text-[#FFB800]/80 font-mono">
                 WORM Retention Locked
               </div>
             </div>
 
             {/* Tile 5: Immutable Access Audits */}
-            <div className="portal-card p-4 space-y-1">
-              <div className="flex items-center justify-between text-slate-400 text-xs">
+            <div className="p-4 rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl space-y-1 relative overflow-hidden group hover:border-[#06C7E8]/50 transition-all">
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#06C7E8] to-transparent pointer-events-none" />
+              <div className="flex items-center justify-between text-[#9AAAC2] text-xs font-medium">
                 <span>Access Audit Trail</span>
-                <FileCheck2 className="w-4 h-4 text-sky-400" />
+                <div className="w-7 h-7 rounded-lg bg-[#14223A] border border-[#263957] flex items-center justify-center text-[#06C7E8]">
+                  <FileCheck2 className="w-3.5 h-3.5" />
+                </div>
               </div>
-              <div className="text-2xl font-bold font-mono text-sky-300">
+              <div className="text-2xl font-bold font-mono text-[#06C7E8]">
                 {evidenceOverview?.total_access_audits || 3}
               </div>
-              <div className="text-[11px] text-sky-300/80 font-mono">
+              <div className="text-[11px] text-[#06C7E8]/80 font-mono">
                 IP &amp; Purpose Logged
               </div>
             </div>
           </div>
 
           {/* Evidence Vault Toolbar & Filters */}
-          <div className="portal-card p-4 space-y-3">
+          <div className="p-4 rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl space-y-3 relative overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#315CFF]/30 to-transparent pointer-events-none" />
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               {/* Search Bar */}
               <div className="relative flex-1 max-w-md">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9AAAC2] pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Search by recording ID, borrower, phone, staff or case #..."
                   value={evidenceSearch}
                   onChange={(e) => setEvidenceSearch(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && fetchEvidenceVault()}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition"
+                  className="w-full bg-[#08132D] border border-[#263957] rounded-xl pl-10 pr-3 py-2 min-h-[38px] text-xs text-[#F4F7FF] placeholder-[#9AAAC2]/60 focus:outline-none focus:border-[#315CFF] shadow-inner transition"
                 />
               </div>
 
@@ -1229,7 +1277,7 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                 <select
                   value={evidenceStatus}
                   onChange={(e) => setEvidenceStatus(e.target.value)}
-                  className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 font-semibold"
+                  className="bg-[#08132D] border border-[#263957] rounded-xl px-3 py-2 min-h-[38px] text-xs text-[#F4F7FF] focus:outline-none focus:border-[#315CFF] font-semibold cursor-pointer"
                 >
                   <option value="ALL">All Statuses</option>
                   <option value="READY">Ready (Standard)</option>
@@ -1241,10 +1289,10 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                 <button
                   type="button"
                   onClick={() => setEvidenceLegalHoldOnly(!evidenceLegalHoldOnly)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-2 min-h-[38px] rounded-xl text-xs font-semibold border transition cursor-pointer ${
                     evidenceLegalHoldOnly
-                      ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                      : "bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200"
+                      ? "bg-[#FFB800]/15 text-[#FFB800] border-[#FFB800]/40 font-bold"
+                      : "bg-[#14223A] border-[#263957] text-[#9AAAC2] hover:text-[#F4F7FF] hover:bg-[#1b2e4f]"
                   }`}
                 >
                   <Scale className="w-3.5 h-3.5" />
@@ -1255,10 +1303,10 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                 <button
                   type="button"
                   onClick={() => setEvidenceComplaintOnly(!evidenceComplaintOnly)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-2 min-h-[38px] rounded-xl text-xs font-semibold border transition cursor-pointer ${
                     evidenceComplaintOnly
-                      ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
-                      : "bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200"
+                      ? "bg-[#FF527A]/15 text-[#FF527A] border-[#FF527A]/40 font-bold"
+                      : "bg-[#14223A] border-[#263957] text-[#9AAAC2] hover:text-[#F4F7FF] hover:bg-[#1b2e4f]"
                   }`}
                 >
                   <FileText className="w-3.5 h-3.5" />
@@ -1269,32 +1317,32 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                 <button
                   type="button"
                   onClick={fetchEvidenceVault}
-                  className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white transition cursor-pointer"
+                  className="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-[#14223A] border border-[#263957] hover:border-[#315CFF]/50 text-[#9AAAC2] hover:text-[#F4F7FF] transition cursor-pointer"
                   title="Reload Evidence Vault"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 ${evidenceLoading ? "animate-spin text-indigo-400" : ""}`} />
+                  <RefreshCw className={`w-4 h-4 ${evidenceLoading ? "animate-spin text-[#315CFF]" : ""}`} />
                 </button>
               </div>
             </div>
           </div>
 
           {/* Recordings Evidence Table */}
-          <div className="portal-card overflow-hidden">
-            <div className="card-header flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 border-b border-slate-800">
+          <div className="w-full rounded-2xl bg-[#0B1733] border border-[#263957] shadow-xl overflow-hidden">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 sm:p-5 border-b border-[#263957] bg-[#08132D]">
               <div className="flex items-center gap-2">
-                <FileAudio className="w-4 h-4 text-indigo-400" />
-                <h3 className="text-sm font-bold text-white">Private S3 KMS Voice Evidence Ledger</h3>
+                <FileAudio className="w-4 h-4 text-[#315CFF]" />
+                <h3 className="text-xs sm:text-sm font-bold text-[#F4F7FF]">Private S3 KMS Voice Evidence Ledger</h3>
               </div>
-              <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <div className="flex items-center gap-2 text-xs font-mono text-[#9AAAC2]">
+                <span className="w-2 h-2 rounded-full bg-[#00C995] animate-pulse"></span>
                 <span>WORM Storage Policy Enforced &bull; 365 Days Rolling</span>
               </div>
             </div>
 
-            <div className="portal-table-container">
-              <table className="portal-table min-w-[1150px]">
+            <div className="overflow-x-auto w-full">
+              <table className="w-full min-w-[1150px] text-left border-collapse text-xs">
                 <thead>
-                  <tr>
+                  <tr className="border-b border-[#263957] bg-[#08132D] text-[#9AAAC2] text-[11px] font-semibold uppercase tracking-wider">
                     <th className="py-3 px-4">EVIDENCE REF / TIME</th>
                     <th className="py-3 px-4">BORROWER &amp; ACCOUNT</th>
                     <th className="py-3 px-4">RECOVERY OFFICER</th>
@@ -1306,19 +1354,19 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                     <th className="py-3 px-4 text-right">EVIDENCE ACTIONS</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-medium">
+                <tbody className="divide-y divide-[#263957]/50 font-medium">
                   {evidenceLoading ? (
                     <tr>
-                      <td colSpan="9" className="py-12 text-center text-slate-400">
+                      <td colSpan="9" className="py-12 text-center text-[#9AAAC2]">
                         <div className="flex items-center justify-center gap-2">
-                          <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+                          <Loader2 className="w-5 h-5 animate-spin text-[#315CFF]" />
                           <span>Decrypting Evidence Registry...</span>
                         </div>
                       </td>
                     </tr>
                   ) : recordingsList.length === 0 ? (
                     <tr>
-                      <td colSpan="9" className="py-12 text-center text-slate-500">
+                      <td colSpan="9" className="py-12 text-center text-[#9AAAC2]">
                         No voice evidence records matched your search/filter criteria.
                       </td>
                     </tr>
@@ -1326,62 +1374,62 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                     recordingsList.map((rec) => {
                       const isLocked = rec.is_legal_hold;
                       return (
-                        <tr key={rec.id} className="hover:bg-slate-800/40 transition group">
+                        <tr key={rec.id} className="hover:bg-[#14223A]/50 transition-colors group text-[#F4F7FF]">
                           {/* Evidence Ref & Date */}
                           <td className="py-3.5 px-4 whitespace-nowrap">
-                            <div className="font-mono text-white text-xs font-semibold flex items-center gap-1.5">
+                            <div className="font-mono text-[#F4F7FF] text-xs font-semibold flex items-center gap-1.5">
                               <span>{rec.id}</span>
                             </div>
-                            <div className="text-[10px] text-slate-400 font-mono">
+                            <div className="text-[10px] text-[#9AAAC2] font-mono">
                               {rec.date_formatted} &bull; {rec.time_formatted}
                             </div>
                           </td>
 
                           {/* Borrower & Account */}
                           <td className="py-3.5 px-4 whitespace-nowrap">
-                            <div className="text-slate-200 font-semibold">
+                            <div className="text-[#F4F7FF] font-semibold">
                               {rec.customer_details?.full_name || "Borrower"}
                             </div>
-                            <div className="text-slate-400 text-[11px] font-mono">
+                            <div className="text-[#9AAAC2] text-[11px] font-mono">
                               {rec.customer_details?.phone || "+91 98765 43210"} &bull; {rec.case_metadata?.case_number || "CASE-001"}
                             </div>
                           </td>
 
                           {/* Recovery Officer */}
                           <td className="py-3.5 px-4 whitespace-nowrap">
-                            <div className="text-slate-200">
+                            <div className="text-[#F4F7FF]">
                               {rec.employee_details?.full_name || "Officer"}
                             </div>
-                            <div className="text-slate-400 text-[10px] font-mono">
+                            <div className="text-[#9AAAC2] text-[10px] font-mono">
                               {rec.employee_details?.employee_code || "EMP-001"} &bull; Ext {rec.employee_details?.extension || "1012"}
                             </div>
                           </td>
 
                           {/* Statutory Notice */}
                           <td className="py-3.5 px-4 whitespace-nowrap">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                              <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#00C995]/10 text-[#00C995] border border-[#00C995]/20">
+                              <ShieldCheck className="w-3 h-3 text-[#00C995]" />
                               <span>ANNOUNCED</span>
                             </span>
                           </td>
 
                           {/* Duration & Size */}
                           <td className="py-3.5 px-4 whitespace-nowrap">
-                            <div className="font-mono text-emerald-400 font-semibold">
+                            <div className="font-mono text-[#00C995] font-semibold">
                               {rec.duration_formatted}
                             </div>
-                            <div className="text-[10px] text-slate-400 font-mono">
+                            <div className="text-[10px] text-[#9AAAC2] font-mono">
                               {rec.file_size_formatted}
                             </div>
                           </td>
 
                           {/* Encryption & Hash */}
                           <td className="py-3.5 px-4 whitespace-nowrap">
-                            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-                              <Lock className="w-2.5 h-2.5 text-indigo-400" />
+                            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#315CFF]/15 text-[#315CFF] border border-[#315CFF]/30">
+                              <Lock className="w-2.5 h-2.5 text-[#315CFF]" />
                               <span>AES-256 KMS</span>
                             </div>
-                            <div className="text-[9px] text-slate-500 font-mono truncate max-w-[120px]" title={rec.checksum_sha256}>
+                            <div className="text-[9px] text-[#9AAAC2] font-mono truncate max-w-[120px]" title={rec.checksum_sha256}>
                               SHA256: {rec.checksum_sha256?.slice(0, 10)}...
                             </div>
                           </td>
@@ -1389,13 +1437,13 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                           {/* Status / Retention */}
                           <td className="py-3.5 px-4 whitespace-nowrap">
                             {isLocked ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                <Scale className="w-3 h-3 text-amber-400" />
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FFB800]/15 text-[#FFB800] border border-[#FFB800]/30">
+                                <Scale className="w-3 h-3 text-[#FFB800]" />
                                 <span>LEGAL HOLD</span>
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#14223A] text-[#9AAAC2] border border-[#263957]">
+                                <CheckCircle2 className="w-3 h-3 text-[#00C995]" />
                                 <span>READY (365d)</span>
                               </span>
                             )}
@@ -1404,12 +1452,12 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                           {/* Grievance Ticket */}
                           <td className="py-3.5 px-4 whitespace-nowrap">
                             {rec.linked_complaint_number || rec.linked_complaint ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-300 border border-rose-500/20">
-                                <FileText className="w-3 h-3 text-rose-400" />
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FF527A]/15 text-[#FF527A] border border-[#FF527A]/30">
+                                <FileText className="w-3 h-3 text-[#FF527A]" />
                                 <span>{rec.linked_complaint_number || rec.linked_complaint?.complaint_number || "GRIEV-001"}</span>
                               </span>
                             ) : (
-                              <span className="text-slate-600 font-mono">—</span>
+                              <span className="text-[#9AAAC2]/60 font-mono">—</span>
                             )}
                           </td>
 
@@ -1420,7 +1468,7 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                               <button
                                 type="button"
                                 onClick={() => handlePlayRecording(rec)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-semibold transition shadow-sm cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r from-[#315CFF] to-[#5945F5] hover:opacity-95 text-[#F4F7FF] text-[11px] font-semibold transition shadow-sm cursor-pointer"
                                 title="Stream Secure Audio (15-min Signed S3 KMS Session)"
                               >
                                 <Play className="w-3 h-3 fill-white" />
@@ -1436,8 +1484,8 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                                 }}
                                 className={`p-1.5 rounded-lg border transition cursor-pointer ${
                                   isLocked
-                                    ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
-                                    : "bg-slate-800 text-slate-400 border-slate-700 hover:text-white hover:bg-slate-700"
+                                    ? "bg-[#FFB800]/20 text-[#FFB800] border-[#FFB800]/40 hover:bg-[#FFB800]/30"
+                                    : "bg-[#14223A] text-[#9AAAC2] border-[#263957] hover:text-[#F4F7FF] hover:bg-[#1b2e4f]"
                                 }`}
                                 title="Manage Legal Hold Retention Freeze"
                               >
@@ -1451,7 +1499,7 @@ export const CallActivityReport = ({ onOpenAudioPlayer, user }) => {
                                   setSelectedRecordingForAudit(rec);
                                   setShowAuditTrailModal(true);
                                 }}
-                                className="p-1.5 rounded-lg bg-slate-800 text-slate-400 border border-slate-700 hover:text-indigo-300 hover:bg-slate-700 transition cursor-pointer"
+                                className="p-1.5 rounded-lg bg-[#14223A] text-[#9AAAC2] border border-[#263957] hover:text-[#315CFF] hover:bg-[#1b2e4f] transition cursor-pointer"
                                 title="Inspect Immutable Access Audit Log"
                               >
                                 <FileCheck2 className="w-3.5 h-3.5" />

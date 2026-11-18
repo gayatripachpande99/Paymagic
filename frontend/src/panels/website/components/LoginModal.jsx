@@ -141,66 +141,6 @@ export default function LoginModal({
               <h2>Employee Sign In</h2>
             </div>
 
-            {/* Quick Role Switcher Chips for seamless testing */}
-            <div style={{ marginBottom: "16px" }}>
-              <span style={{ fontSize: "11px", fontWeight: "600", color: "#94a3b8", display: "block", marginBottom: "6px" }}>
-                Quick Select Employee Role:
-              </span>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
-                <button
-                  type="button"
-                  onClick={() => { setEmployeeIdInput("PM-CAL-0001"); setPasswordInput("Emp@123"); }}
-                  className={`px-2.5 py-1.5 rounded-lg text-left text-xs transition border ${
-                    employeeIdInput === "PM-CAL-0001"
-                      ? "bg-indigo-600/30 border-indigo-500 text-indigo-300 font-bold"
-                      : "bg-slate-800/80 border-slate-700/60 text-slate-300 hover:bg-slate-800"
-                  }`}
-                >
-                  <div className="font-semibold text-[11px] text-white">Rahul Sharma</div>
-                  <div className="text-[10px] text-slate-400">Senior Caller &bull; PM-CAL-0001</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setEmployeeIdInput("PM-FLD-0001"); setPasswordInput("Emp@123"); }}
-                  className={`px-2.5 py-1.5 rounded-lg text-left text-xs transition border ${
-                    employeeIdInput === "PM-FLD-0001"
-                      ? "bg-amber-600/30 border-amber-500 text-amber-300 font-bold"
-                      : "bg-slate-800/80 border-slate-700/60 text-slate-300 hover:bg-slate-800"
-                  }`}
-                >
-                  <div className="font-semibold text-[11px] text-white">Vikram Singh</div>
-                  <div className="text-[10px] text-amber-400">Ground Field Agent &bull; GPS</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setEmployeeIdInput("PM-CAL-0002"); setPasswordInput("Emp@123"); }}
-                  className={`px-2.5 py-1.5 rounded-lg text-left text-xs transition border ${
-                    employeeIdInput === "PM-CAL-0002"
-                      ? "bg-indigo-600/30 border-indigo-500 text-indigo-300 font-bold"
-                      : "bg-slate-800/80 border-slate-700/60 text-slate-300 hover:bg-slate-800"
-                  }`}
-                >
-                  <div className="font-semibold text-[11px] text-white">Priya Patel</div>
-                  <div className="text-[10px] text-slate-400">Recovery Associate</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setEmployeeIdInput("PM-SUP-0001"); setPasswordInput("Emp@123"); }}
-                  className={`px-2.5 py-1.5 rounded-lg text-left text-xs transition border ${
-                    employeeIdInput === "PM-SUP-0001"
-                      ? "bg-emerald-600/30 border-emerald-500 text-emerald-300 font-bold"
-                      : "bg-slate-800/80 border-slate-700/60 text-slate-300 hover:bg-slate-800"
-                  }`}
-                >
-                  <div className="font-semibold text-[11px] text-white">Aarav Mehta</div>
-                  <div className="text-[10px] text-emerald-400">Team Supervisor &bull; Approvals</div>
-                </button>
-              </div>
-            </div>
-
             <form onSubmit={handleEmployeeSubmit} className="login-form">
               {loginError && <div className="error-message">{loginError}</div>}
               <div className="form-group">
@@ -209,7 +149,7 @@ export default function LoginModal({
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2">
                     <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
                   </svg>
-                  <input type="text" placeholder="e.g. PM-CAL-0001 or PM-FLD-0001" value={employeeIdInput} onChange={(e) => setEmployeeIdInput(e.target.value)} autoFocus />
+                  <input type="text" placeholder="Enter your Employee ID or Email" value={employeeIdInput} onChange={(e) => setEmployeeIdInput(e.target.value)} autoFocus />
                 </div>
               </div>
               <div className="form-group">

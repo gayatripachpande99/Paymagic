@@ -387,7 +387,7 @@ export default function CaseTable({
               setCasePage(prev);
               if (loadCases) loadCases(prev);
             }}
-            className="secondary-btn min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl bg-[#14223A] hover:bg-[#1b2e4f] text-[#F4F7FF] border border-[#263957] hover:border-[#315CFF]/50 cursor-pointer disabled:opacity-40"
+            className="min-h-[36px] min-w-[36px] px-2.5 flex items-center justify-center rounded-xl bg-[#14223A] hover:bg-[#1b2e4f] text-[#F4F7FF] border border-[#263957] hover:border-[#315CFF]/50 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Previous Page"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -403,7 +403,7 @@ export default function CaseTable({
               setCasePage(next);
               if (loadCases) loadCases(next);
             }}
-            className="secondary-btn min-h-[36px] min-w-[36px] flex items-center justify-center rounded-xl bg-[#14223A] hover:bg-[#1b2e4f] text-[#F4F7FF] border border-[#263957] hover:border-[#315CFF]/50 cursor-pointer disabled:opacity-40"
+            className="min-h-[36px] min-w-[36px] px-2.5 flex items-center justify-center rounded-xl bg-[#14223A] hover:bg-[#1b2e4f] text-[#F4F7FF] border border-[#263957] hover:border-[#315CFF]/50 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Next Page"
           >
             <ChevronRight className="w-4 h-4" />
