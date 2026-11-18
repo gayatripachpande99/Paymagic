@@ -251,6 +251,8 @@ export const updateCaseStatusWithHistory = async ({
     // 5. Invalidate relevant caches automatically
     cacheService.delPattern("cases:*");
     cacheService.delPattern("dashboard:*");
+    cacheService.delPattern("recovery:*");
+    cacheService.delPattern("allocation:*");
 
     // 6. Return updated result
     return {
