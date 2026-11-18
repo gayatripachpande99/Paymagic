@@ -5,10 +5,7 @@ import CaseAllocationPage from "../panels/admin/pages/CaseAllocationPage";
 import {
   ManagementAnalyticsPage,
   PaymentRecoveryPage,
-  CallRecordsAudioPage,
-  FieldRecoveryVisitsPage,
-  GrievanceDisputesPage,
-  RemindersQueuePage
+  CallRecordsAudioPage
 } from "../panels/admin/pages";
 import BulkAllocateModal from "./portal/BulkAllocateModal";
 import TransferCasesModal from "./portal/TransferCasesModal";
@@ -17,7 +14,6 @@ import CaseDetailModal from "./portal/CaseDetailModal";
 import PaymentModal from "./portal/PaymentModal";
 import AudioPlayerModal from "./portal/AudioPlayerModal";
 import DigitalReceiptModal from "./portal/DigitalReceiptModal";
-import ScheduleFieldVisitModal from "./portal/ScheduleFieldVisitModal";
 
 const CASE_STATUSES = [
   "New",
@@ -51,11 +47,6 @@ const ADMIN_TAB_ROUTES = {
   "analytics": "/admin/analytics",
   "payments": "/admin/payments",
   "telephony": "/admin/telephony",
-  "field-recovery": "/admin/field-recovery",
-  "complaints": "/admin/complaints",
-  "reminders": "/admin/reminders",
-  "attendance": "/admin/attendance",
-  "leave-approvals": "/admin/leave-approvals",
   "employees": "/admin/employees",
   "records": "/admin/records"
 };
@@ -65,11 +56,6 @@ const ADMIN_TAB_TITLES = {
   "analytics": "PayMagic | Portfolio Analytics & DPD Buckets",
   "payments": "PayMagic | Payment Recovery & Collections Desk",
   "telephony": "PayMagic | Voice Telephony CDR & Evidence Vault",
-  "field-recovery": "PayMagic | Field Recovery Operations & Radar",
-  "complaints": "PayMagic | Customer Grievance & Disputes Desk",
-  "reminders": "PayMagic | Sentinel Jobs & Notification Hub",
-  "attendance": "PayMagic | Live Staff Attendance Roster",
-  "leave-approvals": "PayMagic | HR Leave Approval Desk",
   "employees": "PayMagic | Staff Directory & Access Control",
   "records": "PayMagic | Customer Records & File Allocation"
 };
@@ -873,65 +859,6 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             <span>Call Records &amp; Audio</span>
           </button>
 
-          <button
-            className={`portal-nav-item ${activeTab === "field-recovery" ? "active" : ""}`}
-            onClick={() => switchTab("field-recovery")}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-            <span>Field Recovery</span>
-          </button>
-
-          <button
-            className={`portal-nav-item ${activeTab === "complaints" ? "active" : ""}`}
-            onClick={() => switchTab("complaints")}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            <span>Grievances &amp; Disputes</span>
-          </button>
-
-          <button
-            className={`portal-nav-item ${activeTab === "reminders" ? "active" : ""}`}
-            onClick={() => switchTab("reminders")}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-            <span>Sentinels &amp; Alerts</span>
-          </button>
-
-          <button
-            className={`portal-nav-item ${activeTab === "attendance" ? "active" : ""}`}
-            onClick={() => switchTab("attendance")}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            <span>Live Attendance</span>
-          </button>
-
-          <button
-            className={`portal-nav-item ${activeTab === "leave-approvals" ? "active" : ""}`}
-            onClick={() => switchTab("leave-approvals")}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-              <polyline points="10 9 9 9 8 9" />
-            </svg>
-            <span>Leave Approvals</span>
-          </button>
-
           {(user?.role === "ADMIN" || user?.role === "SUPER_ADMIN") && (
             <>
               <button
@@ -1147,38 +1074,6 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
             user={user}
             setSelectedCallAudio={setSelectedCallAudio}
             setShowAudioModal={setShowAudioModal}
-          />
-        )}
-
-        {/* ── TAB: MODULE E FIELD RECOVERY VISITS & OPERATIONS ── */}
-        {activeTab === "field-recovery" && (
-          <FieldRecoveryVisitsPage
-            setShowScheduleVisitModal={setShowScheduleVisitModal}
-            loadFieldVisits={loadFieldVisits}
-            loadFieldOverview={loadFieldOverview}
-            loadCashHandovers={loadCashHandovers}
-            fieldOverviewData={fieldOverviewData}
-            fieldVisitsList={fieldVisitsList}
-            fieldVisitsLoading={fieldVisitsLoading}
-            cashHandoversList={cashHandoversList}
-            cashHandoversLoading={cashHandoversLoading}
-            setSelectedReceiptRef={setSelectedReceiptRef}
-            setShowDigitalReceiptModal={setShowDigitalReceiptModal}
-            handleReconcileCash={handleReconcileCash}
-          />
-        )}
-
-        {/* ── TAB: MODULE G CUSTOMER GRIEVANCES & DISPUTES DESK ── */}
-        {activeTab === "complaints" && (
-          <GrievanceDisputesPage user={user} />
-        )}
-
-        {/* ── TAB: MODULE H SENTINELS & NOTIFICATION HUB ── */}
-        {activeTab === "reminders" && (
-          <RemindersQueuePage
-            user={user}
-            setSelectedCaseId={setSelectedCaseId}
-            setShowCaseDetailModal={setShowCaseDetailModal}
           />
         )}
 
@@ -2133,16 +2028,6 @@ export default function AdminDashboard({ user, onLogout, onBackToHome }) {
           onClose={() => {
             setShowDigitalReceiptModal(false);
             setSelectedReceiptRef(null);
-          }}
-        />
-      )}
-
-      {showScheduleVisitModal && (
-        <ScheduleFieldVisitModal
-          onClose={() => setShowScheduleVisitModal(false)}
-          onCreated={() => {
-            loadFieldVisits();
-            loadFieldOverview();
           }}
         />
       )}

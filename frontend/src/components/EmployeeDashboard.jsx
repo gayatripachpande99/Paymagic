@@ -35,17 +35,13 @@ import CaseDetailModal from "./portal/CaseDetailModal";
 import WebPhoneDialer from "./portal/WebPhoneDialer";
 import CallActivityReport from "./portal/CallActivityReport";
 import PerformanceDashboard from "./portal/PerformanceDashboard";
-import FieldVisitModal from "./portal/FieldVisitModal";
 import CashHandoverModal from "./portal/CashHandoverModal";
 import DigitalReceiptModal from "./portal/DigitalReceiptModal";
 
 import {
   EmployeePerformancePage,
   MyRecoveryCasesPage,
-  FieldVisitsAgentPage,
   MyCallHistoryPage,
-  DailyAttendancePage,
-  LeaveManagementPage,
   MyProfilePage,
   RegulatorySopPage
 } from "../panels/employee/pages";
@@ -80,10 +76,7 @@ const STATUS_PILL_CLASSES = {
 const EMP_TAB_ROUTES = {
   "dashboard": "/employee/dashboard",
   "cases": "/employee/cases",
-  "field-visits": "/employee/field-visits",
   "calls": "/employee/calls",
-  "attendance": "/employee/attendance",
-  "leave": "/employee/leave",
   "profile": "/employee/profile",
   "documents": "/employee/documents"
 };
@@ -91,10 +84,7 @@ const EMP_TAB_ROUTES = {
 const EMP_TAB_TITLES = {
   "dashboard": "PayMagic | Employee Recovery Performance",
   "cases": "PayMagic | My Assigned Loan Recovery Cases",
-  "field-visits": "PayMagic | Field Recovery Visits & On-Site Collections",
   "calls": "PayMagic | My Outbound Call Records",
-  "attendance": "PayMagic | Daily Shift Attendance & Productivity",
-  "leave": "PayMagic | Employee Leave Portal",
   "profile": "PayMagic | My Profile & Employment Details",
   "documents": "PayMagic | Regulatory Guidelines & Training"
 };
@@ -569,15 +559,6 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
             <span>My Recovery Cases</span>
           </button>
 
-          {/* Module D: Field Recovery Visits */}
-          <button
-            className={`portal-nav-item ${activeTab === "field-visits" ? "active" : ""}`}
-            onClick={() => switchTab("field-visits")}
-          >
-            <MapPin className="w-5 h-5 shrink-0" />
-            <span>Field Visits &amp; GPS</span>
-          </button>
-
           {/* Feature 4: Call History & Audio */}
           <button
             className={`portal-nav-item ${activeTab === "calls" ? "active" : ""}`}
@@ -585,24 +566,6 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
           >
             <PhoneCall className="w-5 h-5 shrink-0" />
             <span>My Call History</span>
-          </button>
-
-          {/* Feature 2: Attendance & Shifts */}
-          <button
-            className={`portal-nav-item ${activeTab === "attendance" ? "active" : ""}`}
-            onClick={() => switchTab("attendance")}
-          >
-            <Clock className="w-5 h-5 shrink-0" />
-            <span>Attendance &amp; Shifts</span>
-          </button>
-
-          {/* Feature 2: Leave Management */}
-          <button
-            className={`portal-nav-item ${activeTab === "leave" ? "active" : ""}`}
-            onClick={() => switchTab("leave")}
-          >
-            <Calendar className="w-5 h-5 shrink-0" />
-            <span>Leave Management</span>
           </button>
 
           {/* Profile */}
@@ -737,25 +700,6 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
         )}
 
         {/* ═══════════════════════════════════════════════════════
-            TAB 3: FIELD VISITS & GROUND ROUTE (Module D & Module E)
-        ═══════════════════════════════════════════════════════ */}
-        {activeTab === "field-visits" && (
-          <FieldVisitsAgentPage
-            myRouteData={myRouteData}
-            setShowCashHandoverModal={setShowCashHandoverModal}
-            myCases={myCases}
-            setFieldVisitCase={setFieldVisitCase}
-            setShowFieldVisitModal={setShowFieldVisitModal}
-            setErrorMsg={setErrorMsg}
-            fieldVisits={fieldVisits}
-            fieldVisitsLoading={fieldVisitsLoading}
-            formatTime={formatTime}
-            setSelectedReceiptRef={setSelectedReceiptRef}
-            setShowReceiptModal={setShowReceiptModal}
-          />
-        )}
-
-        {/* ═══════════════════════════════════════════════════════
             TAB 4: MY CALL ACTIVITY & AUDIO EVIDENCE (Feature 1 & 4)
         ═══════════════════════════════════════════════════════ */}
         {activeTab === "calls" && (
@@ -763,41 +707,6 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
             user={user}
             setAudioCall={setAudioCall}
             setShowAudioModal={setShowAudioModal}
-          />
-        )}
-
-        {/* ═══════════════════════════════════════════════════════
-            TAB 5: ATTENDANCE & SHIFTS (Feature 2 & Module D)
-        ═══════════════════════════════════════════════════════ */}
-        {activeTab === "attendance" && (
-          <DailyAttendancePage
-            productivityData={productivityData}
-            todayAttendance={todayAttendance}
-            liveWorkingTime={liveWorkingTime}
-            handleCheckIn={handleCheckIn}
-            handleCheckOut={handleCheckOut}
-            actionLoading={actionLoading}
-            history={history}
-            formatTime={formatTime}
-            formatMinutes={formatMinutes}
-          />
-        )}
-
-        {/* ═══════════════════════════════════════════════════════
-            TAB 6: LEAVE MANAGEMENT (Feature 2)
-        ═══════════════════════════════════════════════════════ */}
-        {activeTab === "leave" && (
-          <LeaveManagementPage
-            handleApplyLeave={handleApplyLeave}
-            leaveType={leaveType}
-            setLeaveType={setLeaveType}
-            fromDate={fromDate}
-            setFromDate={setFromDate}
-            toDate={toDate}
-            setToDate={setToDate}
-            leaveReason={leaveReason}
-            setLeaveReason={setLeaveReason}
-            leaveRequests={leaveRequests}
           />
         )}
 
@@ -878,51 +787,6 @@ export default function EmployeeDashboard({ user, onLogout, onBackToHome }) {
           onUpdate={() => {
             loadMyCases();
             loadEmployeeDashboard();
-          }}
-        />
-      )}
-
-      {/* Module D: Authorized Field Visit & GPS Modal */}
-      {showFieldVisitModal && fieldVisitCase && (
-        <FieldVisitModal
-          loanCase={fieldVisitCase}
-          onClose={() => {
-            setShowFieldVisitModal(false);
-            setFieldVisitCase(null);
-          }}
-          onSuccess={() => {
-            setSuccessMsg("Field visit and outcome recorded with verified GPS coordinates!");
-            loadFieldVisits();
-            loadMyRoute();
-            loadMyCases();
-            loadProductivity();
-            loadEmployeeDashboard();
-          }}
-        />
-      )}
-
-      {/* Module E: Cash Handover Modal */}
-      {showCashHandoverModal && (
-        <CashHandoverModal
-          isOpen={showCashHandoverModal}
-          cashInHand={myRouteData?.agent?.cash_in_hand || 8500}
-          onClose={() => setShowCashHandoverModal(false)}
-          onSuccess={(msg) => {
-            setSuccessMsg(msg);
-            loadMyRoute();
-            loadFieldVisits();
-          }}
-        />
-      )}
-
-      {/* Module E: Digital Receipt Modal */}
-      {showReceiptModal && selectedReceiptRef && (
-        <DigitalReceiptModal
-          isOpen={showReceiptModal}
-          receiptNumber={selectedReceiptRef}
-          onClose={() => {
-            setShowReceiptModal(false);
-            setSelectedReceiptRef(null);
           }}
         />
       )}

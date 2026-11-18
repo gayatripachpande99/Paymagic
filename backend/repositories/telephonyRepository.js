@@ -7,6 +7,59 @@ import db, { memoryStore } from "../config/db.js";
  * Fully supports PostgreSQL and memoryStore fallback.
  */
 export const telephonyRepository = {
+  async createRecording(data, client = null) {
+    const id = data.id || `rec_${uuidv4()}`;
+    const now = new Date().toISOString();
+    const retentionUntil = data.retention_until || new Date(Date.now() + 365 * 86400000).toISOString();
+
+    if (db.isPgActive()) {
+      const q = client || db.getPool();
+      const res = await q.query(
+        `INSERT INTO call_recordings (
+          id, call_id, s3_bucket, s3_key, recording_url,
+          duration_seconds, file_size_bytes, mime_type, encryption_type,
+          processing_status, is_legal_hold, retention_until, created_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        RETURNING *`,
+        [
+          id,
+          data.call_id || data.callId,
+          data.s3_bucket || "paymagic-telephony-recordings-secure",
+          data.s3_key || data.s3Key,
+          data.recording_url || null,
+          data.duration_seconds || 0,
+          data.file_size_bytes || 0,
+          data.mime_type || "audio/mp3",
+          data.encryption_type || "aws:kms:sse",
+          data.processing_status || "READY",
+          Boolean(data.is_legal_hold),
+          retentionUntil,
+          now
+        ]
+      );
+      return res.rows[0];
+    }
+
+    if (!memoryStore.call_recordings) memoryStore.call_recordings = [];
+    const recording = {
+      id,
+      call_id: data.call_id || data.callId,
+      s3_bucket: data.s3_bucket || "paymagic-telephony-recordings-secure",
+      s3_key: data.s3_key || data.s3Key,
+      recording_url: data.recording_url || null,
+      duration_seconds: data.duration_seconds || 0,
+      file_size_bytes: data.file_size_bytes || 0,
+      mime_type: data.mime_type || "audio/mp3",
+      encryption_type: data.encryption_type || "aws:kms:sse",
+      processing_status: data.processing_status || "READY",
+      is_legal_hold: Boolean(data.is_legal_hold),
+      retention_until: retentionUntil,
+      created_at: now
+    };
+    memoryStore.call_recordings.push(recording);
+    return recording;
+  },
+
   /**
    * Insert a new call record
    */

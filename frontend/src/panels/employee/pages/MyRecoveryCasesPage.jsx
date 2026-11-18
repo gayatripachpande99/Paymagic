@@ -165,8 +165,10 @@ export default function MyRecoveryCasesPage({
                         <button
                           type="button"
                           onClick={() => {
-                            setFieldVisitCase(item);
-                            setShowFieldVisitModal(true);
+                            if (typeof setShowFieldVisitModal === "function") {
+                              setFieldVisitCase?.(item);
+                              setShowFieldVisitModal(true);
+                            }
                           }}
                           className="px-2 py-1 rounded bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 text-xs font-semibold flex items-center gap-1 transition"
                           title="Authorized On-Site Field Recovery Visit with GPS Notice"

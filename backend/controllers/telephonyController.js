@@ -3,7 +3,6 @@ import db, { memoryStore, updateCaseStatusWithHistory } from "../config/db.js";
 import { telephonyProvider } from "../adapters/telephonyAdapter.js";
 import { maskPhone } from "../services/piiMaskingService.js";
 import { telephonyRepository } from "../repositories/telephonyRepository.js";
-import { evidenceRepository } from "../repositories/evidenceRepository.js";
 import { webhookEventRepository } from "../repositories/webhookEventRepository.js";
 
 // Webhook Idempotency & Replay Attack Cache
@@ -223,7 +222,7 @@ export const handleWebhook = async (req, res) => {
     if (callStatus === "answered" && callDuration > 0) {
       const s3Key = recording_s3_key || `recordings/${new Date().getFullYear()}/${String(new Date().getMonth() + 1).padStart(2, "0")}/${telephony_call_id}.mp3`;
 
-      await evidenceRepository.createRecording({
+      await telephonyRepository.createRecording({
         call_id: callRecord.id,
         s3_bucket: "paymagic-telephony-recordings-secure",
         s3_key: s3Key,

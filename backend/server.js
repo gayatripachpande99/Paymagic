@@ -15,14 +15,8 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import cacheRoutes from "./routes/cacheRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
-import attendanceRoutes from "./routes/attendanceRoutes.js";
-import fieldRecoveryRoutes from "./routes/fieldRecoveryRoutes.js";
-import complaintRoutes from "./routes/complaintRoutes.js";
-import notificationRoutes from "./routes/notificationRoutes.js";
 import allocationRoutes from "./routes/allocationRoutes.js";
 import recoveryRoutes from "./routes/recoveryRoutes.js";
-import paymentGatewayRoutes from "./routes/paymentGatewayRoutes.js";
-import monitoringRoutes from "./routes/monitoringRoutes.js";
 import { logger } from "./utils/logger.js";
 import { schedulerService } from "./services/schedulerService.js";
 
@@ -119,14 +113,8 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/cache", cacheRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/employee", employeeRoutes);
-app.use("/api/attendance", attendanceRoutes);
-app.use("/api/field", fieldRecoveryRoutes);
-app.use("/api/complaints", complaintRoutes);
-app.use("/api/notifications", notificationRoutes);
 app.use("/api/allocation", allocationRoutes);
 app.use("/api/recovery", recoveryRoutes);
-app.use("/api/payment-gateway", paymentGatewayRoutes);
-app.use("/api/monitoring", monitoringRoutes);
 
 // ── Health, Liveness, and Readiness Endpoints ──
 
