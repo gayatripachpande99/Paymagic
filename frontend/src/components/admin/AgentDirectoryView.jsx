@@ -246,59 +246,75 @@ export default function AgentDirectoryView() {
   );
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       
       {/* ── AGENT SUB-NAVIGATION TABS (4 SUB-FIELDS) ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-card border border-border shadow-sm">
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "16px",
+          padding: "20px",
+          borderRadius: "16px",
+          backgroundColor: "#041030",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+          flexWrap: "wrap"
+        }}
+      >
         <div>
-          <h2 className="text-xl font-bold text-foreground">Agent &amp; Campaign Center</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+            Agent &amp; Campaign Center
+          </h2>
+          <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", margin: 0 }}>
             Manage agents, groupings, dialer campaigns, and automated incentives
           </p>
         </div>
 
         {/* 4 Sub-Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-muted rounded-xl self-start sm:self-auto overflow-x-auto">
-          <button
-            onClick={() => setAgentSubTab("agent_list")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-              agentSubTab === "agent_list"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            1. Agent List
-          </button>
-          <button
-            onClick={() => setAgentSubTab("agent_group")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-              agentSubTab === "agent_group"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            2. Agent Group
-          </button>
-          <button
-            onClick={() => setAgentSubTab("campaign")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-              agentSubTab === "campaign"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            3. Campaign
-          </button>
-          <button
-            onClick={() => setAgentSubTab("incentives")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-              agentSubTab === "incentives"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            4. Incentives
-          </button>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            padding: "4px",
+            backgroundColor: "#020921",
+            borderRadius: "12px",
+            border: "1px solid rgba(255, 255, 255, 0.06)",
+            overflowX: "auto"
+          }}
+        >
+          {[
+            { id: "agent_list", label: "1. Agent List" },
+            { id: "agent_group", label: "2. Agent Group" },
+            { id: "campaign", label: "3. Campaign" },
+            { id: "incentives", label: "4. Incentives" }
+          ].map((tab) => {
+            const isActive = agentSubTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setAgentSubTab(tab.id)}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  fontWeight: isActive ? 700 : 500,
+                  backgroundColor: isActive ? "#1d4ed8" : "transparent",
+                  color: isActive ? "#ffffff" : "#94a3b8",
+                  border: "none",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  whiteSpace: "nowrap",
+                  boxShadow: isActive ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none"
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 

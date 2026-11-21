@@ -253,46 +253,94 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
   });
 
   return (
-    <div className="allocation-page space-y-4 animate-in fade-in duration-200">
+    <div
+      className="allocation-page"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+        backgroundColor: "transparent",
+        color: "#f8fafc",
+        width: "100%"
+      }}
+    >
 
       {/* ── UNIFIED ALLOCATION MANAGEMENT HEADER ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1 border-b border-white/[0.06] pb-3">
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "12px",
+          paddingTop: "4px",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+          paddingBottom: "12px",
+          flexWrap: "wrap"
+        }}
+      >
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Allocation Management</h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <h1 style={{ fontSize: "24px", fontWeight: 700, color: "#ffffff", letterSpacing: "-0.02em", margin: 0 }}>
+            Allocation Management
+          </h1>
+          <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", marginBottom: 0 }}>
             The Allocation Summary gives you a complete view of all institutional portfolios and channels
           </p>
         </div>
 
         {/* Sub-navigation tabs: Allocation List | Upload New File | Upload History */}
-        <div className="flex items-center gap-5 shrink-0 self-start md:self-center">
+        <div style={{ display: "flex", alignItems: "center", gap: "20px", flexShrink: 0 }}>
           <button
             onClick={() => setCurrentView("list")}
-            className={`text-xs cursor-pointer pb-0.5 transition-colors ${
-              currentView === "list"
-                ? "font-bold text-white border-b-2 border-white"
-                : "font-medium text-slate-400 hover:text-white"
-            }`}
+            style={{
+              fontSize: "12px",
+              fontWeight: currentView === "list" ? 700 : 500,
+              color: currentView === "list" ? "#ffffff" : "#94a3b8",
+              borderBottom: currentView === "list" ? "2px solid #ffffff" : "2px solid transparent",
+              paddingBottom: "2px",
+              background: "none",
+              borderLeft: "none",
+              borderRight: "none",
+              borderTop: "none",
+              cursor: "pointer",
+              transition: "all 0.15s ease"
+            }}
           >
             Allocation List
           </button>
           <button
             onClick={() => setCurrentView("upload")}
-            className={`text-xs cursor-pointer pb-0.5 transition-colors ${
-              currentView === "upload"
-                ? "font-bold text-white border-b-2 border-white"
-                : "font-medium text-slate-400 hover:text-white"
-            }`}
+            style={{
+              fontSize: "12px",
+              fontWeight: currentView === "upload" ? 700 : 500,
+              color: currentView === "upload" ? "#ffffff" : "#94a3b8",
+              borderBottom: currentView === "upload" ? "2px solid #ffffff" : "2px solid transparent",
+              paddingBottom: "2px",
+              background: "none",
+              borderLeft: "none",
+              borderRight: "none",
+              borderTop: "none",
+              cursor: "pointer",
+              transition: "all 0.15s ease"
+            }}
           >
             Upload New File
           </button>
           <button
             onClick={() => setCurrentView("history")}
-            className={`text-xs cursor-pointer pb-0.5 transition-colors ${
-              currentView === "history"
-                ? "font-bold text-white border-b-2 border-white"
-                : "font-medium text-slate-400 hover:text-white"
-            }`}
+            style={{
+              fontSize: "12px",
+              fontWeight: currentView === "history" ? 700 : 500,
+              color: currentView === "history" ? "#ffffff" : "#94a3b8",
+              borderBottom: currentView === "history" ? "2px solid #ffffff" : "2px solid transparent",
+              paddingBottom: "2px",
+              background: "none",
+              borderLeft: "none",
+              borderRight: "none",
+              borderTop: "none",
+              cursor: "pointer",
+              transition: "all 0.15s ease"
+            }}
           >
             Upload History
           </button>
@@ -303,131 +351,233 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
           1. ALLOCATION LIST VIEW (MATCHES REFERENCE SCREENSHOT 100%)
       ───────────────────────────────────────────────────────────── */}
       {currentView === "list" && (
-        <div className="space-y-3">
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
           
           {/* Filter Pills Bar */}
-          <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-1 text-xs">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              overflowX: "auto",
+              paddingTop: "4px",
+              paddingBottom: "4px",
+              fontSize: "12px"
+            }}
+          >
             <button
               onClick={() => setActiveFilter("all")}
-              className={`px-3 py-1 rounded-full cursor-pointer whitespace-nowrap transition-all ${
-                activeFilter === "all"
-                  ? "bg-blue-600 text-white font-semibold shadow-sm"
-                  : "bg-[#0a1535] border border-slate-700/60 text-slate-300 hover:text-white font-medium"
-              }`}
+              style={{
+                padding: "4px 12px",
+                borderRadius: "9999px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                fontSize: "12px",
+                fontWeight: activeFilter === "all" ? 600 : 500,
+                backgroundColor: activeFilter === "all" ? "#1d4ed8" : "#0a1535",
+                color: activeFilter === "all" ? "#ffffff" : "#cbd5e1",
+                border: activeFilter === "all" ? "1px solid #1d4ed8" : "1px solid rgba(51, 65, 85, 0.6)",
+                boxShadow: activeFilter === "all" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none",
+                transition: "all 0.15s ease"
+              }}
             >
               All Allocations ({allocations.length})
             </button>
             <button
               onClick={() => setActiveFilter("unallocated")}
-              className={`px-3 py-1 rounded-full cursor-pointer whitespace-nowrap transition-all ${
-                activeFilter === "unallocated"
-                  ? "bg-blue-600 text-white font-semibold shadow-sm"
-                  : "bg-[#0a1535] border border-slate-700/60 text-slate-300 hover:text-white font-medium"
-              }`}
+              style={{
+                padding: "4px 12px",
+                borderRadius: "9999px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                fontSize: "12px",
+                fontWeight: activeFilter === "unallocated" ? 600 : 500,
+                backgroundColor: activeFilter === "unallocated" ? "#1d4ed8" : "#0a1535",
+                color: activeFilter === "unallocated" ? "#ffffff" : "#cbd5e1",
+                border: activeFilter === "unallocated" ? "1px solid #1d4ed8" : "1px solid rgba(51, 65, 85, 0.6)",
+                boxShadow: activeFilter === "unallocated" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none",
+                transition: "all 0.15s ease"
+              }}
             >
               Unallocated ({allocations.filter((a) => a.statusType === "unallocated").length})
             </button>
             <button
               onClick={() => setActiveFilter("100")}
-              className={`px-3 py-1 rounded-full cursor-pointer whitespace-nowrap transition-all ${
-                activeFilter === "100"
-                  ? "bg-blue-600 text-white font-semibold shadow-sm"
-                  : "bg-[#0a1535] border border-slate-700/60 text-slate-300 hover:text-white font-medium"
-              }`}
+              style={{
+                padding: "4px 12px",
+                borderRadius: "9999px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                fontSize: "12px",
+                fontWeight: activeFilter === "100" ? 600 : 500,
+                backgroundColor: activeFilter === "100" ? "#1d4ed8" : "#0a1535",
+                color: activeFilter === "100" ? "#ffffff" : "#cbd5e1",
+                border: activeFilter === "100" ? "1px solid #1d4ed8" : "1px solid rgba(51, 65, 85, 0.6)",
+                boxShadow: activeFilter === "100" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none",
+                transition: "all 0.15s ease"
+              }}
             >
               100% Allocated ({allocations.filter((a) => a.statusType === "100").length})
             </button>
             <button
               onClick={() => setActiveFilter("partially")}
-              className={`px-3 py-1 rounded-full cursor-pointer whitespace-nowrap transition-all ${
-                activeFilter === "partially"
-                  ? "bg-blue-600 text-white font-semibold shadow-sm"
-                  : "bg-[#0a1535] border border-slate-700/60 text-slate-300 hover:text-white font-medium"
-              }`}
+              style={{
+                padding: "4px 12px",
+                borderRadius: "9999px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                fontSize: "12px",
+                fontWeight: activeFilter === "partially" ? 600 : 500,
+                backgroundColor: activeFilter === "partially" ? "#1d4ed8" : "#0a1535",
+                color: activeFilter === "partially" ? "#ffffff" : "#cbd5e1",
+                border: activeFilter === "partially" ? "1px solid #1d4ed8" : "1px solid rgba(51, 65, 85, 0.6)",
+                boxShadow: activeFilter === "partially" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none",
+                transition: "all 0.15s ease"
+              }}
             >
               Partially Allocated ({allocations.filter((a) => a.statusType === "partially").length})
             </button>
             <button
               onClick={() => setActiveFilter("expiring")}
-              className={`px-3 py-1 rounded-full cursor-pointer whitespace-nowrap transition-all ${
-                activeFilter === "expiring"
-                  ? "bg-blue-600 text-white font-semibold shadow-sm"
-                  : "bg-[#0a1535] border border-slate-700/60 text-slate-300 hover:text-white font-medium"
-              }`}
+              style={{
+                padding: "4px 12px",
+                borderRadius: "9999px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                fontSize: "12px",
+                fontWeight: activeFilter === "expiring" ? 600 : 500,
+                backgroundColor: activeFilter === "expiring" ? "#1d4ed8" : "#0a1535",
+                color: activeFilter === "expiring" ? "#ffffff" : "#cbd5e1",
+                border: activeFilter === "expiring" ? "1px solid #1d4ed8" : "1px solid rgba(51, 65, 85, 0.6)",
+                boxShadow: activeFilter === "expiring" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none",
+                transition: "all 0.15s ease"
+              }}
             >
               Expiring in 5 days (0)
             </button>
             <button
               onClick={() => setActiveFilter("closed")}
-              className={`px-3 py-1 rounded-full cursor-pointer whitespace-nowrap transition-all ${
-                activeFilter === "closed"
-                  ? "bg-blue-600 text-white font-semibold shadow-sm"
-                  : "bg-[#0a1535] border border-slate-700/60 text-slate-300 hover:text-white font-medium"
-              }`}
+              style={{
+                padding: "4px 12px",
+                borderRadius: "9999px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                fontSize: "12px",
+                fontWeight: activeFilter === "closed" ? 600 : 500,
+                backgroundColor: activeFilter === "closed" ? "#1d4ed8" : "#0a1535",
+                color: activeFilter === "closed" ? "#ffffff" : "#cbd5e1",
+                border: activeFilter === "closed" ? "1px solid #1d4ed8" : "1px solid rgba(51, 65, 85, 0.6)",
+                boxShadow: activeFilter === "closed" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none",
+                transition: "all 0.15s ease"
+              }}
             >
               Closed ({allocations.filter((a) => a.statusType === "closed").length})
             </button>
           </div>
 
           {/* Allocation Table - Direct on canvas matching screenshot */}
-          <div className="w-full overflow-x-auto pt-1">
-            <table className="w-full text-left text-xs whitespace-nowrap">
-              <thead className="border-b border-white/[0.08] text-slate-400 text-[11px] font-semibold uppercase tracking-wider">
+          <div style={{ width: "100%", overflowX: "auto", paddingTop: "4px" }}>
+            <table style={{ width: "100%", textAlign: "left", fontSize: "12px", whiteSpace: "nowrap", borderCollapse: "collapse" }}>
+              <thead style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "#94a3b8", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <tr>
-                  <th className="py-3 pl-1 pr-4">ALLOCATION NAME</th>
-                  <th className="py-3 px-4">PRODUCT</th>
-                  <th className="py-3 px-4">BUCKET</th>
-                  <th className="py-3 px-4">TOTAL ACCOUNTS</th>
-                  <th className="py-3 px-4">COLLECTABLE</th>
-                  <th className="py-3 px-4">OUTSTANDING</th>
-                  <th className="py-3 px-4">STATUS</th>
-                  <th className="py-3 pl-4 pr-1 text-right">ACTIONS</th>
+                  <th style={{ padding: "12px 16px 12px 4px" }}>ALLOCATION NAME</th>
+                  <th style={{ padding: "12px 16px" }}>PRODUCT</th>
+                  <th style={{ padding: "12px 16px" }}>BUCKET</th>
+                  <th style={{ padding: "12px 16px" }}>TOTAL ACCOUNTS</th>
+                  <th style={{ padding: "12px 16px" }}>COLLECTABLE</th>
+                  <th style={{ padding: "12px 16px" }}>OUTSTANDING</th>
+                  <th style={{ padding: "12px 16px" }}>STATUS</th>
+                  <th style={{ padding: "12px 4px 12px 16px", textAlign: "right" }}>ACTIONS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.05]">
+              <tbody>
                 {filteredAllocations.map((item) => (
-                  <tr key={item.id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3.5 pl-1 pr-4 font-semibold text-white flex items-center gap-2.5">
-                      <FileSpreadsheet className="w-4 h-4 text-blue-500 shrink-0" />
-                      <span className="truncate max-w-md" title={item.name}>{item.name}</span>
+                  <tr
+                    key={item.id}
+                    style={{
+                      borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+                      transition: "background-color 0.15s ease"
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.02)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+                  >
+                    <td style={{ padding: "14px 16px 14px 4px", fontWeight: 600, color: "#ffffff" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <FileSpreadsheet style={{ width: "16px", height: "16px", color: "#3b82f6", flexShrink: 0 }} />
+                        <span style={{ maxWidth: "480px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={item.name}>
+                          {item.name}
+                        </span>
+                      </div>
                     </td>
 
-                    <td className="py-3.5 px-4 text-slate-300">{item.product}</td>
+                    <td style={{ padding: "14px 16px", color: "#cbd5e1" }}>{item.product}</td>
 
-                    <td className="py-3.5 px-4">
-                      <span className="font-bold text-amber-500">
+                    <td style={{ padding: "14px 16px" }}>
+                      <span style={{ fontWeight: 700, color: "#f59e0b" }}>
                         {item.bucket}
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4 font-bold text-white">{item.accounts}</td>
+                    <td style={{ padding: "14px 16px", fontWeight: 700, color: "#ffffff" }}>{item.accounts}</td>
 
-                    <td className="py-3.5 px-4 font-bold text-white">{item.collectable}</td>
+                    <td style={{ padding: "14px 16px", fontWeight: 700, color: "#ffffff" }}>{item.collectable}</td>
 
-                    <td className="py-3.5 px-4 text-slate-400 font-normal">{item.outstanding}</td>
+                    <td style={{ padding: "14px 16px", color: "#94a3b8", fontWeight: 400 }}>{item.outstanding}</td>
 
-                    <td className="py-3.5 px-4 text-slate-300">{item.status}</td>
+                    <td style={{ padding: "14px 16px", color: "#cbd5e1" }}>{item.status}</td>
 
-                    <td className="py-3.5 pl-4 pr-1 text-right relative">
+                    <td style={{ padding: "14px 4px 14px 16px", textAlign: "right", position: "relative" }}>
                       <button
                         onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
-                        className="p-1 rounded hover:bg-white/[0.08] text-slate-400 hover:text-white cursor-pointer"
+                        style={{
+                          padding: "4px",
+                          borderRadius: "4px",
+                          backgroundColor: "transparent",
+                          border: "none",
+                          color: "#94a3b8",
+                          cursor: "pointer"
+                        }}
                         title="Actions"
                       >
-                        <MoreVertical className="w-4 h-4" />
+                        <MoreVertical style={{ width: "16px", height: "16px" }} />
                       </button>
 
                       {/* Three-dot dropdown menu */}
                       {activeMenuId === item.id && (
                         <div
-                          className="absolute right-0 mt-1 w-52 rounded-xl bg-[#051336] border border-white/[0.1] p-1.5 shadow-2xl z-50 text-left animate-in fade-in zoom-in-95"
+                          style={{
+                            position: "absolute",
+                            right: 0,
+                            marginTop: "4px",
+                            width: "208px",
+                            borderRadius: "12px",
+                            backgroundColor: "#051336",
+                            border: "1px solid rgba(255, 255, 255, 0.12)",
+                            padding: "6px",
+                            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
+                            zIndex: 50,
+                            textAlign: "left"
+                          }}
                           onClick={() => setActiveMenuId(null)}
                         >
                           <button
                             onClick={() => onOpenPortfolioDashboard && onOpenPortfolioDashboard(item.id)}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/[0.08] rounded-lg cursor-pointer"
+                            style={{
+                              width: "100%",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              padding: "8px 12px",
+                              fontSize: "12px",
+                              fontWeight: 600,
+                              color: "#e2e8f0",
+                              backgroundColor: "transparent",
+                              border: "none",
+                              borderRadius: "8px",
+                              cursor: "pointer"
+                            }}
                           >
-                            <Eye className="w-3.5 h-3.5 text-blue-400" />
+                            <Eye style={{ width: "14px", height: "14px", color: "#60a5fa" }} />
                             <span>View Dashboard</span>
                           </button>
 
@@ -436,9 +586,22 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
                               setTargetAllocation(item);
                               setShowAddAccountsModal(true);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/[0.08] rounded-lg cursor-pointer"
+                            style={{
+                              width: "100%",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              padding: "8px 12px",
+                              fontSize: "12px",
+                              fontWeight: 600,
+                              color: "#e2e8f0",
+                              backgroundColor: "transparent",
+                              border: "none",
+                              borderRadius: "8px",
+                              cursor: "pointer"
+                            }}
                           >
-                            <Plus className="w-3.5 h-3.5 text-emerald-400" />
+                            <Plus style={{ width: "14px", height: "14px", color: "#34d399" }} />
                             <span>Add Accounts</span>
                           </button>
 
@@ -447,17 +610,43 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
                               setTargetAllocation(item);
                               setShowUnsubscribeModal(true);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/[0.08] rounded-lg cursor-pointer"
+                            style={{
+                              width: "100%",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              padding: "8px 12px",
+                              fontSize: "12px",
+                              fontWeight: 600,
+                              color: "#e2e8f0",
+                              backgroundColor: "transparent",
+                              border: "none",
+                              borderRadius: "8px",
+                              cursor: "pointer"
+                            }}
                           >
-                            <X className="w-3.5 h-3.5 text-amber-400" />
+                            <X style={{ width: "14px", height: "14px", color: "#fbbf24" }} />
                             <span>Unsubscribe Accounts</span>
                           </button>
 
                           <button
                             onClick={handleDownloadSample}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/[0.08] rounded-lg cursor-pointer"
+                            style={{
+                              width: "100%",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              padding: "8px 12px",
+                              fontSize: "12px",
+                              fontWeight: 600,
+                              color: "#e2e8f0",
+                              backgroundColor: "transparent",
+                              border: "none",
+                              borderRadius: "8px",
+                              cursor: "pointer"
+                            }}
                           >
-                            <Download className="w-3.5 h-3.5 text-blue-400" />
+                            <Download style={{ width: "14px", height: "14px", color: "#60a5fa" }} />
                             <span>Download Allocation</span>
                           </button>
 
@@ -466,9 +655,22 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
                               setTargetAllocation(item);
                               setShowDeleteModal(true);
                             }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 rounded-lg cursor-pointer"
+                            style={{
+                              width: "100%",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              padding: "8px 12px",
+                              fontSize: "12px",
+                              fontWeight: 600,
+                              color: "#f87171",
+                              backgroundColor: "transparent",
+                              border: "none",
+                              borderRadius: "8px",
+                              cursor: "pointer"
+                            }}
                           >
-                            <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                            <Trash2 style={{ width: "14px", height: "14px", color: "#f87171" }} />
                             <span>Delete Allocation</span>
                           </button>
                         </div>
@@ -487,106 +689,173 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
           2. UPLOAD NEW FILE VIEW
       ───────────────────────────────────────────────────────────── */}
       {currentView === "upload" && (
-        <div className="space-y-6 animate-in fade-in duration-150 pt-2">
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px", paddingTop: "8px" }}>
           
           {/* Form Card */}
-          <form onSubmit={handleUploadSubmit} className="p-6 rounded-2xl bg-[#051336] border border-white/[0.08] space-y-6 shadow-sm">
+          <form
+            onSubmit={handleUploadSubmit}
+            style={{
+              padding: "24px",
+              borderRadius: "16px",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "24px",
+              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.3)"
+            }}
+          >
             
             {/* Drag & Drop File Zone */}
             <div
               onClick={() => fileInputRef.current && fileInputRef.current.click()}
-              className="border-2 border-dashed border-white/[0.15] hover:border-blue-500/60 rounded-2xl p-8 text-center transition-all cursor-pointer bg-white/[0.02] hover:bg-white/[0.04] group"
+              style={{
+                border: "2px dashed rgba(255, 255, 255, 0.15)",
+                borderRadius: "16px",
+                padding: "32px",
+                textAlign: "center",
+                cursor: "pointer",
+                backgroundColor: "rgba(255, 255, 255, 0.02)",
+                transition: "all 0.15s ease"
+              }}
             >
               <input
                 ref={fileInputRef}
                 type="file"
                 accept=".xls,.xlsx,.xlsb,.csv"
                 onChange={(e) => setSelectedFile(e.target.files[0])}
-                className="hidden"
+                style={{ display: "none" }}
               />
-              <UploadCloud className="w-12 h-12 mx-auto text-blue-400 mb-2 group-hover:scale-110 transition-transform" />
-              <div className="font-bold text-sm text-white">
+              <UploadCloud style={{ width: "48px", height: "48px", margin: "0 auto 8px auto", color: "#60a5fa" }} />
+              <div style={{ fontWeight: 700, fontSize: "14px", color: "#ffffff" }}>
                 {selectedFile ? selectedFile.name : "Drag & drop files or Browse"}
               </div>
-              <p className="text-xs text-slate-400 mt-1">
-                Supported formats: <strong className="text-slate-200">.xls, .xlsx, .xlsb, .csv</strong>
+              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>
+                Supported formats: <strong style={{ color: "#e2e8f0" }}>.xls, .xlsx, .xlsb, .csv</strong>
               </p>
             </div>
 
             {/* Inputs Grid: Product, Bucket, Outstanding (TOS), Duration */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
               
               {/* Product: 15 exact products */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-white flex items-center gap-1">
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 700, color: "#ffffff", display: "flex", alignItems: "center", gap: "4px" }}>
                   <span>Product:</span>
-                  <span className="text-rose-400">*</span>
+                  <span style={{ color: "#f87171" }}>*</span>
                 </label>
                 <select
                   value={selectedProduct}
                   onChange={(e) => setSelectedProduct(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-[#0a1639] border border-white/[0.1] text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: "12px",
+                    backgroundColor: "#0a1639",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    fontSize: "12px",
+                    color: "#ffffff",
+                    outline: "none",
+                    cursor: "pointer"
+                  }}
                   required
                 >
                   {PRODUCTS.map((prod) => (
-                    <option key={prod} value={prod} className="bg-[#051336] text-white">{prod}</option>
+                    <option key={prod} value={prod} style={{ backgroundColor: "#051336", color: "#ffffff" }}>{prod}</option>
                   ))}
                 </select>
               </div>
 
               {/* Bucket: 16 exact buckets */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-white flex items-center gap-1">
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 700, color: "#ffffff", display: "flex", alignItems: "center", gap: "4px" }}>
                   <span>Bucket:</span>
-                  <span className="text-rose-400">*</span>
+                  <span style={{ color: "#f87171" }}>*</span>
                 </label>
                 <select
                   value={selectedBucket}
                   onChange={(e) => setSelectedBucket(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-[#0a1639] border border-white/[0.1] text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: "12px",
+                    backgroundColor: "#0a1639",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    fontSize: "12px",
+                    color: "#ffffff",
+                    outline: "none",
+                    cursor: "pointer"
+                  }}
                   required
                 >
                   {BUCKETS.map((b) => (
-                    <option key={b} value={b} className="bg-[#051336] text-white">{b}</option>
+                    <option key={b} value={b} style={{ backgroundColor: "#051336", color: "#ffffff" }}>{b}</option>
                   ))}
                 </select>
               </div>
 
               {/* Outstanding: * TOS */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-white flex items-center gap-1">
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 700, color: "#ffffff", display: "flex", alignItems: "center", gap: "4px" }}>
                   <span>Outstanding:</span>
-                  <span className="text-rose-400">*</span>
+                  <span style={{ color: "#f87171" }}>*</span>
                 </label>
                 <input
                   type="text"
                   placeholder="TOS (e.g. ₹4.74 Cr)"
                   value={tosAmount}
                   onChange={(e) => setTosAmount(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-[#0a1639] border border-white/[0.1] text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: "12px",
+                    backgroundColor: "#0a1639",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    fontSize: "12px",
+                    color: "#ffffff",
+                    outline: "none"
+                  }}
                   required
                 />
               </div>
 
               {/* Duration: Start date, End date */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-white flex items-center gap-1">
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label style={{ fontSize: "12px", fontWeight: 700, color: "#ffffff", display: "flex", alignItems: "center", gap: "4px" }}>
                   <span>Duration:</span>
-                  <span className="text-rose-400">*</span>
+                  <span style={{ color: "#f87171" }}>*</span>
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-2 py-2 rounded-xl bg-[#0a1639] border border-white/[0.1] text-xs text-white focus:outline-none"
+                    style={{
+                      width: "100%",
+                      padding: "8px",
+                      borderRadius: "12px",
+                      backgroundColor: "#0a1639",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      fontSize: "12px",
+                      color: "#ffffff",
+                      outline: "none"
+                    }}
                     required
                   />
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-2 py-2 rounded-xl bg-[#0a1639] border border-white/[0.1] text-xs text-white focus:outline-none"
+                    style={{
+                      width: "100%",
+                      padding: "8px",
+                      borderRadius: "12px",
+                      backgroundColor: "#0a1639",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      fontSize: "12px",
+                      color: "#ffffff",
+                      outline: "none"
+                    }}
                     required
                   />
                 </div>
@@ -595,36 +864,75 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
             </div>
 
             {/* Template Download & Upload / Proceed Buttons */}
-            <div className="pt-4 border-t border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div
+              style={{
+                paddingTop: "16px",
+                borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "16px",
+                flexWrap: "wrap"
+              }}
+            >
               <div>
                 <button
                   type="button"
                   onClick={handleDownloadSample}
-                  className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1.5 cursor-pointer"
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    color: "#60a5fa",
+                    backgroundColor: "transparent",
+                    border: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    cursor: "pointer"
+                  }}
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download style={{ width: "14px", height: "14px" }} />
                   <span>Download Sample Allocation File</span>
                 </button>
-                <p className="text-[11px] text-slate-400 mt-0.5">
+                <p style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>
                   Use this template for correctly formatted, smooth processing.
                 </p>
               </div>
 
               <button
                 type="submit"
-                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all cursor-pointer self-start sm:self-auto"
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "12px",
+                  backgroundColor: "#2563eb",
+                  color: "#ffffff",
+                  fontWeight: 700,
+                  fontSize: "12px",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 6px rgba(37, 99, 235, 0.2)"
+                }}
               >
                 Upload &amp; Proceed
               </button>
             </div>
 
             {uploadMessage && (
-              <div className={`p-3.5 rounded-xl border text-xs flex items-center gap-2 ${
-                uploadMessage.type === "success"
-                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                  : "bg-rose-500/10 border-rose-500/20 text-rose-400"
-              }`}>
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <div
+                style={{
+                  padding: "14px",
+                  borderRadius: "12px",
+                  border: uploadMessage.type === "success" ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid rgba(244, 63, 94, 0.3)",
+                  fontSize: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  backgroundColor: uploadMessage.type === "success" ? "rgba(16, 185, 129, 0.1)" : "rgba(244, 63, 94, 0.1)",
+                  color: uploadMessage.type === "success" ? "#34d399" : "#fb7185"
+                }}
+              >
+                <CheckCircle2 style={{ width: "16px", height: "16px", flexShrink: 0 }} />
                 <span>{uploadMessage.text}</span>
               </div>
             )}
@@ -638,34 +946,55 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
           3. UPLOAD HISTORY VIEW
       ───────────────────────────────────────────────────────────── */}
       {currentView === "history" && (
-        <div className="space-y-6 animate-in fade-in duration-150 pt-2">
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px", paddingTop: "8px" }}>
           
           {/* History Table */}
-          <div className="p-5 rounded-2xl bg-[#051336] border border-white/[0.08] space-y-4 shadow-sm">
-            <h3 className="text-sm font-bold text-white">Processed Allocation Batches</h3>
+          <div
+            style={{
+              padding: "20px",
+              borderRadius: "16px",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.3)"
+            }}
+          >
+            <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Processed Allocation Batches</h3>
             
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead className="border-b border-white/[0.08] text-slate-400 font-semibold uppercase text-[11px]">
+            <div style={{ width: "100%", overflowX: "auto" }}>
+              <table style={{ width: "100%", textAlign: "left", fontSize: "12px", whiteSpace: "nowrap", borderCollapse: "collapse" }}>
+                <thead style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", fontSize: "11px" }}>
                   <tr>
-                    <th className="p-3 rounded-l-lg">File Name</th>
-                    <th className="p-3">Uploaded By</th>
-                    <th className="p-3">Records Ingested</th>
-                    <th className="p-3">Date &amp; Time</th>
-                    <th className="p-3 text-right rounded-r-lg">Ingestion Status</th>
+                    <th style={{ padding: "12px" }}>File Name</th>
+                    <th style={{ padding: "12px" }}>Uploaded By</th>
+                    <th style={{ padding: "12px" }}>Records Ingested</th>
+                    <th style={{ padding: "12px" }}>Date &amp; Time</th>
+                    <th style={{ padding: "12px", textAlign: "right" }}>Ingestion Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.05]">
+                <tbody>
                   {historyLogs.map((log, idx) => (
-                    <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
-                      <td className="p-3 font-semibold text-white flex items-center gap-2">
-                        <FileSpreadsheet className="w-4 h-4 text-blue-500 shrink-0" />
-                        <span>{log.fileName}</span>
+                    <tr
+                      key={idx}
+                      style={{
+                        borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+                        transition: "background-color 0.15s ease"
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.02)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+                    >
+                      <td style={{ padding: "12px", fontWeight: 600, color: "#ffffff" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <FileSpreadsheet style={{ width: "16px", height: "16px", color: "#3b82f6", flexShrink: 0 }} />
+                          <span>{log.fileName}</span>
+                        </div>
                       </td>
-                      <td className="p-3 text-slate-300">{log.uploadedBy}</td>
-                      <td className="p-3 font-bold text-white">{log.records} accounts</td>
-                      <td className="p-3 font-mono text-slate-400">{log.dateTime}</td>
-                      <td className="p-3 text-right font-bold text-emerald-400">
+                      <td style={{ padding: "12px", color: "#cbd5e1" }}>{log.uploadedBy}</td>
+                      <td style={{ padding: "12px", fontWeight: 700, color: "#ffffff" }}>{log.records} accounts</td>
+                      <td style={{ padding: "12px", fontFamily: "monospace", color: "#94a3b8" }}>{log.dateTime}</td>
+                      <td style={{ padding: "12px", textAlign: "right", fontWeight: 700, color: "#34d399" }}>
                         {log.status}
                       </td>
                     </tr>
@@ -684,38 +1013,96 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
 
       {/* Unsubscribe Accounts Modal */}
       {showUnsubscribeModal && targetAllocation && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#051336] border border-white/[0.1] rounded-2xl p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between">
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 50,
+            backgroundColor: "rgba(0, 0, 0, 0.75)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px"
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "448px",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              borderRadius: "16px",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
-                <h4 className="font-bold text-base text-white">Unsubscribe Accounts</h4>
-                <p className="text-xs text-slate-400 truncate max-w-xs">{targetAllocation.name}</p>
+                <h4 style={{ fontWeight: 700, fontSize: "16px", color: "#ffffff", margin: 0 }}>Unsubscribe Accounts</h4>
+                <p style={{ fontSize: "12px", color: "#94a3b8", maxWidth: "320px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "4px 0 0 0" }}>
+                  {targetAllocation.name}
+                </p>
               </div>
-              <button onClick={() => setShowUnsubscribeModal(false)} className="p-1 rounded-lg hover:bg-white/[0.08] text-slate-400 hover:text-white cursor-pointer">
-                <X className="w-4 h-4" />
+              <button
+                onClick={() => setShowUnsubscribeModal(false)}
+                style={{ padding: "4px", borderRadius: "8px", background: "none", border: "none", color: "#94a3b8", cursor: "pointer" }}
+              >
+                <X style={{ width: "16px", height: "16px" }} />
               </button>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p style={{ fontSize: "12px", color: "#cbd5e1", lineHeight: 1.5, margin: 0 }}>
               Upload account list to instantly pause recovery contacts and mark institutional resolution.
             </p>
 
-            <div className="border border-dashed border-white/[0.15] rounded-xl p-6 text-center bg-white/[0.02] hover:bg-white/[0.05] transition-colors cursor-pointer">
-              <UploadCloud className="w-8 h-8 mx-auto text-blue-400 mb-1" />
-              <div className="text-xs font-semibold text-white">Drag &amp; drop accounts file or browse</div>
-              <span className="text-[10px] text-slate-400">Supported: .csv, .xlsx</span>
+            <div
+              style={{
+                border: "1px dashed rgba(255, 255, 255, 0.15)",
+                borderRadius: "12px",
+                padding: "24px",
+                textAlign: "center",
+                backgroundColor: "rgba(255, 255, 255, 0.02)",
+                cursor: "pointer"
+              }}
+            >
+              <UploadCloud style={{ width: "32px", height: "32px", margin: "0 auto 4px auto", color: "#60a5fa" }} />
+              <div style={{ fontSize: "12px", fontWeight: 600, color: "#ffffff" }}>Drag &amp; drop accounts file or browse</div>
+              <span style={{ fontSize: "10px", color: "#94a3b8" }}>Supported: .csv, .xlsx</span>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", paddingTop: "8px" }}>
               <button
                 onClick={() => setShowUnsubscribeModal(false)}
-                className="px-4 py-2 rounded-xl bg-white/[0.06] text-xs font-bold text-slate-300 hover:text-white cursor-pointer"
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "rgba(255, 255, 255, 0.06)",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "#cbd5e1",
+                  border: "none",
+                  cursor: "pointer"
+                }}
               >
                 Cancel
               </button>
               <button
                 onClick={() => setShowUnsubscribeModal(false)}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-sm cursor-pointer"
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#2563eb",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "#ffffff",
+                  border: "none",
+                  boxShadow: "0 2px 4px rgba(37, 99, 235, 0.2)",
+                  cursor: "pointer"
+                }}
               >
                 Process Unsubscribe
               </button>
@@ -726,38 +1113,96 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
 
       {/* Add Accounts Modal (Upload New Allocation File) */}
       {showAddAccountsModal && targetAllocation && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#051336] border border-white/[0.1] rounded-2xl p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between">
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 50,
+            backgroundColor: "rgba(0, 0, 0, 0.75)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px"
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "448px",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              borderRadius: "16px",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
-                <h4 className="font-bold text-base text-white">Upload New Allocation File</h4>
-                <p className="text-xs text-slate-400 truncate max-w-xs">{targetAllocation.name}</p>
+                <h4 style={{ fontWeight: 700, fontSize: "16px", color: "#ffffff", margin: 0 }}>Upload New Allocation File</h4>
+                <p style={{ fontSize: "12px", color: "#94a3b8", maxWidth: "320px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "4px 0 0 0" }}>
+                  {targetAllocation.name}
+                </p>
               </div>
-              <button onClick={() => setShowAddAccountsModal(false)} className="p-1 rounded-lg hover:bg-white/[0.08] text-slate-400 hover:text-white cursor-pointer">
-                <X className="w-4 h-4" />
+              <button
+                onClick={() => setShowAddAccountsModal(false)}
+                style={{ padding: "4px", borderRadius: "8px", background: "none", border: "none", color: "#94a3b8", cursor: "pointer" }}
+              >
+                <X style={{ width: "16px", height: "16px" }} />
               </button>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p style={{ fontSize: "12px", color: "#cbd5e1", lineHeight: 1.5, margin: 0 }}>
               Append new debtor cases into this existing institutional portfolio bucket.
             </p>
 
-            <div className="border border-dashed border-white/[0.15] rounded-xl p-6 text-center bg-white/[0.02] hover:bg-white/[0.05] transition-colors cursor-pointer">
-              <UploadCloud className="w-8 h-8 mx-auto text-emerald-400 mb-1" />
-              <div className="text-xs font-semibold text-white">Drop .csv, .xlsx to append accounts</div>
-              <span className="text-[10px] text-slate-400">Accounts auto-deduplicated</span>
+            <div
+              style={{
+                border: "1px dashed rgba(255, 255, 255, 0.15)",
+                borderRadius: "12px",
+                padding: "24px",
+                textAlign: "center",
+                backgroundColor: "rgba(255, 255, 255, 0.02)",
+                cursor: "pointer"
+              }}
+            >
+              <UploadCloud style={{ width: "32px", height: "32px", margin: "0 auto 4px auto", color: "#34d399" }} />
+              <div style={{ fontSize: "12px", fontWeight: 600, color: "#ffffff" }}>Drop .csv, .xlsx to append accounts</div>
+              <span style={{ fontSize: "10px", color: "#94a3b8" }}>Accounts auto-deduplicated</span>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", paddingTop: "8px" }}>
               <button
                 onClick={() => setShowAddAccountsModal(false)}
-                className="px-4 py-2 rounded-xl bg-white/[0.06] text-xs font-bold text-slate-300 hover:text-white cursor-pointer"
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "rgba(255, 255, 255, 0.06)",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "#cbd5e1",
+                  border: "none",
+                  cursor: "pointer"
+                }}
               >
                 Cancel
               </button>
               <button
                 onClick={() => setShowAddAccountsModal(false)}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white shadow-sm cursor-pointer"
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#059669",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "#ffffff",
+                  border: "none",
+                  boxShadow: "0 2px 4px rgba(5, 150, 105, 0.2)",
+                  cursor: "pointer"
+                }}
               >
                 Upload &amp; Merge
               </button>
@@ -768,21 +1213,55 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
 
       {/* Delete Allocation Confirmation Modal */}
       {showDeleteModal && targetAllocation && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-[#051336] border border-white/[0.1] rounded-2xl p-6 space-y-4 shadow-2xl animate-in fade-in zoom-in-95">
-            <div className="flex items-center gap-2 text-rose-400 font-bold text-base">
-              <Trash2 className="w-5 h-5" />
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 50,
+            backgroundColor: "rgba(0, 0, 0, 0.75)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px"
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "384px",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              borderRadius: "16px",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#f87171", fontWeight: 700, fontSize: "16px" }}>
+              <Trash2 style={{ width: "20px", height: "20px" }} />
               <span>Confirm Portfolio Deletion</span>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Are you sure you want to delete <strong className="text-white">{targetAllocation.name}</strong>? This will unlink active dials and ground tasks permanently.
+            <p style={{ fontSize: "12px", color: "#cbd5e1", lineHeight: 1.5, margin: 0 }}>
+              Are you sure you want to delete <strong style={{ color: "#ffffff" }}>{targetAllocation.name}</strong>? This will unlink active dials and ground tasks permanently.
             </p>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", paddingTop: "8px" }}>
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 rounded-xl bg-white/[0.06] text-xs font-bold text-slate-300 hover:text-white cursor-pointer"
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "rgba(255, 255, 255, 0.06)",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "#cbd5e1",
+                  border: "none",
+                  cursor: "pointer"
+                }}
               >
                 Cancel
               </button>
@@ -791,7 +1270,17 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
                   setAllocations(allocations.filter((a) => a.id !== targetAllocation.id));
                   setShowDeleteModal(false);
                 }}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-bold text-white shadow-sm cursor-pointer"
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#e11d48",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "#ffffff",
+                  border: "none",
+                  boxShadow: "0 2px 4px rgba(225, 29, 72, 0.2)",
+                  cursor: "pointer"
+                }}
               >
                 Delete
               </button>

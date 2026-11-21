@@ -122,7 +122,17 @@ export default function AdminPortalShell({
   ];
 
   return (
-    <div className={`min-h-screen bg-background text-foreground flex flex-col theme-${theme} admin-portal-root`} data-theme={theme}>
+    <div
+      className={`min-h-screen bg-background text-foreground flex flex-col theme-${theme} admin-portal-root`}
+      data-theme={theme}
+      style={{
+        minHeight: "100vh",
+        backgroundColor: theme === "light" ? "#f8fafc" : "#01081f",
+        color: theme === "light" ? "#0f172a" : "#f8fafc",
+        display: "flex",
+        flexDirection: "column"
+      }}
+    >
       
       {/* ── TOP NAVBAR ── */}
       <AdminNavbar
@@ -138,16 +148,59 @@ export default function AdminPortalShell({
       />
 
       {/* ── MAIN CONTENT CONTAINER ── */}
-      <div className="flex-1 max-w-[1440px] w-full mx-auto px-6 py-4">
+      <div
+        className="flex-1 max-w-[1440px] w-full mx-auto px-6 py-4"
+        style={{
+          flex: 1,
+          maxWidth: "1440px",
+          width: "100%",
+          marginLeft: "auto",
+          marginRight: "auto",
+          paddingLeft: "24px",
+          paddingRight: "24px",
+          paddingTop: "16px",
+          paddingBottom: "24px"
+        }}
+      >
         
         {/* WHEN TOP NAV IS "HOME" */}
         {topNav === "home" && (
-          <div className="flex flex-col md:flex-row gap-6">
+          <div
+            className="flex flex-col md:flex-row gap-6"
+            style={{ display: "flex", gap: "24px", flexDirection: "row" }}
+          >
             
             {/* Left Home Sidebar */}
-            <aside className="w-full md:w-64 lg:w-72 shrink-0">
-              <div className="sticky top-24 rounded-2xl bg-card border border-border p-3 space-y-1.5 shadow-sm">
-                <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/60 mb-2">
+            <aside
+              className="w-full md:w-64 lg:w-72 shrink-0"
+              style={{ width: "270px", flexShrink: 0 }}
+            >
+              <div
+                style={{
+                  position: "sticky",
+                  top: "80px",
+                  borderRadius: "16px",
+                  backgroundColor: theme === "light" ? "#ffffff" : "#041030",
+                  border: theme === "light" ? "1px solid #e2e8f0" : "1px solid rgba(255, 255, 255, 0.08)",
+                  padding: "12px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+                }}
+              >
+                <div
+                  style={{
+                    padding: "8px 12px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    color: theme === "light" ? "#64748b" : "#94a3b8",
+                    borderBottom: theme === "light" ? "1px solid #e2e8f0" : "1px solid rgba(255, 255, 255, 0.08)",
+                    marginBottom: "6px"
+                  }}
+                >
                   Operations Command
                 </div>
 
@@ -163,24 +216,77 @@ export default function AdminPortalShell({
                           setSelectedPortfolioId(null);
                         }
                       }}
-                      className={`w-full flex items-center justify-between p-3 rounded-xl text-left transition-all ${
-                        isActive
-                          ? "bg-blue-600 text-white font-bold shadow-sm shadow-blue-500/20"
-                          : "text-foreground hover:bg-muted font-medium"
-                      }`}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "10px 12px",
+                        borderRadius: "12px",
+                        textAlign: "left",
+                        backgroundColor: isActive
+                          ? "#1d4ed8"
+                          : theme === "light"
+                          ? "transparent"
+                          : "transparent",
+                        color: isActive
+                          ? "#ffffff"
+                          : theme === "light"
+                          ? "#1e293b"
+                          : "#cbd5e1",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                        fontWeight: isActive ? 700 : 500,
+                        boxShadow: isActive ? "0 2px 6px rgba(29, 78, 216, 0.4)" : "none"
+                      }}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={`p-1.5 rounded-lg ${isActive ? "bg-white/10 text-white" : "bg-muted text-muted-foreground"}`}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                        <div
+                          style={{
+                            padding: "6px",
+                            borderRadius: "8px",
+                            backgroundColor: isActive
+                              ? "rgba(255, 255, 255, 0.15)"
+                              : theme === "light"
+                              ? "#f1f5f9"
+                              : "rgba(255, 255, 255, 0.05)",
+                            color: isActive
+                              ? "#ffffff"
+                              : theme === "light"
+                              ? "#64748b"
+                              : "#94a3b8",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                        >
                           <Icon className="w-4 h-4" />
                         </div>
-                        <div className="min-w-0">
-                          <div className="text-xs truncate">{item.label}</div>
-                          <div className={`text-[10px] truncate ${isActive ? "text-white/80" : "text-muted-foreground"}`}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: "12px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {item.label}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: "10px",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              color: isActive ? "rgba(255, 255, 255, 0.8)" : theme === "light" ? "#64748b" : "#94a3b8"
+                            }}
+                          >
                             {item.desc}
                           </div>
                         </div>
                       </div>
-                      <ChevronRight className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-white" : "text-muted-foreground"}`} />
+                      <ChevronRight
+                        className="w-3.5 h-3.5"
+                        style={{
+                          flexShrink: 0,
+                          color: isActive ? "#ffffff" : theme === "light" ? "#94a3b8" : "#64748b"
+                        }}
+                      />
                     </button>
                   );
                 })}
@@ -188,7 +294,7 @@ export default function AdminPortalShell({
             </aside>
 
             {/* Home Main Content Area */}
-            <main className="flex-1 min-w-0">
+            <main className="flex-1 min-w-0" style={{ flex: 1, minWidth: 0 }}>
               {homeSidebar === "portfolio" && (
                 <HomePortfolioView
                   selectedPortfolioId={selectedPortfolioId}

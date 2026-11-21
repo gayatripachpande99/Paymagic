@@ -108,78 +108,120 @@ export default function HomePortfolioView({
   // If a portfolio is clicked, render the detailed portfolio breakdown
   if (activePortfolio) {
     return (
-      <div className="space-y-6 animate-in fade-in duration-200">
+      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
         
         {/* Detail Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-card border border-border shadow-sm">
-          <div className="flex items-center gap-3">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
+            padding: "20px",
+            borderRadius: "16px",
+            backgroundColor: "#041030",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+            flexWrap: "wrap"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <button
               onClick={() => setSelectedPortfolioId(null)}
-              className="p-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground transition-colors"
+              style={{
+                padding: "8px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(255, 255, 255, 0.06)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                color: "#ffffff",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
               title="Back to All Portfolios"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft style={{ width: "16px", height: "16px" }} />
             </button>
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-lg text-foreground">
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                <span style={{ fontWeight: 700, fontSize: "16px", color: "#ffffff" }}>
                   {activePortfolio.name}
                 </span>
-                <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                <span
+                  style={{
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    backgroundColor: "rgba(245, 158, 11, 0.15)",
+                    color: "#f59e0b",
+                    border: "1px solid rgba(245, 158, 11, 0.3)"
+                  }}
+                >
                   {activePortfolio.bucket}
                 </span>
-                <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                <span
+                  style={{
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    backgroundColor: "rgba(37, 99, 235, 0.15)",
+                    color: "#60a5fa",
+                    border: "1px solid rgba(37, 99, 235, 0.3)"
+                  }}
+                >
                   {activePortfolio.product}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                PayMagic Recovery Portfolio Performance & Multi-Channel Breakdown
+              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px", margin: 0 }}>
+                PayMagic Recovery Portfolio Performance &amp; Multi-Channel Breakdown
               </p>
             </div>
           </div>
 
           {/* Sub-Tabs: 1. One View | 2. Call | 3. Field | 4. Digital */}
-          <div className="flex items-center gap-1.5 p-1 bg-muted rounded-xl">
-            <button
-              onClick={() => setDetailTab("one_view")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                detailTab === "one_view"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              1. One View
-            </button>
-            <button
-              onClick={() => setDetailTab("call")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                detailTab === "call"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              2. Call
-            </button>
-            <button
-              onClick={() => setDetailTab("field")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                detailTab === "field"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              3. Field
-            </button>
-            <button
-              onClick={() => setDetailTab("digital")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                detailTab === "digital"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              4. Digital
-            </button>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              padding: "4px",
+              backgroundColor: "#020921",
+              borderRadius: "12px",
+              border: "1px solid rgba(255, 255, 255, 0.06)"
+            }}
+          >
+            {[
+              { id: "one_view", label: "1. One View" },
+              { id: "call", label: "2. Call" },
+              { id: "field", label: "3. Field" },
+              { id: "digital", label: "4. Digital" }
+            ].map((tab) => {
+              const isActive = detailTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setDetailTab(tab.id)}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: "8px",
+                    fontSize: "12px",
+                    fontWeight: isActive ? 700 : 500,
+                    backgroundColor: isActive ? "#1d4ed8" : "transparent",
+                    color: isActive ? "#ffffff" : "#94a3b8",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    boxShadow: isActive ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none"
+                  }}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -811,70 +853,163 @@ export default function HomePortfolioView({
       </div>
 
       {/* 4 Portfolio Boxes Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))",
+          gap: "20px"
+        }}
+      >
         {PORTFOLIOS.map((item) => (
           <div
             key={item.id}
             onClick={() => setSelectedPortfolioId(item.id)}
-            className="group p-5 rounded-2xl bg-card border border-border hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/5 transition-all cursor-pointer relative overflow-hidden"
+            style={{
+              padding: "20px",
+              borderRadius: "16px",
+              backgroundColor: "#041030",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              cursor: "pointer",
+              position: "relative",
+              overflow: "hidden",
+              transition: "all 0.2s ease",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.5)";
+              e.currentTarget.style.boxShadow = "0 8px 24px rgba(29, 78, 216, 0.15)";
+              e.currentTarget.style.transform = "translateY(-1px)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.2)";
+              e.currentTarget.style.transform = "none";
+            }}
           >
             {/* Top Row: Badge, Name, Status, Channel */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className={`w-8 h-8 rounded-lg ${item.badgeColor} text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-sm`}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                <div
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "10px",
+                    backgroundColor: item.badgeColor === "bg-amber-600" ? "#d97706" : "#2563eb",
+                    color: "#ffffff",
+                    fontWeight: 700,
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)"
+                  }}
+                >
                   {item.badge}
                 </div>
-                <div className="min-w-0">
-                  <h3 className="font-bold text-sm text-foreground group-hover:text-blue-500 transition-colors truncate">
+                <div style={{ minWidth: 0 }}>
+                  <h3
+                    style={{
+                      fontWeight: 700,
+                      fontSize: "14px",
+                      color: "#ffffff",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      margin: 0
+                    }}
+                  >
                     {item.name}
                   </h3>
-                  <div className="text-[11px] text-muted-foreground">
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>
                     {item.company}
                   </div>
                 </div>
               </div>
 
               {/* Status & Channel */}
-              <div className="flex items-center gap-2 shrink-0">
-                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                  item.isExpired
-                    ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
-                    : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                }`}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    padding: "2px 8px",
+                    borderRadius: "9999px",
+                    backgroundColor: item.isExpired ? "rgba(244, 63, 94, 0.15)" : "rgba(16, 185, 129, 0.15)",
+                    color: item.isExpired ? "#fb7185" : "#34d399",
+                    border: item.isExpired ? "1px solid rgba(244, 63, 94, 0.3)" : "1px solid rgba(16, 185, 129, 0.3)"
+                  }}
+                >
                   {item.statusText}
                 </span>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center gap-1">
-                  <PhoneCall className="w-2.5 h-2.5" />
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    padding: "2px 8px",
+                    borderRadius: "9999px",
+                    backgroundColor: "rgba(37, 99, 235, 0.15)",
+                    color: "#60a5fa",
+                    border: "1px solid rgba(37, 99, 235, 0.3)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px"
+                  }}
+                >
+                  <PhoneCall style={{ width: "10px", height: "10px" }} />
                   {item.channel}
                 </span>
               </div>
             </div>
 
             {/* Metrics Breakdown Grid */}
-            <div className="grid grid-cols-3 gap-3 mt-5 pt-4 border-t border-border/80">
-              <div className="space-y-0.5">
-                <span className="text-[11px] text-muted-foreground">Total Accounts</span>
-                <div className="text-base font-bold text-foreground">{item.accounts}</div>
-                <div className="text-[10px] text-emerald-500 font-medium">{item.collectedPct} Collected</div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr",
+                gap: "12px",
+                marginTop: "18px",
+                paddingTop: "14px",
+                borderTop: "1px solid rgba(255, 255, 255, 0.08)"
+              }}
+            >
+              <div>
+                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Total Accounts</span>
+                <div style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", marginTop: "2px" }}>{item.accounts}</div>
+                <div style={{ fontSize: "10px", color: "#34d399", fontWeight: 600, marginTop: "2px" }}>{item.collectedPct} Collected</div>
               </div>
 
-              <div className="space-y-0.5">
-                <span className="text-[11px] text-muted-foreground">Outstanding</span>
-                <div className="text-base font-bold text-foreground">{item.outstanding}</div>
-                <div className="text-[10px] text-emerald-500 font-medium">{item.collectedPct} Collected</div>
+              <div>
+                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Outstanding</span>
+                <div style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", marginTop: "2px" }}>{item.outstanding}</div>
+                <div style={{ fontSize: "10px", color: "#34d399", fontWeight: 600, marginTop: "2px" }}>{item.collectedPct} Collected</div>
               </div>
 
-              <div className="space-y-0.5">
-                <span className="text-[11px] text-muted-foreground">Collected Amount</span>
-                <div className="text-xs font-bold text-foreground truncate">{item.collectedAmount}</div>
-                <div className="text-[10px] text-muted-foreground">Target TOS</div>
+              <div>
+                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Collected Amount</span>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "#ffffff", marginTop: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {item.collectedAmount}
+                </div>
+                <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "2px" }}>Target TOS</div>
               </div>
             </div>
 
             {/* Bottom Arrow Indicator */}
-            <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between text-xs font-semibold text-blue-500 group-hover:translate-x-0.5 transition-transform">
+            <div
+              style={{
+                marginTop: "14px",
+                paddingTop: "12px",
+                borderTop: "1px solid rgba(255, 255, 255, 0.05)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "#60a5fa"
+              }}
+            >
               <span>Click to view detailed One View &amp; Dashboards</span>
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight style={{ width: "16px", height: "16px" }} />
             </div>
           </div>
         ))}
