@@ -21,7 +21,11 @@ import {
   ChevronDown
 } from "lucide-react";
 
-export default function AllocationView({ onOpenPortfolioDashboard }) {
+export default function AllocationView({
+  onOpenPortfolioDashboard,
+  selectedAllocatorId = "alloc_bajaj",
+  allocators = []
+}) {
   // Main view state: 'list' | 'upload' | 'history'
   const [currentView, setCurrentView] = useState("list");
 
@@ -86,10 +90,12 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
     "Writeoff"
   ];
 
-  // Initial allocations list
+  // Initial allocations list scoped by institutional allocator
   const [allocations, setAllocations] = useState([
+    // ── 1. BAJAJ FINSERVE ALLOCATIONS (4 EXACT ALLOCATIONS) ──
     {
       id: "bajaj_nov_18",
+      allocatorId: "alloc_bajaj",
       name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-18_16:32",
       product: "Personal Loan",
       bucket: "Writeoff",
@@ -103,6 +109,7 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
     },
     {
       id: "bajaj_nov_13",
+      allocatorId: "alloc_bajaj",
       name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-13_10:13",
       product: "Personal Loan",
       bucket: "Writeoff",
@@ -116,6 +123,7 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
     },
     {
       id: "bajaj_nov_04_13",
+      allocatorId: "alloc_bajaj",
       name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-04_13:45",
       product: "Personal Loan",
       bucket: "Writeoff",
@@ -129,6 +137,7 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
     },
     {
       id: "bajaj_nov_04_11",
+      allocatorId: "alloc_bajaj",
       name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-04_11:31",
       product: "Personal Loan",
       bucket: "Writeoff",
@@ -139,6 +148,35 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
       statusType: "closed",
       duration: "Expired",
       uploadedOn: "2026-11-04 11:31"
+    },
+    // ── 2. PUNEWALA ALLOCATIONS (ISOLATED TO PUNEWALA) ──
+    {
+      id: "punewala_nov_16",
+      allocatorId: "alloc_punewala",
+      name: "PUNEWALA_Personal Loan_Writeoff_2026-11-16_14:20",
+      product: "Personal Loan",
+      bucket: "Writeoff",
+      accounts: 85,
+      collectable: "₹1.55 Cr",
+      outstanding: "₹2.40 Cr",
+      status: "100% Allocated",
+      statusType: "100",
+      duration: "Ends in 22 days",
+      uploadedOn: "2026-11-16 14:20"
+    },
+    {
+      id: "punewala_nov_10",
+      allocatorId: "alloc_punewala",
+      name: "PUNEWALA_Business Loan_Writeoff_2026-11-10_11:15",
+      product: "Business Loan",
+      bucket: "Writeoff",
+      accounts: 64,
+      collectable: "₹1.10 Cr",
+      outstanding: "₹1.85 Cr",
+      status: "Partially Allocated",
+      statusType: "partially",
+      duration: "Ends in 14 days",
+      uploadedOn: "2026-11-10 11:15"
     }
   ]);
 
@@ -202,9 +240,12 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
       setUploadMessage({ type: "error", text: "Please enter Outstanding (TOS) and attach an allocation file." });
       return;
     }
-    const newName = `BAJAJ FINSERVE_${selectedProduct}_${selectedBucket}_${new Date().toISOString().slice(0, 10)}`;
+    const activeAllocObj = allocators.find((a) => a.id === selectedAllocatorId) || { name: "BAJAJ FINSERVE", code: "BAJAJ" };
+    const prefix = (activeAllocObj.code || activeAllocObj.name || "BAJAJ").toUpperCase().replace(/\s+/g, "_");
+    const newName = `${prefix}_${selectedProduct}_${selectedBucket}_${new Date().toISOString().slice(0, 10)}`;
     const newAlloc = {
       id: `alloc_${Date.now()}`,
+      allocatorId: selectedAllocatorId,
       name: newName,
       product: selectedProduct,
       bucket: selectedBucket,
@@ -235,13 +276,18 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
     }, 1500);
   };
 
-  // Filter allocations
-  const filteredAllocations = allocations.filter((item) => {
+  // Filter allocations scoped to selected allocator
+  const scopedAllocations = allocations.filter(
+    (item) => !item.allocatorId || item.allocatorId === selectedAllocatorId
+  );
+
+  const filteredAllocations = scopedAllocations.filter((item) => {
     const matchesFilter =
       activeFilter === "all" ||
       (activeFilter === "unallocated" && item.statusType === "unallocated") ||
       (activeFilter === "100" && item.statusType === "100") ||
       (activeFilter === "partially" && item.statusType === "partially") ||
+      (activeFilter === "expiring" && item.statusType === "expiring") ||
       (activeFilter === "closed" && item.statusType === "closed");
 
     const matchesSearch =
@@ -378,7 +424,7 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
                 transition: "all 0.15s ease"
               }}
             >
-              All Allocations ({allocations.length})
+              All Allocations ({scopedAllocations.length})
             </button>
             <button
               onClick={() => setActiveFilter("unallocated")}
@@ -396,7 +442,7 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
                 transition: "all 0.15s ease"
               }}
             >
-              Unallocated ({allocations.filter((a) => a.statusType === "unallocated").length})
+              Unallocated ({scopedAllocations.filter((a) => a.statusType === "unallocated").length})
             </button>
             <button
               onClick={() => setActiveFilter("100")}
@@ -414,7 +460,7 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
                 transition: "all 0.15s ease"
               }}
             >
-              100% Allocated ({allocations.filter((a) => a.statusType === "100").length})
+              100% Allocated ({scopedAllocations.filter((a) => a.statusType === "100").length})
             </button>
             <button
               onClick={() => setActiveFilter("partially")}
@@ -432,7 +478,7 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
                 transition: "all 0.15s ease"
               }}
             >
-              Partially Allocated ({allocations.filter((a) => a.statusType === "partially").length})
+              Partially Allocated ({scopedAllocations.filter((a) => a.statusType === "partially").length})
             </button>
             <button
               onClick={() => setActiveFilter("expiring")}
@@ -450,7 +496,7 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
                 transition: "all 0.15s ease"
               }}
             >
-              Expiring in 5 days (0)
+              Expiring in 5 days ({scopedAllocations.filter((a) => a.statusType === "expiring").length})
             </button>
             <button
               onClick={() => setActiveFilter("closed")}

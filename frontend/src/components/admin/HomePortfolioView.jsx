@@ -177,14 +177,31 @@ export const PORTFOLIOS = INITIAL_PORTFOLIOS;
 export default function HomePortfolioView({
   selectedPortfolioId,
   setSelectedPortfolioId,
-  onNavigateToCallMonitoring
+  onNavigateToCallMonitoring,
+  allocators: propAllocators,
+  setAllocators: propSetAllocators,
+  selectedAllocatorId: propSelectedAllocatorId,
+  setSelectedAllocatorId: propSetSelectedAllocatorId,
+  portfolios: propPortfolios,
+  setPortfolios: propSetPortfolios,
+  showCreateModal: propShowCreateModal,
+  setShowCreateModal: propSetShowCreateModal
 }) {
-  const [allocators, setAllocators] = useState(INITIAL_ALLOCATORS);
-  const [selectedAllocatorId, setSelectedAllocatorId] = useState("alloc_bajaj");
-  const [portfolios, setPortfolios] = useState(INITIAL_PORTFOLIOS);
+  const [localAllocators, setLocalAllocators] = useState(INITIAL_ALLOCATORS);
+  const [localSelectedAllocatorId, setLocalSelectedAllocatorId] = useState("alloc_bajaj");
+  const [localPortfolios, setLocalPortfolios] = useState(INITIAL_PORTFOLIOS);
+  const [localShowCreateModal, setLocalShowCreateModal] = useState(false);
 
-  // Create Allocator Modal State
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const allocators = propAllocators || localAllocators;
+  const setAllocators = propSetAllocators || setLocalAllocators;
+  const selectedAllocatorId = propSelectedAllocatorId || localSelectedAllocatorId;
+  const setSelectedAllocatorId = propSetSelectedAllocatorId || setLocalSelectedAllocatorId;
+  const portfolios = propPortfolios || localPortfolios;
+  const setPortfolios = propSetPortfolios || setLocalPortfolios;
+  const showCreateModal = propShowCreateModal !== undefined ? propShowCreateModal : localShowCreateModal;
+  const setShowCreateModal = propSetShowCreateModal || setLocalShowCreateModal;
+
+  // Create Allocator Form State
   const [createForm, setCreateForm] = useState({
     name: "",
     code: "",
@@ -1004,16 +1021,16 @@ export default function HomePortfolioView({
             <span>All Portfolios</span>
             <span
               style={{
-                fontSize: "11px",
-                padding: "2px 8px",
+                fontSize: "12px",
+                padding: "3px 10px",
                 borderRadius: "9999px",
-                backgroundColor: "rgba(37, 99, 235, 0.15)",
+                backgroundColor: "rgba(37, 99, 235, 0.2)",
                 color: "#60a5fa",
-                border: "1px solid rgba(37, 99, 235, 0.3)",
-                fontFamily: "monospace"
+                border: "1px solid rgba(37, 99, 235, 0.4)",
+                fontWeight: 600
               }}
             >
-              PayMagic PVT LTD
+              {selectedAllocator?.name || "Bajaj Finserve"}
             </span>
           </h2>
         </div>
@@ -1045,124 +1062,7 @@ export default function HomePortfolioView({
         </button>
       </div>
 
-      {/* ── 2. ASSIGNED BANKS / ALLOCATORS SELECTOR (STRICT ISOLATION) ── */}
-      <div
-        style={{
-          padding: "18px 20px",
-          borderRadius: "16px",
-          backgroundColor: "#041030",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "14px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div
-              style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "8px",
-                backgroundColor: "rgba(37, 99, 235, 0.15)",
-                color: "#60a5fa",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center"
-              }}
-            >
-              <Landmark style={{ width: "18px", height: "18px" }} />
-            </div>
-            <div>
-              <span style={{ fontSize: "13px", fontWeight: 700, color: "#ffffff" }}>
-                Assigned Banks &amp; Institutional Allocators:
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Allocator Pills (Single Selection at a time) */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-          {allocators.map((alloc) => {
-            const isSelected = selectedAllocatorId === alloc.id;
-            const count = portfolios.filter((p) => p.allocatorId === alloc.id).length;
-            return (
-              <button
-                key={alloc.id}
-                onClick={() => setSelectedAllocatorId(alloc.id)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "8px 16px",
-                  borderRadius: "9999px",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  fontWeight: isSelected ? 700 : 500,
-                  backgroundColor: isSelected ? "#1d4ed8" : "#0a1535",
-                  color: isSelected ? "#ffffff" : "#cbd5e1",
-                  border: isSelected ? "1px solid #3b82f6" : "1px solid rgba(51, 65, 85, 0.6)",
-                  boxShadow: isSelected ? "0 2px 8px rgba(29, 78, 216, 0.4)" : "none",
-                  transition: "all 0.15s ease"
-                }}
-              >
-                <span
-                  style={{
-                    width: "20px",
-                    height: "20px",
-                    borderRadius: "9999px",
-                    backgroundColor: isSelected ? "#ffffff" : "rgba(255, 255, 255, 0.15)",
-                    color: isSelected ? "#1d4ed8" : "#ffffff",
-                    fontSize: "10px",
-                    fontWeight: 800,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}
-                >
-                  {alloc.badge}
-                </span>
-                <span>{alloc.name}</span>
-                <span
-                  style={{
-                    padding: "2px 6px",
-                    borderRadius: "9999px",
-                    fontSize: "10px",
-                    fontWeight: 700,
-                    backgroundColor: isSelected ? "rgba(255, 255, 255, 0.25)" : "rgba(255, 255, 255, 0.08)",
-                    color: isSelected ? "#ffffff" : "#94a3b8"
-                  }}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Institutional Isolation Notice */}
-        <div
-          style={{
-            padding: "8px 12px",
-            borderRadius: "8px",
-            backgroundColor: "#020921",
-            border: "1px solid rgba(255, 255, 255, 0.05)",
-            fontSize: "11px",
-            color: "#34d399",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px"
-          }}
-        >
-          <ShieldCheck style={{ width: "14px", height: "14px", flexShrink: 0 }} />
-          <span>
-            Active Allocator: <strong style={{ color: "#ffffff" }}>{selectedAllocator.name}</strong> ({filteredPortfolios.length} Allocations). Institutional data isolation active — allocations from other banks are hidden.
-          </span>
-        </div>
-      </div>
-
-      {/* ── 3. ISOLATED PORTFOLIO BOXES GRID ── */}
+      {/* ── 2. ISOLATED PORTFOLIO BOXES GRID ── */}
       {filteredPortfolios.length > 0 ? (
         <div
           style={{
@@ -1415,9 +1315,6 @@ export default function HomePortfolioView({
                   <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
                     Create New Allocator
                   </h3>
-                  <span style={{ fontSize: "11px", color: "#94a3b8" }}>
-                    Add an assigned bank or institutional lender
-                  </span>
                 </div>
               </div>
               <button

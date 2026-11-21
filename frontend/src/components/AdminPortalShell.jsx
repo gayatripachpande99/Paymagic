@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import AdminNavbar from "./admin/AdminNavbar";
-import HomePortfolioView from "./admin/HomePortfolioView";
+import HomePortfolioView, { INITIAL_ALLOCATORS, INITIAL_PORTFOLIOS } from "./admin/HomePortfolioView";
 import HomeCallMonitoringView from "./admin/HomeCallMonitoringView";
 import HomeCRMView from "./admin/HomeCRMView";
 import HomeFieldMonitoringView from "./admin/HomeFieldMonitoringView";
@@ -62,6 +62,12 @@ export default function AdminPortalShell({
 
   // Agent Online / Offline Presence State
   const [presenceOnline, setPresenceOnline] = useState(true);
+
+  // Institutional Allocator State (Single selection with strict isolation)
+  const [allocators, setAllocators] = useState(INITIAL_ALLOCATORS);
+  const [selectedAllocatorId, setSelectedAllocatorId] = useState("alloc_bajaj");
+  const [portfolios, setPortfolios] = useState(INITIAL_PORTFOLIOS);
+  const [showCreateAllocatorModal, setShowCreateAllocatorModal] = useState(false);
 
   // Active working allocation name
   const activeAllocationName = "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-18_16:32";
@@ -145,6 +151,11 @@ export default function AdminPortalShell({
         presenceOnline={presenceOnline}
         setPresenceOnline={setPresenceOnline}
         activeAllocationName={activeAllocationName}
+        allocators={allocators}
+        selectedAllocatorId={selectedAllocatorId}
+        setSelectedAllocatorId={setSelectedAllocatorId}
+        portfolios={portfolios}
+        onOpenCreateAllocatorModal={() => setShowCreateAllocatorModal(true)}
       />
 
       {/* ── MAIN CONTENT CONTAINER ── */}
@@ -289,6 +300,14 @@ export default function AdminPortalShell({
                   selectedPortfolioId={selectedPortfolioId}
                   setSelectedPortfolioId={setSelectedPortfolioId}
                   onNavigateToCallMonitoring={() => setHomeSidebar("call_monitoring")}
+                  allocators={allocators}
+                  setAllocators={setAllocators}
+                  selectedAllocatorId={selectedAllocatorId}
+                  setSelectedAllocatorId={setSelectedAllocatorId}
+                  portfolios={portfolios}
+                  setPortfolios={setPortfolios}
+                  showCreateModal={showCreateAllocatorModal}
+                  setShowCreateModal={setShowCreateAllocatorModal}
                 />
               )}
 
@@ -317,6 +336,8 @@ export default function AdminPortalShell({
                 setHomeSidebar("portfolio");
                 setSelectedPortfolioId(portfolioId);
               }}
+              selectedAllocatorId={selectedAllocatorId}
+              allocators={allocators}
             />
           </main>
         )}

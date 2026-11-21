@@ -11,7 +11,9 @@ import {
   FileText,
   Sparkles,
   Moon,
-  Sun
+  Sun,
+  Landmark,
+  Plus
 } from "lucide-react";
 
 export default function AdminNavbar({
@@ -23,10 +25,19 @@ export default function AdminNavbar({
   setTopNav,
   presenceOnline,
   setPresenceOnline,
-  activeAllocationName = "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-18_16:32"
+  activeAllocationName = "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-18_16:32",
+  allocators = [],
+  selectedAllocatorId = "alloc_bajaj",
+  setSelectedAllocatorId,
+  portfolios = [],
+  onOpenCreateAllocatorModal
 }) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
+  const [allocatorDropdownOpen, setAllocatorDropdownOpen] = useState(false);
+
+  // Active allocator object
+  const activeAllocator = allocators.find((a) => a.id === selectedAllocatorId) || allocators[0];
 
   // Dynamic user data matching logged in credentials with Bhushan Gaikwad as default fallback
   const userName = user?.fullName || user?.full_name || user?.name || "Bhushan Gaikwad";
@@ -317,27 +328,192 @@ export default function AdminNavbar({
             <span>{presenceOnline ? "Online" : "Offline"}</span>
           </button>
 
-          {/* Active Allocation Badge */}
-          <div
-            title={`Active Working Allocation: ${activeAllocationName}`}
-            className="hidden lg:flex"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "4px 12px",
-              borderRadius: "9999px",
-              backgroundColor: "#0a1639",
-              border: "1px solid rgba(30, 58, 138, 0.4)",
-              fontSize: "12px",
-              color: "#cbd5e1",
-              maxWidth: "260px"
-            }}
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {activeAllocationName}
-            </span>
+          {/* Active Allocator Dropdown Pill */}
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setAllocatorDropdownOpen(!allocatorDropdownOpen)}
+              title="Select Institutional Allocator"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "4px 12px",
+                borderRadius: "9999px",
+                backgroundColor: "#0a1639",
+                border: "1px solid rgba(59, 130, 246, 0.4)",
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "#ffffff",
+                cursor: "pointer",
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                transition: "all 0.15s ease"
+              }}
+            >
+              <span
+                style={{
+                  width: "18px",
+                  height: "18px",
+                  borderRadius: "9999px",
+                  backgroundColor: "#2563eb",
+                  color: "#ffffff",
+                  fontSize: "10px",
+                  fontWeight: 800,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0
+                }}
+              >
+                {activeAllocator?.badge || "B"}
+              </span>
+              <span style={{ maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {activeAllocator?.name || "Bajaj Finserve"}
+              </span>
+              <ChevronDown
+                className="w-3.5 h-3.5 text-blue-400"
+                style={{
+                  transform: allocatorDropdownOpen ? "rotate(180deg)" : "none",
+                  transition: "transform 0.15s ease"
+                }}
+              />
+            </button>
+
+            {allocatorDropdownOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  marginTop: "8px",
+                  width: "280px",
+                  borderRadius: "14px",
+                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                  backgroundColor: "#051336",
+                  padding: "8px",
+                  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.6)",
+                  zIndex: 60
+                }}
+              >
+                <div
+                  style={{
+                    padding: "6px 10px 8px 10px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    color: "#94a3b8",
+                    borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                    marginBottom: "6px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                  }}
+                >
+                  <span>Select Allocator</span>
+                  <span style={{ fontSize: "10px", color: "#60a5fa" }}>Isolated Scope</span>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  {allocators.map((alloc) => {
+                    const isSelected = alloc.id === selectedAllocatorId;
+                    const allocPortfoliosCount = portfolios.filter((p) => p.allocatorId === alloc.id).length;
+                    return (
+                      <button
+                        key={alloc.id}
+                        onClick={() => {
+                          if (setSelectedAllocatorId) setSelectedAllocatorId(alloc.id);
+                          setAllocatorDropdownOpen(false);
+                        }}
+                        style={{
+                          width: "100%",
+                          textAlign: "left",
+                          padding: "8px 10px",
+                          borderRadius: "8px",
+                          backgroundColor: isSelected ? "rgba(37, 99, 235, 0.25)" : "transparent",
+                          border: isSelected ? "1px solid rgba(59, 130, 246, 0.4)" : "1px solid transparent",
+                          color: isSelected ? "#ffffff" : "#cbd5e1",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          cursor: "pointer",
+                          transition: "all 0.15s ease"
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                          <span
+                            style={{
+                              width: "22px",
+                              height: "22px",
+                              borderRadius: "9999px",
+                              backgroundColor: isSelected ? "#2563eb" : "rgba(255, 255, 255, 0.1)",
+                              color: "#ffffff",
+                              fontSize: "11px",
+                              fontWeight: 800,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0
+                            }}
+                          >
+                            {alloc.badge}
+                          </span>
+                          <span style={{ fontSize: "13px", fontWeight: isSelected ? 700 : 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {alloc.name}
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              padding: "2px 6px",
+                              borderRadius: "9999px",
+                              backgroundColor: "rgba(255, 255, 255, 0.08)",
+                              color: "#94a3b8"
+                            }}
+                          >
+                            {allocPortfoliosCount}
+                          </span>
+                          {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div
+                  style={{
+                    borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+                    marginTop: "6px",
+                    paddingTop: "6px"
+                  }}
+                >
+                  <button
+                    onClick={() => {
+                      setAllocatorDropdownOpen(false);
+                      if (onOpenCreateAllocatorModal) onOpenCreateAllocatorModal();
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "8px 10px",
+                      borderRadius: "8px",
+                      backgroundColor: "rgba(37, 99, 235, 0.15)",
+                      border: "1px dashed rgba(59, 130, 246, 0.4)",
+                      color: "#60a5fa",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "6px",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Create Allocator</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Light / Dark Theme Pill Toggle */}
