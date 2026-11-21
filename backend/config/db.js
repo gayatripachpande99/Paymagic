@@ -15,6 +15,12 @@ export const memoryStore = {
   roles: [],
   users: [],
   employees: [],
+  organizations: [],
+  allocators: [],
+  allocations: [],
+  campaigns: [],
+  campaign_members: [],
+  agent_groups: [],
   customers: [],
   loan_cases: [],
   case_status_history: [],
@@ -24,6 +30,8 @@ export const memoryStore = {
   call_recordings: [],
   recording_access_logs: [],
   payments: [],
+  payment_ledger: [],
+  incentive_programs: [],
   targets: [],
   attendance: [],
   shifts: [],
@@ -104,6 +112,14 @@ export const initializeDatabase = async () => {
   memoryStore.roles = seed.roles;
   memoryStore.users = seed.users;
   memoryStore.employees = seed.employees;
+  memoryStore.organizations = seed.organizations || [];
+  memoryStore.allocators = seed.allocators || [];
+  memoryStore.allocations = seed.allocations || [];
+  memoryStore.campaigns = seed.campaigns || [];
+  memoryStore.campaign_members = seed.campaignMembers || [];
+  memoryStore.agent_groups = seed.agentGroups || [];
+  memoryStore.payment_ledger = seed.paymentLedger || [];
+  memoryStore.incentive_programs = seed.incentivePrograms || [];
   memoryStore.customers = seed.customers;
   memoryStore.loan_cases = seed.loanCases;
   memoryStore.case_status_history = seed.caseStatusHistory;

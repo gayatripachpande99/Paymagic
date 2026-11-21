@@ -4228,3 +4228,516 @@ footer {
   }
 }
 
+/* ───────────────────────────────────────────
+   LIGHT & DARK THEME ENGINE & COMPONENT STYLES
+─────────────────────────────────────────── */
+
+/* ── 1. Theme Toggle Button ── */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  user-select: none;
+}
+
+.theme-toggle-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(96, 165, 250, 0.4);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.theme-toggle-track {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.sun-icon {
+  color: #fbbf24;
+  filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.5));
+}
+
+.moon-icon {
+  color: #38bdf8;
+  filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.5));
+}
+
+.theme-toggle-text {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* In Light Theme, style the button crisp and clean */
+[data-theme="light"] .theme-toggle-btn,
+.light .theme-toggle-btn {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .theme-toggle-btn:hover,
+.light .theme-toggle-btn:hover {
+  border-color: #3b82f6;
+  background: #f8fafc;
+  color: #2563eb;
+}
+
+[data-theme="light"] .moon-icon,
+.light .moon-icon {
+  color: #475569;
+  filter: none;
+}
+
+/* ── 2. Light Theme CSS Variable Redefinitions ── */
+[data-theme="light"],
+.theme-light,
+.light {
+  --navy:            #f8fafc;
+  --navy-mid:        #ffffff;
+  --navy-light:      #f1f5f9;
+  --navy-surface:    #e2e8f0;
+  --blue:            #2563eb;
+  --blue-light:      #3b82f6;
+  --blue-glow:       rgba(37, 99, 235, 0.12);
+  --indigo:          #4f46e5;
+  --indigo-light:    #6366f1;
+  --purple:          #7c3aed;
+  --green:           #10b981;
+  --gold:            #f59e0b;
+  --rose:            #e11d48;
+
+  --text-primary:    #0f172a;
+  --text-secondary:  #334155;
+  --text-muted:      #64748b;
+
+  --border:          rgba(0, 0, 0, 0.08);
+  --border-subtle:   rgba(0, 0, 0, 0.05);
+  --border-focus:    rgba(37, 99, 235, 0.5);
+  --card-bg:         #ffffff;
+  --card-border:     #e2e8f0;
+  --surface-hover:   rgba(0, 0, 0, 0.03);
+}
+
+/* ── 3. Light Theme Website Overrides ── */
+[data-theme="light"] body,
+body.light {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+[data-theme="light"] .website {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+[data-theme="light"] .navbar {
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .navbar-scrolled {
+  background: rgba(255, 255, 255, 0.98);
+  border-bottom-color: #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .brand {
+  color: #0f172a;
+}
+
+[data-theme="light"] .nav-links a {
+  color: #475569;
+}
+
+[data-theme="light"] .nav-links a:hover {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.06);
+}
+
+[data-theme="light"] .nav-links.mobile-open {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .hero {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(37, 99, 235, 0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at -10% 60%, rgba(99, 102, 241, 0.05) 0%, transparent 60%),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 60%, #f8fafc 100%);
+  color: #0f172a;
+}
+
+[data-theme="light"] .hero h1 {
+  color: #0f172a;
+}
+
+[data-theme="light"] .hero-description {
+  color: #475569;
+}
+
+[data-theme="light"] .hero-badge {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #059669;
+}
+
+[data-theme="light"] .hero-stat {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .hero-stat-value {
+  color: #0f172a;
+}
+
+[data-theme="light"] .hero-stat-label {
+  color: #64748b;
+}
+
+[data-theme="light"] .secondary-btn {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .secondary-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+[data-theme="light"] .trust-bar {
+  background: #ffffff;
+  border-top-color: #e2e8f0;
+  border-bottom-color: #e2e8f0;
+}
+
+[data-theme="light"] .trust-badge {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #334155;
+}
+
+[data-theme="light"] .trust-badge:hover {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+[data-theme="light"] .section {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .about-desc {
+  color: #475569;
+}
+
+[data-theme="light"] .pillar {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] .pillar:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .metric-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .metric-card:hover {
+  background: #f8fafc;
+  border-color: #93c5fd;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.08);
+}
+
+[data-theme="light"] .metric-value {
+  color: #0f172a;
+}
+
+[data-theme="light"] .services {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+[data-theme="light"] .services-sub {
+  color: #475569;
+}
+
+[data-theme="light"] .service-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .service-card:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.08);
+  transform: translateY(-4px);
+}
+
+[data-theme="light"] .service-card h3 {
+  color: #0f172a;
+}
+
+[data-theme="light"] .service-desc {
+  color: #475569;
+}
+
+[data-theme="light"] .founder-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .founder-card:hover {
+  border-color: #c4b5fd;
+  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.09);
+}
+
+[data-theme="light"] .founder-card h3 {
+  color: #0f172a;
+}
+
+[data-theme="light"] .founder-role {
+  color: #2563eb;
+}
+
+[data-theme="light"] .founder-bio {
+  color: #475569;
+}
+
+[data-theme="light"] .testimonials-section {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .testimonial-card {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .testimonial-card:hover {
+  background: #ffffff;
+  border-color: #93c5fd;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .testimonial-content {
+  color: #334155;
+}
+
+[data-theme="light"] .testimonial-author strong {
+  color: #0f172a;
+}
+
+[data-theme="light"] .compliance-section {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+[data-theme="light"] .compliance-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .compliance-card:hover {
+  border-color: #a7f3d0;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.08);
+}
+
+[data-theme="light"] .compliance-card h3 {
+  color: #0f172a;
+}
+
+[data-theme="light"] .compliance-desc {
+  color: #475569;
+}
+
+[data-theme="light"] .faqs-section {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .faq-item {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] .faq-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .faq-question {
+  color: #0f172a;
+}
+
+[data-theme="light"] .faq-answer {
+  color: #475569;
+}
+
+[data-theme="light"] .enquiry-section {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+[data-theme="light"] .enquiry-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .form-input,
+[data-theme="light"] .form-select,
+[data-theme="light"] .form-textarea {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .form-input:focus,
+[data-theme="light"] .form-select:focus,
+[data-theme="light"] .form-textarea:focus {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+[data-theme="light"] .footer {
+  background: #f1f5f9;
+  border-top-color: #e2e8f0;
+  color: #475569;
+}
+
+[data-theme="light"] .footer-brand strong {
+  color: #0f172a;
+}
+
+[data-theme="light"] .footer-col h4 {
+  color: #0f172a;
+}
+
+[data-theme="light"] .footer-col ul li a {
+  color: #64748b;
+}
+
+[data-theme="light"] .footer-col ul li a:hover {
+  color: #2563eb;
+}
+
+[data-theme="light"] .footer-bottom {
+  border-top-color: #e2e8f0;
+  color: #64748b;
+}
+
+/* ── 4. Light Theme Login Modal Overrides ── */
+[data-theme="light"] .modal-overlay {
+  background: rgba(15, 23, 42, 0.6);
+}
+
+[data-theme="light"] .modal-container {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .modal-close-btn {
+  color: #64748b !important;
+  background: #f1f5f9 !important;
+}
+
+[data-theme="light"] .modal-close-btn:hover {
+  color: #0f172a !important;
+  background: #e2e8f0 !important;
+}
+
+[data-theme="light"] .modal-container h2,
+[data-theme="light"] .modal-container h3 {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .modal-container p {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .modal-input-field input {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .modal-input-field input:focus {
+  background: #ffffff !important;
+  border-color: #2563eb !important;
+}
+
+/* ── 5. Light Theme Portal Overrides (Admin & Employee) ── */
+[data-theme="light"] .admin-portal,
+[data-theme="light"] .employee-portal,
+.theme-light.admin-portal,
+.theme-light.employee-portal {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .admin-portal header,
+[data-theme="light"] .employee-portal header {
+  background: #ffffff !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .admin-portal aside,
+[data-theme="light"] .employee-portal aside {
+  background: #ffffff !important;
+  border-right-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .admin-portal .portal-card,
+[data-theme="light"] .employee-portal .portal-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03) !important;
+}
+
+

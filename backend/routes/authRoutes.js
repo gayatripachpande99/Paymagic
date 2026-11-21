@@ -5,13 +5,15 @@ import {
   getCurrentUser,
   logout,
   adminLogin,
-  employeeLogin
+  employeeLogin,
+  forgotPassword
 } from "../controllers/authController.js";
 import { authenticate } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.post("/login", login);
+router.post("/forgot-password", forgotPassword);
 router.post("/admin-login", adminLogin);
 router.post("/employee-login", employeeLogin);
 router.post("/refresh", refreshToken);

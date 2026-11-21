@@ -1115,10 +1115,256 @@ export const createSeedData = async () => {
     }
   ];
 
+  const organizations = [
+    {
+      id: "org_paymagic",
+      name: "PayMagic PVT LTD",
+      tenant_code: "PM-CORP-2026",
+      status: "ACTIVE",
+      currency: "INR",
+      country: "IN",
+      regulatory_license: "RBI-NBFC-RECOVERY-COMPLIANT",
+      created_at: "2026-01-01T00:00:00.000Z"
+    }
+  ];
+
+  const allocators = [
+    {
+      id: "alloc_bajaj",
+      organization_id: "org_paymagic",
+      name: "BAJAJ FINSERVE",
+      code: "BAJAJ",
+      client_type: "NBFC",
+      contact_person: "Sanjay Verma",
+      contact_email: "sanjay.verma@bajajfinserv.in",
+      contact_phone: "+91 9822001122",
+      active_cases_count: 116,
+      total_portfolio_amount: 24500000,
+      total_recovered_amount: 6850000,
+      recovery_rate_pct: 27.96,
+      status: "ACTIVE",
+      created_at: "2026-01-15T00:00:00.000Z"
+    },
+    {
+      id: "alloc_hdfc",
+      organization_id: "org_paymagic",
+      name: "HDFC Bank Ltd",
+      code: "HDFC",
+      client_type: "SCHEDULED_COMMERCIAL_BANK",
+      contact_person: "Anjali Mehta",
+      contact_email: "anjali.mehta@hdfcbank.com",
+      contact_phone: "+91 9822003344",
+      active_cases_count: 52,
+      total_portfolio_amount: 14500000,
+      total_recovered_amount: 4000000,
+      recovery_rate_pct: 27.58,
+      status: "ACTIVE",
+      created_at: "2026-02-01T00:00:00.000Z"
+    },
+    {
+      id: "alloc_sbi",
+      organization_id: "org_paymagic",
+      name: "State Bank of India (Cards)",
+      code: "SBI",
+      client_type: "PUBLIC_SECTOR_BANK",
+      contact_person: "Ramesh Iyer",
+      contact_email: "ramesh.iyer@sbicards.com",
+      contact_phone: "+91 9822005566",
+      active_cases_count: 32,
+      total_portfolio_amount: 9500000,
+      total_recovered_amount: 2400000,
+      recovery_rate_pct: 25.26,
+      status: "ACTIVE",
+      created_at: "2026-02-10T00:00:00.000Z"
+    }
+  ];
+
+  const allocations = [
+    {
+      id: "batch_bajaj_nov_2026",
+      allocator_id: "alloc_bajaj",
+      allocator_name: "BAJAJ FINSERVE",
+      name: "Bajaj Personal Loan Writeoff",
+      file_name: "URBAN-BAJAJ-NOV-2026-FINAL.xlsx",
+      product: "Personal Loan",
+      bucket: "Writeoff / 90+ DPD",
+      total_accounts: 116,
+      total_principal: 24500000,
+      total_outstanding: 18200000,
+      total_recovered: 6300000,
+      recovery_rate_pct: 25.71,
+      upload_date: "2026-11-01T10:00:00.000Z",
+      status: "ACTIVE",
+      uploaded_by: "Bhushan Gaikwad"
+    },
+    {
+      id: "batch_hdfc_autoloan_2026",
+      allocator_id: "alloc_hdfc",
+      allocator_name: "HDFC Bank Ltd",
+      name: "HDFC Auto Loan Delinquent Book",
+      file_name: "HDFC-AUTO-DELINQUENT-Q3.csv",
+      product: "Auto Loan",
+      bucket: "61-90 DPD",
+      total_accounts: 52,
+      total_principal: 14500000,
+      total_outstanding: 10500000,
+      total_recovered: 4000000,
+      recovery_rate_pct: 27.58,
+      upload_date: "2026-11-05T14:30:00.000Z",
+      status: "ACTIVE",
+      uploaded_by: "Onkar Holkar"
+    }
+  ];
+
+  const campaigns = [
+    {
+      id: "camp_bajaj_predictive",
+      organization_id: "org_paymagic",
+      allocator_id: "alloc_bajaj",
+      allocator_name: "BAJAJ FINSERVE",
+      allocation_id: "batch_bajaj_nov_2026",
+      allocation_name: "Bajaj Personal Loan Writeoff",
+      name: "URBAN BAJAJ-NOV-2026",
+      type: "PREDICTIVE",
+      channel: "CALL",
+      assigned_agents_count: 3,
+      total_accounts_count: 116,
+      connected_calls_count: 85,
+      ptp_count: 24,
+      collected_amount: 145000,
+      status: "RUNNING",
+      created_at: "2026-11-10T09:00:00.000Z"
+    },
+    {
+      id: "camp_field_mumbai",
+      organization_id: "org_paymagic",
+      allocator_id: "alloc_bajaj",
+      allocator_name: "BAJAJ FINSERVE",
+      allocation_id: "batch_bajaj_nov_2026",
+      allocation_name: "Bajaj Personal Loan Writeoff",
+      name: "MUMBAI-FIELD-RECOVERY-PILOT",
+      type: "MANUAL",
+      channel: "FIELD",
+      assigned_agents_count: 1,
+      total_accounts_count: 35,
+      completed_visits_count: 18,
+      spot_collections_count: 7,
+      collected_amount: 85000,
+      status: "RUNNING",
+      created_at: "2026-11-12T11:00:00.000Z"
+    }
+  ];
+
+  const campaignMembers = [
+    { id: "cm_1", campaign_id: "camp_bajaj_predictive", user_id: "usr_caller_1", role: "CALLER", joined_at: "2026-11-10T09:00:00.000Z" },
+    { id: "cm_2", campaign_id: "camp_bajaj_predictive", user_id: "usr_caller_2", role: "CALLER", joined_at: "2026-11-10T09:00:00.000Z" },
+    { id: "cm_3", campaign_id: "camp_bajaj_predictive", user_id: "usr_admin", role: "CALLER", joined_at: "2026-11-10T09:00:00.000Z" },
+    { id: "cm_4", campaign_id: "camp_field_mumbai", user_id: "usr_field_1", role: "FIELD_AGENT", joined_at: "2026-11-12T11:00:00.000Z" }
+  ];
+
+  const agentGroups = [
+    {
+      id: "grp_bajaj_call_a",
+      name: "BAJAJ CALL TEAM A",
+      supervisor_id: "usr_supervisor",
+      supervisor_name: "Aarav Mehta",
+      campaign_id: "camp_bajaj_predictive",
+      campaign_name: "URBAN BAJAJ-NOV-2026",
+      channel: "CALL",
+      members_count: 3,
+      members: ["Rahul Sharma", "Priya Patel", "Bhushan Gaikwad"],
+      status: "ACTIVE"
+    },
+    {
+      id: "grp_field_mumbai_1",
+      name: "MUMBAI FIELD TEAM 1",
+      supervisor_id: "usr_supervisor",
+      supervisor_name: "Aarav Mehta",
+      campaign_id: "camp_field_mumbai",
+      campaign_name: "MUMBAI-FIELD-RECOVERY-PILOT",
+      channel: "FIELD",
+      members_count: 1,
+      members: ["Vikram Singh"],
+      status: "ACTIVE"
+    }
+  ];
+
+  const paymentLedger = [
+    {
+      id: "ledg_001",
+      payment_id: "pay_001",
+      case_id: "case_001",
+      case_number: "CASE-2026-0001",
+      borrower_name: "Amit Deshmukh",
+      allocator_name: "BAJAJ FINSERVE",
+      amount: 15000.00,
+      payment_mode: "UPI",
+      utr_number: "UPI-4102948291",
+      verified_by: "Aarav Mehta",
+      verified_at: new Date(Date.now() - 3600000).toISOString(),
+      status: "VERIFIED"
+    },
+    {
+      id: "ledg_002",
+      payment_id: "pay_002",
+      case_id: "case_002",
+      case_number: "CASE-2026-0002",
+      borrower_name: "Sunita Verma",
+      allocator_name: "BAJAJ FINSERVE",
+      amount: 25000.00,
+      payment_mode: "IMPS",
+      utr_number: "IMPS-9921028341",
+      verified_by: "Bhushan Gaikwad",
+      verified_at: new Date(Date.now() - 7200000).toISOString(),
+      status: "VERIFIED"
+    }
+  ];
+
+  const incentivePrograms = [
+    {
+      id: "inc_bajaj_nov_2026",
+      name: "Bajaj Personal Loan Incentive Program - Nov 2026",
+      allocator_name: "BAJAJ FINSERVE",
+      campaign_name: "URBAN BAJAJ-NOV-2026",
+      target_collection: 500000.00,
+      actual_verified_collection: 625000.00,
+      target_achievement_percent: 125.0,
+      reward_amount: 25000.00,
+      eligible_agent_id: "usr_caller_1",
+      eligible_agent_name: "Rahul Sharma",
+      status: "APPROVED_PENDING_PAYOUT",
+      approval_date: "2026-11-18T10:00:00.000Z",
+      approved_by: "Bhushan Gaikwad"
+    },
+    {
+      id: "inc_field_spot_2026",
+      name: "Mumbai Ground Recovery Spot Incentive - Nov 2026",
+      allocator_name: "BAJAJ FINSERVE",
+      campaign_name: "MUMBAI-FIELD-RECOVERY-PILOT",
+      target_collection: 250000.00,
+      actual_verified_collection: 285000.00,
+      target_achievement_percent: 114.0,
+      reward_amount: 15000.00,
+      eligible_agent_id: "usr_field_1",
+      eligible_agent_name: "Vikram Singh",
+      status: "APPROVED_PENDING_PAYOUT",
+      approval_date: "2026-11-18T11:30:00.000Z",
+      approved_by: "Aarav Mehta"
+    }
+  ];
+
   return {
     roles,
     users,
     employees,
+    organizations,
+    allocators,
+    allocations,
+    campaigns,
+    campaignMembers,
+    agentGroups,
+    paymentLedger,
+    incentivePrograms,
     customers,
     loanCases,
     caseStatusHistory,
