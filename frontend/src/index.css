@@ -9,17 +9,17 @@
 [data-theme="dark"],
 .dark,
 .theme-dark {
-  --bg-main: #020b2e;
-  --bg-surface: #040f3a;
-  --card-bg-main: #07133b;
-  --muted-bg-main: #0c1c4d;
-  --muted-bg-hover: #142866;
+  --bg-main: #01081f;
+  --bg-surface: #030d29;
+  --card-bg-main: #051336;
+  --muted-bg-main: #09173d;
+  --muted-bg-hover: #102354;
   --text-main: #f8fafc;
   --muted-text-main: #94a3b8;
-  --border-main: rgba(255, 255, 255, 0.1);
+  --border-main: rgba(255, 255, 255, 0.08);
   --border-focus: #3b82f6;
   --shadow-subtle: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
-  --dropdown-bg: #07133b;
+  --dropdown-bg: #051336;
   color-scheme: dark;
 }
 
