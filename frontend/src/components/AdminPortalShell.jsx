@@ -264,19 +264,8 @@ export default function AdminPortalShell({
                           <Icon className="w-4 h-4" />
                         </div>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: "12px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          <div style={{ fontSize: "13px", fontWeight: isActive ? 700 : 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             {item.label}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: "10px",
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              color: isActive ? "rgba(255, 255, 255, 0.8)" : theme === "light" ? "#64748b" : "#94a3b8"
-                            }}
-                          >
-                            {item.desc}
                           </div>
                         </div>
                       </div>
