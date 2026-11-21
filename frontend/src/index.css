@@ -186,8 +186,24 @@ select option {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   CUSTOM SLEEK SCROLLBAR
+   ADMIN PORTAL SPECIFIC STYLING
 ───────────────────────────────────────────────────────────── */
+.admin-portal-root {
+  min-height: 100vh;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+}
+
+.admin-portal-root .portal-card,
+.admin-portal-root .p-5.rounded-2xl.bg-card,
+.admin-portal-root .p-6.rounded-2xl.bg-card,
+.admin-portal-root .p-4.rounded-xl.bg-card {
+  background-color: var(--card-bg-main) !important;
+  border: 1px solid var(--border-main) !important;
+  box-shadow: var(--shadow-subtle) !important;
+}
+
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

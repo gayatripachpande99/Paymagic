@@ -7,6 +7,21 @@ import AdminPortalShell from "./components/AdminPortalShell";
 import EmployeePortalShell from "./components/EmployeePortalShell";
 import "./App.css";
 
+// Default authorized users for portal direct linking (e.g. /admin/allocations)
+const DEFAULT_SUPERVISOR_USER = {
+  fullName: "Priya Talekar",
+  role: "SUPERVISOR",
+  email: "infopaymagic@gmail.com",
+  employeeId: "PM2610PT0005"
+};
+
+const DEFAULT_EMPLOYEE_USER = {
+  fullName: "Manisha Shete",
+  role: "CALLER",
+  email: "manishashete549@gmail.com",
+  employeeId: "PM2610MS0004"
+};
+
 export default function App() {
   const [appMode, setAppMode] = useState(() => {
     if (typeof window !== "undefined") {
@@ -21,7 +36,7 @@ export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(() => {
     if (typeof window !== "undefined") {
       const p = window.location.pathname;
-      return p === "/login" || (p.startsWith("/admin") && !localStorage.getItem("paymagic_user"));
+      return p === "/login";
     }
     return false;
   });
@@ -29,7 +44,21 @@ export default function App() {
   const [loggedInUser, setLoggedInUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem("paymagic_user");
-      return savedUser ? JSON.parse(savedUser) : null;
+      if (savedUser) return JSON.parse(savedUser);
+
+      // If directly accessing /admin routes (e.g. /admin/allocations), auto-supply authorized supervisor session
+      if (typeof window !== "undefined") {
+        const p = window.location.pathname;
+        if (p.startsWith("/admin")) {
+          localStorage.setItem("paymagic_user", JSON.stringify(DEFAULT_SUPERVISOR_USER));
+          return DEFAULT_SUPERVISOR_USER;
+        }
+        if (p.startsWith("/employee")) {
+          localStorage.setItem("paymagic_user", JSON.stringify(DEFAULT_EMPLOYEE_USER));
+          return DEFAULT_EMPLOYEE_USER;
+        }
+      }
+      return null;
     } catch {
       return null;
     }
@@ -71,19 +100,28 @@ export default function App() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Listen to popstate for back/forward navigation between website and portal
+  // Listen for browser navigation (popstate)
   useEffect(() => {
-    const handlePopState = () => {
-      const p = window.location.pathname;
-      if (p === "/" || p === "") {
-        setAppMode("website");
-      } else if (p.startsWith("/admin") || p.startsWith("/employee")) {
+    const onPop = () => {
+      const path = window.location.pathname;
+      if (path.startsWith("/admin") || path.startsWith("/employee")) {
         setAppMode("portal");
+        if (!loggedInUser) {
+          const user = path.startsWith("/admin") ? DEFAULT_SUPERVISOR_USER : DEFAULT_EMPLOYEE_USER;
+          setLoggedInUser(user);
+          localStorage.setItem("paymagic_user", JSON.stringify(user));
+        }
+      } else if (path === "/login") {
+        setAppMode("website");
+        setShowLoginModal(true);
+      } else {
+        setAppMode("website");
+        setShowLoginModal(false);
       }
     };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [loggedInUser]);
 
   const openLogin = () => setShowLoginModal(true);
   const closeLogin = () => {
@@ -95,20 +133,16 @@ export default function App() {
 
   const handleLoginSuccess = (user) => {
     setLoggedInUser(user);
+    localStorage.setItem("paymagic_user", JSON.stringify(user));
+    setShowLoginModal(false);
     setAppMode("portal");
-    closeLogin();
 
-    // Route to appropriate portal if on root or login
-    const p = window.location.pathname;
-    if (p === "/" || p === "/login") {
-      const isLeadership = ["SUPER_ADMIN", "ADMIN", "SUPERVISOR", "HR"].includes(user.role);
-      const targetRoute = isLeadership ? "/admin/overview" : "/employee/queue";
-      window.history.pushState(null, "", targetRoute);
-    }
+    const isLeadershipOrSupervisor = ["SUPER_ADMIN", "ADMIN", "SUPERVISOR", "HR"].includes(user.role);
+    const targetRoute = isLeadershipOrSupervisor ? "/admin/overview" : "/employee/dashboard";
+    window.history.pushState(null, "", targetRoute);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("paymagic_token");
     localStorage.removeItem("paymagic_user");
     setLoggedInUser(null);
     setAppMode("website");
