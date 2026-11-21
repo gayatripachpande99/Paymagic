@@ -44,8 +44,15 @@ export default function AdminNavbar({
             onClick={() => setTopNav("home")}
             className="flex items-center gap-2.5 cursor-pointer group select-none"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-              <ShieldCheck className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center group-hover:scale-105 transition-transform shrink-0 shadow-md shadow-blue-500/20 bg-blue-600/20 border border-blue-500/30 p-0.5">
+              <img
+                src="/logo.png"
+                alt="PayMagic Logo"
+                className="w-full h-full object-contain rounded-lg"
+                onError={(e) => {
+                  e.currentTarget.src = "/favicon.png";
+                }}
+              />
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-lg leading-tight tracking-tight text-white flex items-center gap-1.5">
