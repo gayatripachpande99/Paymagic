@@ -264,6 +264,22 @@ export default function LoginModal({
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                 <button
                   type="button"
+                  onClick={() => fillCredentials("PM-SADM-0001", "Admin@123")}
+                  style={{
+                    fontSize: "11px",
+                    padding: "4px 8px",
+                    borderRadius: "6px",
+                    background: "rgba(99, 102, 241, 0.12)",
+                    border: "1px solid rgba(99, 102, 241, 0.3)",
+                    color: "#c7d2fe",
+                    cursor: "pointer"
+                  }}
+                  title="Super Admin - Onkar Holkar"
+                >
+                  Super Admin (Onkar)
+                </button>
+                <button
+                  type="button"
                   onClick={() => fillCredentials("PM-ADM-0001", "Admin@123")}
                   style={{
                     fontSize: "11px",
@@ -274,21 +290,7 @@ export default function LoginModal({
                     color: "#c7d2fe",
                     cursor: "pointer"
                   }}
-                >
-                  Admin (Onkar)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => fillCredentials("PM-ADM-0002", "Admin@123")}
-                  style={{
-                    fontSize: "11px",
-                    padding: "4px 8px",
-                    borderRadius: "6px",
-                    background: "rgba(99, 102, 241, 0.12)",
-                    border: "1px solid rgba(99, 102, 241, 0.3)",
-                    color: "#c7d2fe",
-                    cursor: "pointer"
-                  }}
+                  title="Admin - Bhushan Gaikwad"
                 >
                   Admin (Bhushan)
                 </button>

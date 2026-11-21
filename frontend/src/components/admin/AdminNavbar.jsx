@@ -28,11 +28,17 @@ export default function AdminNavbar({
   const [profileOpen, setProfileOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
 
-  // Default to Bhushan Gaikwad / ADMIN as shown in primary reference screenshot
-  const userName = user?.fullName || "Bhushan Gaikwad";
-  const userRole = user?.role || "ADMIN";
-  const userEmail = user?.email || "infopaymagic@gmail.com";
-  const userInitials = "PT";
+  // Dynamic user data matching logged in credentials with Bhushan Gaikwad as default fallback
+  const userName = user?.fullName || user?.full_name || user?.name || "Bhushan Gaikwad";
+  const userRole = user?.role ? user.role.replace("_", " ") : "ADMIN";
+  const userEmail = user?.email || (userName.toLowerCase().includes("onkar") ? "onkarholkar19@gmail.com" : "admin@paymagic.in");
+  const userInitials = userName
+    .split(" ")
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "BG";
 
   return (
     <header
