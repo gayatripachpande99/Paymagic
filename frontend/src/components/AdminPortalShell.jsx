@@ -23,6 +23,9 @@ import {
 function getInitialTopNav() {
   if (typeof window === "undefined") return "home";
   const p = window.location.pathname.toLowerCase();
+  if (p.includes("call-monitoring") || p.includes("call_monitoring")) return "call_monitoring";
+  if (p.includes("crm")) return "crm";
+  if (p.includes("field-monitoring") || p.includes("field_monitoring")) return "field_monitoring";
   if (p.includes("allocation")) return "allocation";
   if (p.includes("agent") || p.includes("employee")) return "agent";
   if (p.includes("report")) return "more_reports";
@@ -35,8 +38,11 @@ function getInitialTopNav() {
 }
 
 const TAB_TITLES = {
-  home: "PayMagic | Operations Command & Portfolios",
-  allocation: "PayMagic | Institutional Recovery Allocation Management",
+  home: "PayMagic | Portfolio Performance",
+  call_monitoring: "PayMagic | Call Agent Monitoring",
+  crm: "PayMagic | CRM",
+  field_monitoring: "PayMagic | Field Agent Monitoring",
+  allocation: "PayMagic | Allocation Management",
   agent: "PayMagic | Staff Directory & Agent Grouping",
   more_reports: "PayMagic | Regulatory & Statutory Reports",
   more_score: "PayMagic | Yucollect Propensity Score",
@@ -53,9 +59,6 @@ export default function AdminPortalShell({
 }) {
   // Top Navbar State initialized from URL
   const [topNav, setTopNavState] = useState(getInitialTopNav);
-
-  // Home Sidebar State: 'portfolio' | 'call_monitoring' | 'crm' | 'field_monitoring'
-  const [homeSidebar, setHomeSidebar] = useState("portfolio");
 
   // Selected portfolio for One View deep dive
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
@@ -75,7 +78,10 @@ export default function AdminPortalShell({
   const setTopNav = (newTab) => {
     setTopNavState(newTab);
     let targetPath = "/admin/overview";
-    if (newTab === "allocation") targetPath = "/admin/allocations";
+    if (newTab === "call_monitoring") targetPath = "/admin/call-monitoring";
+    else if (newTab === "crm") targetPath = "/admin/crm";
+    else if (newTab === "field_monitoring") targetPath = "/admin/field-monitoring";
+    else if (newTab === "allocation") targetPath = "/admin/allocations";
     else if (newTab === "agent") targetPath = "/admin/employees";
     else if (newTab === "more_reports") targetPath = "/admin/reports";
     else if (newTab === "more_score") targetPath = "/admin/score";
@@ -94,38 +100,6 @@ export default function AdminPortalShell({
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, [topNav]);
-
-  // Sidebar navigation options for Home
-  const homeSidebarItems = [
-    {
-      id: "portfolio",
-      label: "A. Portfolio Performance",
-      shortLabel: "Portfolio Performance",
-      icon: TrendingUp,
-      desc: "All portfolios, One View & channel breakdown"
-    },
-    {
-      id: "call_monitoring",
-      label: "B. Call Agent Monitoring",
-      shortLabel: "Call Monitoring",
-      icon: Headphones,
-      desc: "Live dialer monitoring & agent performance"
-    },
-    {
-      id: "crm",
-      label: "C. CRM",
-      shortLabel: "CRM Desk",
-      icon: PhoneCall,
-      desc: "Supervisor & Agent view, queue & priorities"
-    },
-    {
-      id: "field_monitoring",
-      label: "D. Field Agent Monitoring",
-      shortLabel: "Field Monitoring",
-      icon: Compass,
-      desc: "GPS radar, live tracking & deviation audits"
-    }
-  ];
 
   return (
     <div
@@ -174,166 +148,52 @@ export default function AdminPortalShell({
         }}
       >
         
-        {/* WHEN TOP NAV IS "HOME" */}
+        {/* 1. PORTFOLIO PERFORMANCE PAGE (OVERVIEW - CLEAN FULL-WIDTH, NO SIDEBAR) */}
         {topNav === "home" && (
-          <div
-            className="flex flex-col md:flex-row gap-6"
-            style={{ display: "flex", gap: "24px", flexDirection: "row" }}
-          >
-            
-            {/* Left Home Sidebar */}
-            <aside
-              className="w-full md:w-64 lg:w-72 shrink-0"
-              style={{ width: "270px", flexShrink: 0 }}
-            >
-              <div
-                style={{
-                  position: "sticky",
-                  top: "80px",
-                  borderRadius: "16px",
-                  backgroundColor: theme === "light" ? "#ffffff" : "#041030",
-                  border: theme === "light" ? "1px solid #e2e8f0" : "1px solid rgba(255, 255, 255, 0.08)",
-                  padding: "12px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
-                }}
-              >
-                <div
-                  style={{
-                    padding: "8px 12px",
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                    color: theme === "light" ? "#64748b" : "#94a3b8",
-                    borderBottom: theme === "light" ? "1px solid #e2e8f0" : "1px solid rgba(255, 255, 255, 0.08)",
-                    marginBottom: "6px"
-                  }}
-                >
-                  Operations Command
-                </div>
-
-                {homeSidebarItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = homeSidebar === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setHomeSidebar(item.id);
-                        if (item.id !== "portfolio") {
-                          setSelectedPortfolioId(null);
-                        }
-                      }}
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "10px 12px",
-                        borderRadius: "12px",
-                        textAlign: "left",
-                        backgroundColor: isActive
-                          ? "#1d4ed8"
-                          : theme === "light"
-                          ? "transparent"
-                          : "transparent",
-                        color: isActive
-                          ? "#ffffff"
-                          : theme === "light"
-                          ? "#1e293b"
-                          : "#cbd5e1",
-                        border: "none",
-                        cursor: "pointer",
-                        transition: "all 0.15s ease",
-                        fontWeight: isActive ? 700 : 500,
-                        boxShadow: isActive ? "0 2px 6px rgba(29, 78, 216, 0.4)" : "none"
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
-                        <div
-                          style={{
-                            padding: "6px",
-                            borderRadius: "8px",
-                            backgroundColor: isActive
-                              ? "rgba(255, 255, 255, 0.15)"
-                              : theme === "light"
-                              ? "#f1f5f9"
-                              : "rgba(255, 255, 255, 0.05)",
-                            color: isActive
-                              ? "#ffffff"
-                              : theme === "light"
-                              ? "#64748b"
-                              : "#94a3b8",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                          }}
-                        >
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: "13px", fontWeight: isActive ? 700 : 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {item.label}
-                          </div>
-                        </div>
-                      </div>
-                      <ChevronRight
-                        className="w-3.5 h-3.5"
-                        style={{
-                          flexShrink: 0,
-                          color: isActive ? "#ffffff" : theme === "light" ? "#94a3b8" : "#64748b"
-                        }}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
-            </aside>
-
-            {/* Home Main Content Area */}
-            <main className="flex-1 min-w-0" style={{ flex: 1, minWidth: 0 }}>
-              {homeSidebar === "portfolio" && (
-                <HomePortfolioView
-                  selectedPortfolioId={selectedPortfolioId}
-                  setSelectedPortfolioId={setSelectedPortfolioId}
-                  onNavigateToCallMonitoring={() => setHomeSidebar("call_monitoring")}
-                  allocators={allocators}
-                  setAllocators={setAllocators}
-                  selectedAllocatorId={selectedAllocatorId}
-                  setSelectedAllocatorId={setSelectedAllocatorId}
-                  portfolios={portfolios}
-                  setPortfolios={setPortfolios}
-                  showCreateModal={showCreateAllocatorModal}
-                  setShowCreateModal={setShowCreateAllocatorModal}
-                />
-              )}
-
-              {homeSidebar === "call_monitoring" && (
-                <HomeCallMonitoringView />
-              )}
-
-              {homeSidebar === "crm" && (
-                <HomeCRMView />
-              )}
-
-              {homeSidebar === "field_monitoring" && (
-                <HomeFieldMonitoringView />
-              )}
-            </main>
-
-          </div>
+          <main className="w-full">
+            <HomePortfolioView
+              selectedPortfolioId={selectedPortfolioId}
+              setSelectedPortfolioId={setSelectedPortfolioId}
+              onNavigateToCallMonitoring={() => setTopNav("call_monitoring")}
+              allocators={allocators}
+              setAllocators={setAllocators}
+              selectedAllocatorId={selectedAllocatorId}
+              setSelectedAllocatorId={setSelectedAllocatorId}
+              portfolios={portfolios}
+              setPortfolios={setPortfolios}
+              showCreateModal={showCreateAllocatorModal}
+              setShowCreateModal={setShowCreateAllocatorModal}
+            />
+          </main>
         )}
 
-        {/* WHEN TOP NAV IS "ALLOCATION" */}
+        {/* 2. CALL AGENT MONITORING PAGE */}
+        {topNav === "call_monitoring" && (
+          <main className="w-full">
+            <HomeCallMonitoringView />
+          </main>
+        )}
+
+        {/* 3. CRM PAGE */}
+        {topNav === "crm" && (
+          <main className="w-full">
+            <HomeCRMView />
+          </main>
+        )}
+
+        {/* 4. FIELD AGENT MONITORING PAGE */}
+        {topNav === "field_monitoring" && (
+          <main className="w-full">
+            <HomeFieldMonitoringView />
+          </main>
+        )}
+
+        {/* 5. ALLOCATION MANAGEMENT PAGE */}
         {topNav === "allocation" && (
           <main className="w-full">
             <AllocationView
               onOpenPortfolioDashboard={(portfolioId) => {
                 setTopNav("home");
-                setHomeSidebar("portfolio");
                 setSelectedPortfolioId(portfolioId);
               }}
               selectedAllocatorId={selectedAllocatorId}
@@ -342,14 +202,14 @@ export default function AdminPortalShell({
           </main>
         )}
 
-        {/* WHEN TOP NAV IS "AGENT" */}
+        {/* 6. STAFF DIRECTORY & AGENT PAGE */}
         {topNav === "agent" && (
           <main className="w-full">
             <AgentDirectoryView />
           </main>
         )}
 
-        {/* WHEN TOP NAV IS UNDER "MORE" */}
+        {/* 7. MORE VIEWS */}
         {topNav.startsWith("more_") && (
           <main className="w-full">
             <MoreViews activeTab={topNav} />

@@ -20,7 +20,8 @@ import {
   Landmark,
   Plus,
   X,
-  ShieldCheck
+  ShieldCheck,
+  Eye
 } from "lucide-react";
 
 // ── INITIAL ALLOCATORS (ASSIGNED BANKS / CLIENTS) ──
@@ -1206,7 +1207,7 @@ export default function HomePortfolioView({
                 </div>
               </div>
 
-              {/* Bottom Arrow Indicator */}
+              {/* Bottom Action: One View Button */}
               <div
                 style={{
                   marginTop: "14px",
@@ -1214,14 +1215,40 @@ export default function HomePortfolioView({
                   borderTop: "1px solid rgba(255, 255, 255, 0.05)",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "space-between",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: "#60a5fa"
+                  justifyContent: "flex-end"
                 }}
               >
-                <span>Click to view detailed One View &amp; Dashboards</span>
-                <ChevronRight style={{ width: "16px", height: "16px" }} />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedPortfolioId(item.id);
+                  }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    padding: "6px 16px",
+                    borderRadius: "8px",
+                    backgroundColor: "#1d4ed8",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0 2px 4px rgba(29, 78, 216, 0.3)",
+                    transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#2563eb";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1d4ed8";
+                  }}
+                >
+                  <Eye style={{ width: "14px", height: "14px" }} />
+                  <span>One View</span>
+                </button>
               </div>
             </div>
           ))}

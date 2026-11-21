@@ -82,11 +82,11 @@ export default function AdminNavbar({
       >
         
         {/* Left: Brand & Navigation */}
-        <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
           <div
             onClick={() => setTopNav("home")}
             className="cursor-pointer group select-none"
-            style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", userSelect: "none" }}
+            style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", userSelect: "none", flexShrink: 0 }}
           >
             <div
               style={{
@@ -138,27 +138,95 @@ export default function AdminNavbar({
             </div>
           </div>
 
-          {/* Top Navigation Links: 1. Home | 2. Allocation | 3. Agent | 4. More */}
-          <nav className="hidden md:flex" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          {/* Top Navigation Links: 
+              1. Portfolio | 2. Call Monitoring | 3. CRM | 4. Field Monitoring | 5. Allocation | 6. Agent | 7. More */}
+          <nav className="hidden md:flex" style={{ display: "flex", alignItems: "center", gap: "4px", flexWrap: "nowrap" }}>
             <button
               onClick={() => {
                 setTopNav("home");
                 setMoreDropdownOpen(false);
               }}
               style={{
-                padding: "6px 14px",
+                padding: "5px 12px",
                 borderRadius: "9999px",
-                fontSize: "14px",
+                fontSize: "13px",
                 fontWeight: topNav === "home" ? 700 : 500,
                 backgroundColor: topNav === "home" ? "#1d4ed8" : "transparent",
                 color: topNav === "home" ? "#ffffff" : "#cbd5e1",
                 border: "none",
                 cursor: "pointer",
                 boxShadow: topNav === "home" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none",
-                transition: "all 0.15s ease"
+                transition: "all 0.15s ease",
+                whiteSpace: "nowrap"
               }}
             >
-              Home
+              Portfolio
+            </button>
+
+            <button
+              onClick={() => {
+                setTopNav("call_monitoring");
+                setMoreDropdownOpen(false);
+              }}
+              style={{
+                padding: "5px 12px",
+                borderRadius: "9999px",
+                fontSize: "13px",
+                fontWeight: topNav === "call_monitoring" ? 700 : 500,
+                backgroundColor: topNav === "call_monitoring" ? "#1d4ed8" : "transparent",
+                color: topNav === "call_monitoring" ? "#ffffff" : "#cbd5e1",
+                border: "none",
+                cursor: "pointer",
+                boxShadow: topNav === "call_monitoring" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none",
+                transition: "all 0.15s ease",
+                whiteSpace: "nowrap"
+              }}
+            >
+              Call Monitoring
+            </button>
+
+            <button
+              onClick={() => {
+                setTopNav("crm");
+                setMoreDropdownOpen(false);
+              }}
+              style={{
+                padding: "5px 12px",
+                borderRadius: "9999px",
+                fontSize: "13px",
+                fontWeight: topNav === "crm" ? 700 : 500,
+                backgroundColor: topNav === "crm" ? "#1d4ed8" : "transparent",
+                color: topNav === "crm" ? "#ffffff" : "#cbd5e1",
+                border: "none",
+                cursor: "pointer",
+                boxShadow: topNav === "crm" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none",
+                transition: "all 0.15s ease",
+                whiteSpace: "nowrap"
+              }}
+            >
+              CRM
+            </button>
+
+            <button
+              onClick={() => {
+                setTopNav("field_monitoring");
+                setMoreDropdownOpen(false);
+              }}
+              style={{
+                padding: "5px 12px",
+                borderRadius: "9999px",
+                fontSize: "13px",
+                fontWeight: topNav === "field_monitoring" ? 700 : 500,
+                backgroundColor: topNav === "field_monitoring" ? "#1d4ed8" : "transparent",
+                color: topNav === "field_monitoring" ? "#ffffff" : "#cbd5e1",
+                border: "none",
+                cursor: "pointer",
+                boxShadow: topNav === "field_monitoring" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none",
+                transition: "all 0.15s ease",
+                whiteSpace: "nowrap"
+              }}
+            >
+              Field Monitoring
             </button>
 
             <button
@@ -167,16 +235,17 @@ export default function AdminNavbar({
                 setMoreDropdownOpen(false);
               }}
               style={{
-                padding: "6px 14px",
+                padding: "5px 12px",
                 borderRadius: "9999px",
-                fontSize: "14px",
+                fontSize: "13px",
                 fontWeight: topNav === "allocation" ? 700 : 500,
                 backgroundColor: topNav === "allocation" ? "#1d4ed8" : "transparent",
                 color: topNav === "allocation" ? "#ffffff" : "#cbd5e1",
                 border: "none",
                 cursor: "pointer",
                 boxShadow: topNav === "allocation" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none",
-                transition: "all 0.15s ease"
+                transition: "all 0.15s ease",
+                whiteSpace: "nowrap"
               }}
             >
               Allocation
@@ -188,29 +257,30 @@ export default function AdminNavbar({
                 setMoreDropdownOpen(false);
               }}
               style={{
-                padding: "6px 14px",
+                padding: "5px 12px",
                 borderRadius: "9999px",
-                fontSize: "14px",
+                fontSize: "13px",
                 fontWeight: topNav === "agent" ? 700 : 500,
                 backgroundColor: topNav === "agent" ? "#1d4ed8" : "transparent",
                 color: topNav === "agent" ? "#ffffff" : "#cbd5e1",
                 border: "none",
                 cursor: "pointer",
                 boxShadow: topNav === "agent" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none",
-                transition: "all 0.15s ease"
+                transition: "all 0.15s ease",
+                whiteSpace: "nowrap"
               }}
             >
               Agent
             </button>
 
-            {/* 4. More Dropdown */}
+            {/* More Dropdown */}
             <div style={{ position: "relative" }}>
               <button
                 onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
                 style={{
-                  padding: "6px 14px",
+                  padding: "5px 12px",
                   borderRadius: "9999px",
-                  fontSize: "14px",
+                  fontSize: "13px",
                   fontWeight: topNav.startsWith("more_") ? 700 : 500,
                   backgroundColor: topNav.startsWith("more_") ? "#1d4ed8" : "transparent",
                   color: topNav.startsWith("more_") ? "#ffffff" : "#cbd5e1",
@@ -219,7 +289,8 @@ export default function AdminNavbar({
                   display: "flex",
                   alignItems: "center",
                   gap: "4px",
-                  transition: "all 0.15s ease"
+                  transition: "all 0.15s ease",
+                  whiteSpace: "nowrap"
                 }}
               >
                 <span>More</span>
