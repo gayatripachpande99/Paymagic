@@ -118,9 +118,6 @@ export default function LoginModal({
               <h2 style={{ fontSize: "20px", fontWeight: 800, color: "#f8fafc", marginTop: "8px" }}>
                 Sign In to PayMagic
               </h2>
-              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>
-                Enter your credentials to access your authorized workspace
-              </p>
             </div>
 
             {errorMsg && (

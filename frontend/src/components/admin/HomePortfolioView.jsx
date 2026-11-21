@@ -325,9 +325,6 @@ export default function HomePortfolioView({
                   {activePortfolio.product}
                 </span>
               </div>
-              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px", margin: 0 }}>
-                PayMagic Recovery Portfolio Performance &amp; Multi-Channel Breakdown
-              </p>
             </div>
           </div>
 
@@ -1019,9 +1016,6 @@ export default function HomePortfolioView({
               PayMagic PVT LTD
             </span>
           </h2>
-          <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", margin: 0 }}>
-            Institutional recovery allocations assigned for omnichannel collections &amp; multi-channel recovery
-          </p>
         </div>
 
         {/* Create Allocator Action Button */}
@@ -1084,9 +1078,6 @@ export default function HomePortfolioView({
               <span style={{ fontSize: "13px", fontWeight: 700, color: "#ffffff" }}>
                 Assigned Banks &amp; Institutional Allocators:
               </span>
-              <p style={{ fontSize: "11px", color: "#94a3b8", margin: 0 }}>
-                Select an allocator below. Exactly one allocator can be selected at a time, strictly isolating its portfolios.
-              </p>
             </div>
           </div>
         </div>

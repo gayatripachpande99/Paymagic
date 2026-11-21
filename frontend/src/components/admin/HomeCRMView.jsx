@@ -236,9 +236,6 @@ export default function HomeCRMView() {
               </button>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Track tasks, make calls, and monitor progress in real time.
-          </p>
         </div>
 
         {/* Right Buttons: Switch campaigns, Messages, Priority Tasks */}

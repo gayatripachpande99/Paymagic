@@ -24,9 +24,6 @@ export default function HomeFieldMonitoringView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-card border border-border shadow-sm">
         <div>
           <h2 className="text-xl font-bold text-foreground">Field Agent Monitoring</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            GPS radar verification, live geo-tracking, and distance deviation audits
-          </p>
         </div>
 
         {/* 1. Live Monitoring | 2. Deviation Monitoring */}
@@ -84,7 +81,6 @@ export default function HomeFieldMonitoringView() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-bold text-foreground">Field Agent Live Radar</h3>
-                <p className="text-xs text-muted-foreground">Real-time status of recovery agents on ground</p>
               </div>
 
               {/* Toggle Map / List */}
@@ -170,7 +166,6 @@ export default function HomeFieldMonitoringView() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-bold text-foreground">Geofence Compliance Log</h3>
-                <p className="text-xs text-muted-foreground">Discrepancies between borrower recorded address and field check-in</p>
               </div>
 
               {/* Toggle Map / List */}

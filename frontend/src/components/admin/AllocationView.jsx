@@ -283,9 +283,6 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
           <h1 style={{ fontSize: "24px", fontWeight: 700, color: "#ffffff", letterSpacing: "-0.02em", margin: 0 }}>
             Allocation Management
           </h1>
-          <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", marginBottom: 0 }}>
-            The Allocation Summary gives you a complete view of all institutional portfolios and channels
-          </p>
         </div>
 
         {/* Sub-navigation tabs: Allocation List | Upload New File | Upload History */}
@@ -895,9 +892,6 @@ export default function AllocationView({ onOpenPortfolioDashboard }) {
                   <Download style={{ width: "14px", height: "14px" }} />
                   <span>Download Sample Allocation File</span>
                 </button>
-                <p style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>
-                  Use this template for correctly formatted, smooth processing.
-                </p>
               </div>
 
               <button

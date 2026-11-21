@@ -97,9 +97,6 @@ export default function MoreViews({ activeTab }) {
         <div className="p-5 rounded-2xl bg-card border border-border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold text-foreground">Yucollect Score</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Proprietary recovery likelihood propensity scores calculated per portfolio bucket
-            </p>
           </div>
           <button className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm">
             <Sparkles className="w-3.5 h-3.5" />
@@ -182,9 +179,6 @@ export default function MoreViews({ activeTab }) {
       {/* Top Header */}
       <div className="p-5 rounded-2xl bg-card border border-border shadow-sm">
         <h2 className="text-xl font-bold text-foreground">Operational Reports Center</h2>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Download omnichannel reports, call center metrics, field recovery logs, and voice recordings
-        </p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">
@@ -272,9 +266,6 @@ export default function MoreViews({ activeTab }) {
             <div className="p-5 rounded-2xl bg-card border border-border space-y-5 animate-in fade-in">
               <div>
                 <h3 className="text-lg font-bold text-foreground">All Reports</h3>
-                <p className="text-xs text-muted-foreground">
-                  Download reports from different channels to track performance
-                </p>
               </div>
 
               {/* Date Filters: 18-11-2026 to 18-11-2026 & Search */}
@@ -351,9 +342,6 @@ export default function MoreViews({ activeTab }) {
             <div className="p-5 rounded-2xl bg-card border border-border space-y-5 animate-in fade-in">
               <div>
                 <h3 className="text-lg font-bold text-foreground">Contact Center (CC) Reports</h3>
-                <p className="text-xs text-muted-foreground">
-                  Call center dialer statistics, talk time analysis, and telecaller disposition summaries
-                </p>
               </div>
 
               <div className="flex items-center gap-2 text-xs">
@@ -406,9 +394,6 @@ export default function MoreViews({ activeTab }) {
             <div className="p-5 rounded-2xl bg-card border border-border space-y-5 animate-in fade-in">
               <div>
                 <h3 className="text-lg font-bold text-foreground">Field Reports</h3>
-                <p className="text-xs text-muted-foreground">
-                  Download reports from different channels to track performance
-                </p>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
@@ -474,9 +459,6 @@ export default function MoreViews({ activeTab }) {
             <div className="p-5 rounded-2xl bg-card border border-border space-y-5 animate-in fade-in">
               <div>
                 <h3 className="text-lg font-bold text-foreground">Filter and Download Report</h3>
-                <p className="text-xs text-muted-foreground">
-                  Digital channel dispatch logs (SMS, WhatsApp, Automated BOT)
-                </p>
               </div>
 
               {/* Date Filters: Start date & End date */}
@@ -549,9 +531,6 @@ export default function MoreViews({ activeTab }) {
             <div className="p-5 rounded-2xl bg-card border border-border space-y-5 animate-in fade-in">
               <div>
                 <h3 className="text-lg font-bold text-foreground">Filter and Download all Call Recordings</h3>
-                <p className="text-xs text-muted-foreground">
-                  Statutory audio recordings archive for institutional compliance and dispute reviews
-                </p>
               </div>
 
               {/* Filters: Allocation File & Date range */}

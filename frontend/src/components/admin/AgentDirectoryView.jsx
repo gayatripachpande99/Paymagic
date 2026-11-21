@@ -268,9 +268,6 @@ export default function AgentDirectoryView() {
           <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
             Agent &amp; Campaign Center
           </h2>
-          <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", margin: 0 }}>
-            Manage agents, groupings, dialer campaigns, and automated incentives
-          </p>
         </div>
 
         {/* 4 Sub-Tabs */}
@@ -341,9 +338,6 @@ export default function AgentDirectoryView() {
               <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
                 Agents list
               </h3>
-              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", margin: 0 }}>
-                You can view, add, and assign agents to campaigns here.
-              </p>
             </div>
 
             {/* 4 KPIs */}
@@ -827,9 +821,6 @@ export default function AgentDirectoryView() {
               <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
                 Map agents to campaigns
               </h3>
-              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", margin: 0 }}>
-                Assign agents or agent groups to campaigns. View, edit or delete campaigns from here.
-              </p>
             </div>
 
             {/* Top Right Button: Finish Assessment */}
@@ -1330,9 +1321,6 @@ export default function AgentDirectoryView() {
               <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
                 Incentive Program
               </h3>
-              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", margin: 0 }}>
-                Create and edit new or existing incentive programs here.
-              </p>
             </div>
 
             {/* Top Right Button: New Program */}

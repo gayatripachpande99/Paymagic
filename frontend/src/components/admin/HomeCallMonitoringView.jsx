@@ -114,9 +114,6 @@ export default function HomeCallMonitoringView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-card border border-border shadow-sm">
         <div>
           <h2 className="text-xl font-bold text-foreground">All Agents Performance</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Real-time telephony agent status, queue metrics, and shift productivity
-          </p>
         </div>
 
         {/* 1. Live Monitoring | 2. Agent Performance */}
@@ -298,7 +295,6 @@ export default function HomeCallMonitoringView() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-bold text-foreground">Performance Details</h3>
-                <p className="text-xs text-muted-foreground">Detailed agent telemetry logs and quality metrics</p>
               </div>
               <div className="relative">
                 <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
