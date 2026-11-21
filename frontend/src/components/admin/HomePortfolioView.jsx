@@ -1134,9 +1134,6 @@ export default function HomePortfolioView({
                     >
                       {item.name}
                     </h3>
-                    <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>
-                      {item.company}
-                    </div>
                   </div>
                 </div>
 
