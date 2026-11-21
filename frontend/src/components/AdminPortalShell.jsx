@@ -719,17 +719,20 @@ export default function AdminPortalShell({ user, onLogout, onBackToHome, theme =
       )}
 
       {/* ── WORKSPACE BODY ── */}
-      <div style={{ display: "flex", flex: 1 }}>
+      <div className="portal-workspace-body" style={{ display: "flex", flex: 1 }}>
         {/* SIDEBAR NAVIGATION */}
-        <aside style={{
-          width: "250px",
-          background: "#0B1733",
-          borderRight: "1px solid #263957",
-          padding: "20px 12px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "6px"
-        }}>
+        <aside
+          className="portal-sidebar-nav"
+          style={{
+            width: "250px",
+            background: isLight ? "#FFFFFF" : "#0B1733",
+            borderRight: `1px solid ${isLight ? "#E2E8F0" : "#263957"}`,
+            padding: "20px 12px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "6px"
+          }}
+        >
           {[
             { id: "overview", label: "Executive Overview", icon: BarChart3 },
             { id: "cases", label: "Case Allocation", icon: Layers, badge: summary.unassigned_cases },
@@ -788,7 +791,7 @@ export default function AdminPortalShell({ user, onLogout, onBackToHome, theme =
         </aside>
 
         {/* CONTENT AREA */}
-        <main style={{ flex: 1, padding: "28px", overflowY: "auto", background: "#050B20" }}>
+        <main className="portal-main-area" style={{ flex: 1, padding: "28px", overflowY: "auto", background: isLight ? "#F8FAFC" : "#050B20" }}>
           {/* ═══════════════════════════════════════════════════════
               PAGE 1: EXECUTIVE OVERVIEW (Architecture Section 8 & 5)
           ═══════════════════════════════════════════════════════ */}

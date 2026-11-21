@@ -528,17 +528,20 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
       )}
 
       {/* ── MAIN WORKSPACE ── */}
-      <div style={{ display: "flex", flex: 1 }}>
+      <div className="portal-workspace-body" style={{ display: "flex", flex: 1 }}>
         {/* SIDEBAR NAVIGATION */}
-        <aside style={{
-          width: "240px",
-          background: "#0B1733",
-          borderRight: "1px solid #263957",
-          padding: "20px 12px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "6px"
-        }}>
+        <aside
+          className="portal-sidebar-nav"
+          style={{
+            width: "240px",
+            background: isLight ? "#FFFFFF" : "#0B1733",
+            borderRight: `1px solid ${isLight ? "#E2E8F0" : "#263957"}`,
+            padding: "20px 12px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "6px"
+          }}
+        >
           {[
             { id: "queue", label: "My Working Queue", icon: Layers, badge: summary.assigned_accounts },
             { id: "tasks", label: "Priority Tasks & PTP", icon: Calendar, badge: summary.pending_followups },
@@ -590,7 +593,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
         </aside>
 
         {/* CONTENT BODY */}
-        <main style={{ flex: 1, padding: "28px", overflowY: "auto" }}>
+        <main className="portal-main-area" style={{ flex: 1, padding: "28px", overflowY: "auto", background: isLight ? "#F8FAFC" : "transparent" }}>
           {/* Active Allocator & Campaign Context Strip (Architecture Section 3) */}
           <div style={{
             padding: "16px 20px",
