@@ -16,12 +16,42 @@ import {
   Filter,
   TrendingUp,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  Landmark,
+  Plus,
+  X,
+  ShieldCheck
 } from "lucide-react";
 
-export const PORTFOLIOS = [
+// ── INITIAL ALLOCATORS (ASSIGNED BANKS / CLIENTS) ──
+export const INITIAL_ALLOCATORS = [
+  {
+    id: "alloc_bajaj",
+    name: "Bajaj Finserve",
+    code: "BAJAJ",
+    type: "NBFC",
+    company: "PayMagic PVT LTD",
+    badge: "B",
+    badgeColor: "bg-blue-600"
+  },
+  {
+    id: "alloc_punewala",
+    name: "Punewala (Poonawalla Fincorp)",
+    code: "PUNEWALA",
+    type: "NBFC",
+    company: "PayMagic PVT LTD",
+    badge: "P",
+    badgeColor: "bg-purple-600"
+  }
+];
+
+// ── ALLOCATIONS SCOPED BY ALLOCATOR ID ──
+export const INITIAL_PORTFOLIOS = [
+  // ── 1. BAJAJ FINSERVE ALLOCATIONS (4 EXACT ALLOCATIONS) ──
   {
     id: "bajaj_nov_18",
+    allocatorId: "alloc_bajaj",
+    allocatorName: "Bajaj Finserve",
     name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-18_16:32",
     company: "PayMagic PVT LTD",
     badge: "B",
@@ -40,6 +70,8 @@ export const PORTFOLIOS = [
   },
   {
     id: "bajaj_nov_13",
+    allocatorId: "alloc_bajaj",
+    allocatorName: "Bajaj Finserve",
     name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-13_10:13",
     company: "PayMagic PVT LTD",
     badge: "B",
@@ -58,6 +90,8 @@ export const PORTFOLIOS = [
   },
   {
     id: "bajaj_nov_04_13",
+    allocatorId: "alloc_bajaj",
+    allocatorName: "Bajaj Finserve",
     name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-04_13:45",
     company: "PayMagic PVT LTD",
     badge: "B",
@@ -76,6 +110,8 @@ export const PORTFOLIOS = [
   },
   {
     id: "bajaj_nov_04_11",
+    allocatorId: "alloc_bajaj",
+    allocatorName: "Bajaj Finserve",
     name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-04_11:31",
     company: "PayMagic PVT LTD",
     badge: "B",
@@ -91,19 +127,132 @@ export const PORTFOLIOS = [
     product: "Personal Loan",
     bucket: "Writeoff",
     date: "2026-11-04"
+  },
+
+  // ── 2. PUNEWALA ALLOCATIONS (ISOLATED EXCLUSIVELY TO PUNEWALA) ──
+  {
+    id: "punewala_nov_16",
+    allocatorId: "alloc_punewala",
+    allocatorName: "Punewala (Poonawalla Fincorp)",
+    name: "PUNEWALA_Personal Loan_Writeoff_2026-11-16_14:20",
+    company: "PayMagic PVT LTD",
+    badge: "P",
+    badgeColor: "bg-purple-600",
+    channel: "Call",
+    statusText: "Ends in 22 days",
+    isExpired: false,
+    accounts: 85,
+    collectedPct: "0.00%",
+    outstanding: "₹2.40 Cr",
+    collectedAmount: "₹0 / ₹2.40 Cr",
+    collectable: "₹1.55 Cr",
+    product: "Personal Loan",
+    bucket: "Writeoff",
+    date: "2026-11-16"
+  },
+  {
+    id: "punewala_nov_10",
+    allocatorId: "alloc_punewala",
+    allocatorName: "Punewala (Poonawalla Fincorp)",
+    name: "PUNEWALA_Business Loan_Writeoff_2026-11-10_11:15",
+    company: "PayMagic PVT LTD",
+    badge: "P",
+    badgeColor: "bg-purple-600",
+    channel: "Call",
+    statusText: "Ends in 14 days",
+    isExpired: false,
+    accounts: 64,
+    collectedPct: "0.00%",
+    outstanding: "₹1.85 Cr",
+    collectedAmount: "₹0 / ₹1.85 Cr",
+    collectable: "₹1.10 Cr",
+    product: "Business Loan",
+    bucket: "Writeoff",
+    date: "2026-11-10"
   }
 ];
+
+export const PORTFOLIOS = INITIAL_PORTFOLIOS;
 
 export default function HomePortfolioView({
   selectedPortfolioId,
   setSelectedPortfolioId,
   onNavigateToCallMonitoring
 }) {
+  const [allocators, setAllocators] = useState(INITIAL_ALLOCATORS);
+  const [selectedAllocatorId, setSelectedAllocatorId] = useState("alloc_bajaj");
+  const [portfolios, setPortfolios] = useState(INITIAL_PORTFOLIOS);
+
+  // Create Allocator Modal State
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: "",
+    code: "",
+    type: "NBFC",
+    initialAllocation: ""
+  });
+  const [createError, setCreateError] = useState("");
+
   const [detailTab, setDetailTab] = useState("one_view"); // one_view, call, field, digital
   const [digitalSubTab, setDigitalSubTab] = useState("sms"); // sms, ivr, bot
   const [fieldSearch, setFieldSearch] = useState("");
 
-  const activePortfolio = PORTFOLIOS.find((p) => p.id === selectedPortfolioId);
+  const activePortfolio = portfolios.find((p) => p.id === selectedPortfolioId) || PORTFOLIOS.find((p) => p.id === selectedPortfolioId);
+  const selectedAllocator = allocators.find((a) => a.id === selectedAllocatorId) || allocators[0];
+  const filteredPortfolios = portfolios.filter((p) => p.allocatorId === selectedAllocatorId);
+
+  const handleCreateAllocator = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!createForm.name.trim() || !createForm.code.trim()) {
+      setCreateError("Please provide both Allocator / Bank Name and Bank Code.");
+      return;
+    }
+
+    const newId = `alloc_${createForm.code.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${Date.now().toString().slice(-4)}`;
+    const newBadge = createForm.name.trim().charAt(0).toUpperCase();
+
+    const newAlloc = {
+      id: newId,
+      name: createForm.name.trim(),
+      code: createForm.code.trim().toUpperCase(),
+      type: createForm.type,
+      company: "PayMagic PVT LTD",
+      badge: newBadge,
+      badgeColor: "bg-emerald-600"
+    };
+
+    setAllocators([...allocators, newAlloc]);
+    setSelectedAllocatorId(newId);
+
+    // Optional initial allocation under this new allocator
+    if (createForm.initialAllocation.trim()) {
+      const newPortfolio = {
+        id: `port_${Date.now()}`,
+        allocatorId: newId,
+        allocatorName: newAlloc.name,
+        name: createForm.initialAllocation.trim(),
+        company: "PayMagic PVT LTD",
+        badge: newBadge,
+        badgeColor: "bg-emerald-600",
+        channel: "Call",
+        statusText: "Ends in 30 days",
+        isExpired: false,
+        accounts: 25,
+        collectedPct: "0.00%",
+        outstanding: "₹50.00 Lakh",
+        collectedAmount: "₹0 / ₹50.00 Lakh",
+        collectable: "₹32.50 Lakh",
+        product: "Personal Loan",
+        bucket: "Writeoff",
+        date: new Date().toISOString().slice(0, 10)
+      };
+      setPortfolios([newPortfolio, ...portfolios]);
+    }
+
+    setShowCreateModal(false);
+    setCreateForm({ name: "", code: "", type: "NBFC", initialAllocation: "" });
+    setCreateError("");
+  };
 
   // If a portfolio is clicked, render the detailed portfolio breakdown
   if (activePortfolio) {
@@ -833,187 +982,623 @@ export default function HomePortfolioView({
     );
   }
 
-  // ── DEFAULT: RENDER 4 PORTFOLIO CARDS ──
+  // ── DEFAULT: RENDER ALLOCATOR SELECTOR & ISOLATED PORTFOLIO CARDS ──
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-5 rounded-2xl bg-card border border-border shadow-sm">
+      {/* ── 1. HEADER ── */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "12px",
+          padding: "20px",
+          borderRadius: "16px",
+          backgroundColor: "#041030",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+          flexWrap: "wrap"
+        }}
+      >
         <div>
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+          <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", display: "flex", alignItems: "center", gap: "10px", margin: 0 }}>
             <span>All Portfolios</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 font-mono">
+            <span
+              style={{
+                fontSize: "11px",
+                padding: "2px 8px",
+                borderRadius: "9999px",
+                backgroundColor: "rgba(37, 99, 235, 0.15)",
+                color: "#60a5fa",
+                border: "1px solid rgba(37, 99, 235, 0.3)",
+                fontFamily: "monospace"
+              }}
+            >
               PayMagic PVT LTD
             </span>
           </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Institutional recovery allocations assigned for omnichannel collections
+          <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", margin: 0 }}>
+            Institutional recovery allocations assigned for omnichannel collections &amp; multi-channel recovery
           </p>
+        </div>
+
+        {/* Create Allocator Action Button */}
+        <button
+          onClick={() => {
+            setCreateError("");
+            setShowCreateModal(true);
+          }}
+          style={{
+            padding: "8px 16px",
+            borderRadius: "10px",
+            backgroundColor: "#1d4ed8",
+            color: "#ffffff",
+            fontSize: "12px",
+            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            border: "none",
+            cursor: "pointer",
+            boxShadow: "0 2px 6px rgba(29, 78, 216, 0.4)",
+            transition: "all 0.15s ease"
+          }}
+        >
+          <Plus style={{ width: "16px", height: "16px" }} />
+          <span>Create Allocator</span>
+        </button>
+      </div>
+
+      {/* ── 2. ASSIGNED BANKS / ALLOCATORS SELECTOR (STRICT ISOLATION) ── */}
+      <div
+        style={{
+          padding: "18px 20px",
+          borderRadius: "16px",
+          backgroundColor: "#041030",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "14px",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "8px",
+                backgroundColor: "rgba(37, 99, 235, 0.15)",
+                color: "#60a5fa",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+            >
+              <Landmark style={{ width: "18px", height: "18px" }} />
+            </div>
+            <div>
+              <span style={{ fontSize: "13px", fontWeight: 700, color: "#ffffff" }}>
+                Assigned Banks &amp; Institutional Allocators:
+              </span>
+              <p style={{ fontSize: "11px", color: "#94a3b8", margin: 0 }}>
+                Select an allocator below. Exactly one allocator can be selected at a time, strictly isolating its portfolios.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Allocator Pills (Single Selection at a time) */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          {allocators.map((alloc) => {
+            const isSelected = selectedAllocatorId === alloc.id;
+            const count = portfolios.filter((p) => p.allocatorId === alloc.id).length;
+            return (
+              <button
+                key={alloc.id}
+                onClick={() => setSelectedAllocatorId(alloc.id)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px 16px",
+                  borderRadius: "9999px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: isSelected ? 700 : 500,
+                  backgroundColor: isSelected ? "#1d4ed8" : "#0a1535",
+                  color: isSelected ? "#ffffff" : "#cbd5e1",
+                  border: isSelected ? "1px solid #3b82f6" : "1px solid rgba(51, 65, 85, 0.6)",
+                  boxShadow: isSelected ? "0 2px 8px rgba(29, 78, 216, 0.4)" : "none",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                <span
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    borderRadius: "9999px",
+                    backgroundColor: isSelected ? "#ffffff" : "rgba(255, 255, 255, 0.15)",
+                    color: isSelected ? "#1d4ed8" : "#ffffff",
+                    fontSize: "10px",
+                    fontWeight: 800,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >
+                  {alloc.badge}
+                </span>
+                <span>{alloc.name}</span>
+                <span
+                  style={{
+                    padding: "2px 6px",
+                    borderRadius: "9999px",
+                    fontSize: "10px",
+                    fontWeight: 700,
+                    backgroundColor: isSelected ? "rgba(255, 255, 255, 0.25)" : "rgba(255, 255, 255, 0.08)",
+                    color: isSelected ? "#ffffff" : "#94a3b8"
+                  }}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Institutional Isolation Notice */}
+        <div
+          style={{
+            padding: "8px 12px",
+            borderRadius: "8px",
+            backgroundColor: "#020921",
+            border: "1px solid rgba(255, 255, 255, 0.05)",
+            fontSize: "11px",
+            color: "#34d399",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}
+        >
+          <ShieldCheck style={{ width: "14px", height: "14px", flexShrink: 0 }} />
+          <span>
+            Active Allocator: <strong style={{ color: "#ffffff" }}>{selectedAllocator.name}</strong> ({filteredPortfolios.length} Allocations). Institutional data isolation active — allocations from other banks are hidden.
+          </span>
         </div>
       </div>
 
-      {/* 4 Portfolio Boxes Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))",
-          gap: "20px"
-        }}
-      >
-        {PORTFOLIOS.map((item) => (
+      {/* ── 3. ISOLATED PORTFOLIO BOXES GRID ── */}
+      {filteredPortfolios.length > 0 ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))",
+            gap: "20px"
+          }}
+        >
+          {filteredPortfolios.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => setSelectedPortfolioId(item.id)}
+              style={{
+                padding: "20px",
+                borderRadius: "16px",
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                cursor: "pointer",
+                position: "relative",
+                overflow: "hidden",
+                transition: "all 0.2s ease",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.5)";
+                e.currentTarget.style.boxShadow = "0 8px 24px rgba(29, 78, 216, 0.15)";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.2)";
+                e.currentTarget.style.transform = "none";
+              }}
+            >
+              {/* Top Row: Badge, Name, Status, Channel */}
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "10px",
+                      backgroundColor: item.badgeColor === "bg-amber-600" ? "#d97706" : item.badgeColor === "bg-purple-600" ? "#7c3aed" : "#2563eb",
+                      color: "#ffffff",
+                      fontWeight: 700,
+                      fontSize: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)"
+                    }}
+                  >
+                    {item.badge}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <h3
+                      style={{
+                        fontWeight: 700,
+                        fontSize: "14px",
+                        color: "#ffffff",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        margin: 0
+                      }}
+                      title={item.name}
+                    >
+                      {item.name}
+                    </h3>
+                    <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>
+                      {item.company}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status & Channel */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      padding: "2px 8px",
+                      borderRadius: "9999px",
+                      backgroundColor: item.isExpired ? "rgba(244, 63, 94, 0.15)" : "rgba(16, 185, 129, 0.15)",
+                      color: item.isExpired ? "#fb7185" : "#34d399",
+                      border: item.isExpired ? "1px solid rgba(244, 63, 94, 0.3)" : "1px solid rgba(16, 185, 129, 0.3)"
+                    }}
+                  >
+                    {item.statusText}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      padding: "2px 8px",
+                      borderRadius: "9999px",
+                      backgroundColor: "rgba(37, 99, 235, 0.15)",
+                      color: "#60a5fa",
+                      border: "1px solid rgba(37, 99, 235, 0.3)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                  >
+                    <PhoneCall style={{ width: "10px", height: "10px" }} />
+                    {item.channel}
+                  </span>
+                </div>
+              </div>
+
+              {/* Metrics Breakdown Grid */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: "12px",
+                  marginTop: "18px",
+                  paddingTop: "14px",
+                  borderTop: "1px solid rgba(255, 255, 255, 0.08)"
+                }}
+              >
+                <div>
+                  <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Total Accounts</span>
+                  <div style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", marginTop: "2px" }}>{item.accounts}</div>
+                  <div style={{ fontSize: "10px", color: "#34d399", fontWeight: 600, marginTop: "2px" }}>{item.collectedPct} Collected</div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Outstanding</span>
+                  <div style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", marginTop: "2px" }}>{item.outstanding}</div>
+                  <div style={{ fontSize: "10px", color: "#34d399", fontWeight: 600, marginTop: "2px" }}>{item.collectedPct} Collected</div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Collected Amount</span>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#ffffff", marginTop: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {item.collectedAmount}
+                  </div>
+                  <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "2px" }}>Target TOS</div>
+                </div>
+              </div>
+
+              {/* Bottom Arrow Indicator */}
+              <div
+                style={{
+                  marginTop: "14px",
+                  paddingTop: "12px",
+                  borderTop: "1px solid rgba(255, 255, 255, 0.05)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#60a5fa"
+                }}
+              >
+                <span>Click to view detailed One View &amp; Dashboards</span>
+                <ChevronRight style={{ width: "16px", height: "16px" }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div
+          style={{
+            padding: "48px 24px",
+            borderRadius: "16px",
+            backgroundColor: "#041030",
+            border: "1px dashed rgba(255, 255, 255, 0.15)",
+            textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "12px"
+          }}
+        >
           <div
-            key={item.id}
-            onClick={() => setSelectedPortfolioId(item.id)}
             style={{
-              padding: "20px",
-              borderRadius: "16px",
-              backgroundColor: "#041030",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
-              cursor: "pointer",
-              position: "relative",
-              overflow: "hidden",
-              transition: "all 0.2s ease",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.5)";
-              e.currentTarget.style.boxShadow = "0 8px 24px rgba(29, 78, 216, 0.15)";
-              e.currentTarget.style.transform = "translateY(-1px)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.2)";
-              e.currentTarget.style.transform = "none";
+              width: "48px",
+              height: "48px",
+              borderRadius: "12px",
+              backgroundColor: "rgba(37, 99, 235, 0.1)",
+              color: "#60a5fa",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
             }}
           >
-            {/* Top Row: Badge, Name, Status, Channel */}
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+            <Landmark style={{ width: "24px", height: "24px" }} />
+          </div>
+          <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+            No Allocations for {selectedAllocator.name}
+          </h3>
+          <p style={{ fontSize: "12px", color: "#94a3b8", maxWidth: "420px", margin: 0 }}>
+            There are currently no recovery portfolios uploaded for this assigned bank. Go to the Allocation tab to upload an allocation file.
+          </p>
+        </div>
+      )}
+
+      {/* ── 4. CREATE ALLOCATOR MODAL ── */}
+      {showCreateModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 50,
+            backgroundColor: "rgba(0, 0, 0, 0.75)",
+            backdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px"
+          }}
+          onClick={() => setShowCreateModal(false)}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "460px",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              borderRadius: "16px",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.8)"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <div
                   style={{
                     width: "36px",
                     height: "36px",
                     borderRadius: "10px",
-                    backgroundColor: item.badgeColor === "bg-amber-600" ? "#d97706" : "#2563eb",
-                    color: "#ffffff",
-                    fontWeight: 700,
-                    fontSize: "14px",
+                    backgroundColor: "rgba(37, 99, 235, 0.2)",
+                    color: "#60a5fa",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)"
+                    justifyContent: "center"
                   }}
                 >
-                  {item.badge}
+                  <Landmark style={{ width: "18px", height: "18px" }} />
                 </div>
-                <div style={{ minWidth: 0 }}>
-                  <h3
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                    Create New Allocator
+                  </h3>
+                  <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+                    Add an assigned bank or institutional lender
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                style={{
+                  padding: "4px",
+                  borderRadius: "6px",
+                  backgroundColor: "transparent",
+                  border: "none",
+                  color: "#94a3b8",
+                  cursor: "pointer"
+                }}
+              >
+                <X style={{ width: "18px", height: "18px" }} />
+              </button>
+            </div>
+
+            {createError && (
+              <div
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  backgroundColor: "rgba(244, 63, 94, 0.15)",
+                  border: "1px solid rgba(244, 63, 94, 0.3)",
+                  color: "#fb7185",
+                  fontSize: "11px"
+                }}
+              >
+                {createError}
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleCreateAllocator} style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "12px" }}>
+              <div>
+                <label style={{ display: "block", color: "#cbd5e1", fontWeight: 600, marginBottom: "4px" }}>
+                  Allocator / Bank Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Tata Capital, IDFC First Bank"
+                  value={createForm.name}
+                  onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: "10px",
+                    backgroundColor: "#020921",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div>
+                  <label style={{ display: "block", color: "#cbd5e1", fontWeight: 600, marginBottom: "4px" }}>
+                    Bank Code *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. TATACAP"
+                    value={createForm.code}
+                    onChange={(e) => setCreateForm({ ...createForm, code: e.target.value })}
                     style={{
-                      fontWeight: 700,
-                      fontSize: "14px",
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
                       color: "#ffffff",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      margin: 0
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      textTransform: "uppercase"
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", color: "#cbd5e1", fontWeight: 600, marginBottom: "4px" }}>
+                    Client Type
+                  </label>
+                  <select
+                    value={createForm.type}
+                    onChange={(e) => setCreateForm({ ...createForm, type: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box"
                     }}
                   >
-                    {item.name}
-                  </h3>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "2px" }}>
-                    {item.company}
-                  </div>
+                    <option value="NBFC">NBFC</option>
+                    <option value="SCHEDULED_COMMERCIAL_BANK">Scheduled Bank</option>
+                    <option value="FINTECH">Fintech Lender</option>
+                  </select>
                 </div>
               </div>
 
-              {/* Status & Channel */}
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                <span
+              <div>
+                <label style={{ display: "block", color: "#cbd5e1", fontWeight: 600, marginBottom: "4px" }}>
+                  Initial Portfolio Name (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. TATA_Personal Loan_Writeoff_2026-11-20"
+                  value={createForm.initialAllocation}
+                  onChange={(e) => setCreateForm({ ...createForm, initialAllocation: e.target.value })}
                   style={{
-                    fontSize: "11px",
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: "10px",
+                    backgroundColor: "#020921",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", paddingTop: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "10px",
+                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    color: "#ffffff",
                     fontWeight: 700,
-                    padding: "2px 8px",
-                    borderRadius: "9999px",
-                    backgroundColor: item.isExpired ? "rgba(244, 63, 94, 0.15)" : "rgba(16, 185, 129, 0.15)",
-                    color: item.isExpired ? "#fb7185" : "#34d399",
-                    border: item.isExpired ? "1px solid rgba(244, 63, 94, 0.3)" : "1px solid rgba(16, 185, 129, 0.3)"
+                    fontSize: "12px",
+                    border: "none",
+                    cursor: "pointer"
                   }}
                 >
-                  {item.statusText}
-                </span>
-                <span
+                  Cancel
+                </button>
+                <button
+                  type="submit"
                   style={{
-                    fontSize: "11px",
+                    padding: "8px 16px",
+                    borderRadius: "10px",
+                    backgroundColor: "#1d4ed8",
+                    color: "#ffffff",
                     fontWeight: 700,
-                    padding: "2px 8px",
-                    borderRadius: "9999px",
-                    backgroundColor: "rgba(37, 99, 235, 0.15)",
-                    color: "#60a5fa",
-                    border: "1px solid rgba(37, 99, 235, 0.3)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px"
+                    fontSize: "12px",
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0 2px 6px rgba(29, 78, 216, 0.4)"
                   }}
                 >
-                  <PhoneCall style={{ width: "10px", height: "10px" }} />
-                  {item.channel}
-                </span>
+                  Save Allocator
+                </button>
               </div>
-            </div>
-
-            {/* Metrics Breakdown Grid */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr 1fr",
-                gap: "12px",
-                marginTop: "18px",
-                paddingTop: "14px",
-                borderTop: "1px solid rgba(255, 255, 255, 0.08)"
-              }}
-            >
-              <div>
-                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Total Accounts</span>
-                <div style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", marginTop: "2px" }}>{item.accounts}</div>
-                <div style={{ fontSize: "10px", color: "#34d399", fontWeight: 600, marginTop: "2px" }}>{item.collectedPct} Collected</div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Outstanding</span>
-                <div style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", marginTop: "2px" }}>{item.outstanding}</div>
-                <div style={{ fontSize: "10px", color: "#34d399", fontWeight: 600, marginTop: "2px" }}>{item.collectedPct} Collected</div>
-              </div>
-
-              <div>
-                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Collected Amount</span>
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "#ffffff", marginTop: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {item.collectedAmount}
-                </div>
-                <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "2px" }}>Target TOS</div>
-              </div>
-            </div>
-
-            {/* Bottom Arrow Indicator */}
-            <div
-              style={{
-                marginTop: "14px",
-                paddingTop: "12px",
-                borderTop: "1px solid rgba(255, 255, 255, 0.05)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "#60a5fa"
-              }}
-            >
-              <span>Click to view detailed One View &amp; Dashboards</span>
-              <ChevronRight style={{ width: "16px", height: "16px" }} />
-            </div>
+            </form>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
     </div>
   );
