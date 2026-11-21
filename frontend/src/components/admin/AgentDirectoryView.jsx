@@ -322,70 +322,147 @@ export default function AgentDirectoryView() {
           1. AGENT LIST SUB-TAB
          ═══════════════════════════════════════════════════════ */}
       {agentSubTab === "agent_list" && (
-        <div className="space-y-6">
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           
-          {/* Header & Subtitle */}
-          <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
+          {/* Header & Subtitle Card */}
+          <div
+            style={{
+              padding: "20px",
+              borderRadius: "16px",
+              backgroundColor: "#041030",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+            }}
+          >
             <div>
-              <h3 className="text-lg font-bold text-foreground">Agents list</h3>
-              <p className="text-xs text-muted-foreground">
+              <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                Agents list
+              </h3>
+              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", margin: 0 }}>
                 You can view, add, and assign agents to campaigns here.
               </p>
             </div>
 
             {/* 4 KPIs */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
-              <div className="p-3.5 rounded-xl bg-muted/40 border border-border">
-                <span className="text-xs font-semibold text-muted-foreground">Total Agents</span>
-                <div className="text-2xl font-black text-foreground mt-0.5">4</div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: "14px",
+                paddingTop: "6px"
+              }}
+            >
+              <div
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(255, 255, 255, 0.06)"
+                }}
+              >
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", display: "block" }}>Total Agents</span>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "#ffffff", marginTop: "2px" }}>4</div>
               </div>
-              <div className="p-3.5 rounded-xl bg-muted/40 border border-border">
-                <span className="text-xs font-semibold text-muted-foreground">Online Agents</span>
-                <div className="text-2xl font-black text-emerald-500 mt-0.5">0</div>
+              <div
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(255, 255, 255, 0.06)"
+                }}
+              >
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", display: "block" }}>Online Agents</span>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "#34d399", marginTop: "2px" }}>0</div>
               </div>
-              <div className="p-3.5 rounded-xl bg-muted/40 border border-border">
-                <span className="text-xs font-semibold text-muted-foreground">Unallocated Agents</span>
-                <div className="text-2xl font-black text-amber-500 mt-0.5">0</div>
+              <div
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(255, 255, 255, 0.06)"
+                }}
+              >
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", display: "block" }}>Unallocated Agents</span>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "#fbbf24", marginTop: "2px" }}>0</div>
               </div>
-              <div className="p-3.5 rounded-xl bg-muted/40 border border-border">
-                <span className="text-xs font-semibold text-muted-foreground">Nil Allocated Agents</span>
-                <div className="text-2xl font-black text-rose-500 mt-0.5">0</div>
+              <div
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(255, 255, 255, 0.06)"
+                }}
+              >
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", display: "block" }}>Nil Allocated Agents</span>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "#fb7185", marginTop: "2px" }}>0</div>
               </div>
             </div>
           </div>
 
           {/* Controls: 3 Buttons (All, Field, Call) + Create Agent Group + Search */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "12px",
+              flexWrap: "wrap"
+            }}
+          >
             
             {/* 3 Buttons */}
-            <div className="flex items-center gap-2 flex-wrap">
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
               <button
                 onClick={() => setAgentListFilter("all")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  agentListFilter === "all"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                }`}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "9999px",
+                  fontSize: "12px",
+                  fontWeight: agentListFilter === "all" ? 700 : 500,
+                  backgroundColor: agentListFilter === "all" ? "#1d4ed8" : "#0a1535",
+                  color: agentListFilter === "all" ? "#ffffff" : "#cbd5e1",
+                  border: agentListFilter === "all" ? "1px solid #1d4ed8" : "1px solid rgba(51, 65, 85, 0.6)",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  boxShadow: agentListFilter === "all" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none"
+                }}
               >
                 1. All Agent
               </button>
               <button
                 onClick={() => setAgentListFilter("field")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  agentListFilter === "field"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                }`}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "9999px",
+                  fontSize: "12px",
+                  fontWeight: agentListFilter === "field" ? 700 : 500,
+                  backgroundColor: agentListFilter === "field" ? "#1d4ed8" : "#0a1535",
+                  color: agentListFilter === "field" ? "#ffffff" : "#cbd5e1",
+                  border: agentListFilter === "field" ? "1px solid #1d4ed8" : "1px solid rgba(51, 65, 85, 0.6)",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  boxShadow: agentListFilter === "field" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none"
+                }}
               >
                 2. Field Agent
               </button>
               <button
                 onClick={() => setAgentListFilter("call")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  agentListFilter === "call"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                }`}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "9999px",
+                  fontSize: "12px",
+                  fontWeight: agentListFilter === "call" ? 700 : 500,
+                  backgroundColor: agentListFilter === "call" ? "#1d4ed8" : "#0a1535",
+                  color: agentListFilter === "call" ? "#ffffff" : "#cbd5e1",
+                  border: agentListFilter === "call" ? "1px solid #1d4ed8" : "1px solid rgba(51, 65, 85, 0.6)",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  boxShadow: agentListFilter === "call" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none"
+                }}
               >
                 3. Call Agent
               </button>
@@ -394,102 +471,218 @@ export default function AgentDirectoryView() {
               {agentListFilter === "call" && (
                 <button
                   onClick={() => setAgentSubTab("agent_group")}
-                  className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all animate-in fade-in"
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: "9999px",
+                    backgroundColor: "#059669",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0 2px 6px rgba(5, 150, 105, 0.3)",
+                    transition: "all 0.15s ease"
+                  }}
                 >
-                  <FolderPlus className="w-3.5 h-3.5" />
+                  <FolderPlus style={{ width: "14px", height: "14px" }} />
                   <span>Create Agent Group</span>
                 </button>
               )}
             </div>
 
             {/* Search input */}
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <div style={{ position: "relative" }}>
+              <Search
+                style={{
+                  width: "14px",
+                  height: "14px",
+                  position: "absolute",
+                  left: "12px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#94a3b8"
+                }}
+              />
               <input
                 type="text"
                 value={searchAgentList}
                 onChange={(e) => setSearchAgentList(e.target.value)}
                 placeholder="Search account number, name or mobile..."
-                className="pl-9 pr-3 py-1.5 rounded-xl bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 w-72"
+                style={{
+                  paddingLeft: "36px",
+                  paddingRight: "14px",
+                  paddingTop: "7px",
+                  paddingBottom: "7px",
+                  borderRadius: "10px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  fontSize: "12px",
+                  color: "#ffffff",
+                  outline: "none",
+                  width: "280px"
+                }}
               />
             </div>
           </div>
 
           {/* Full Agents Table (All Exact Columns) */}
-          <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead className="bg-muted text-muted-foreground font-semibold">
+          <div
+            style={{
+              padding: "20px",
+              borderRadius: "16px",
+              backgroundColor: "#041030",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+            }}
+          >
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", textAlign: "left", fontSize: "12px", whiteSpace: "nowrap", borderCollapse: "collapse" }}>
+                <thead
+                  style={{
+                    borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                    color: "#94a3b8",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em"
+                  }}
+                >
                   <tr>
-                    <th className="p-3">Agent Name</th>
-                    <th className="p-3">Supervisor</th>
-                    <th className="p-3">Yucollect ID</th>
-                    <th className="p-3">Agency</th>
-                    <th className="p-3">Agency employee ID</th>
-                    <th className="p-3">Agent Contact</th>
-                    <th className="p-3">Channel</th>
-                    <th className="p-3">Product</th>
-                    <th className="p-3">Bucket</th>
-                    <th className="p-3">DRA</th>
-                    <th className="p-3">Area</th>
-                    <th className="p-3">Base Pincode</th>
-                    <th className="p-3">Residence Pincode</th>
-                    <th className="p-3">Current Address</th>
-                    <th className="p-3">Permanent Address</th>
-                    <th className="p-3">Experience</th>
-                    <th className="p-3">Campaign</th>
-                    <th className="p-3">ACR</th>
-                    <th className="p-3 text-right">Action</th>
+                    <th style={{ padding: "12px 14px" }}>Agent Name</th>
+                    <th style={{ padding: "12px 14px" }}>Supervisor</th>
+                    <th style={{ padding: "12px 14px" }}>Yucollect ID</th>
+                    <th style={{ padding: "12px 14px" }}>Agency</th>
+                    <th style={{ padding: "12px 14px" }}>Agency employee ID</th>
+                    <th style={{ padding: "12px 14px" }}>Agent Contact</th>
+                    <th style={{ padding: "12px 14px" }}>Channel</th>
+                    <th style={{ padding: "12px 14px" }}>Product</th>
+                    <th style={{ padding: "12px 14px" }}>Bucket</th>
+                    <th style={{ padding: "12px 14px" }}>DRA</th>
+                    <th style={{ padding: "12px 14px" }}>Area</th>
+                    <th style={{ padding: "12px 14px" }}>Base Pincode</th>
+                    <th style={{ padding: "12px 14px" }}>Residence Pincode</th>
+                    <th style={{ padding: "12px 14px" }}>Current Address</th>
+                    <th style={{ padding: "12px 14px" }}>Permanent Address</th>
+                    <th style={{ padding: "12px 14px" }}>Experience</th>
+                    <th style={{ padding: "12px 14px" }}>Campaign</th>
+                    <th style={{ padding: "12px 14px" }}>ACR</th>
+                    <th style={{ padding: "12px 14px", textAlign: "right" }}>Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody>
                   {filteredAgents.map((agent, idx) => (
-                    <tr key={idx} className="hover:bg-muted/40 transition-colors">
-                      <td className="p-3 font-semibold text-foreground flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-blue-600/20 text-blue-500 font-bold text-[10px] flex items-center justify-center shrink-0">
-                          {agent.name.substring(0, 2).toUpperCase()}
+                    <tr
+                      key={idx}
+                      style={{
+                        borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+                        transition: "background-color 0.15s ease"
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.02)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+                    >
+                      <td style={{ padding: "14px", fontWeight: 600, color: "#ffffff" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div
+                            style={{
+                              width: "26px",
+                              height: "26px",
+                              borderRadius: "9999px",
+                              backgroundColor: "rgba(37, 99, 235, 0.2)",
+                              color: "#60a5fa",
+                              fontWeight: 700,
+                              fontSize: "10px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0
+                            }}
+                          >
+                            {agent.name.substring(0, 2).toUpperCase()}
+                          </div>
+                          <span>{agent.name}</span>
                         </div>
-                        <span>{agent.name}</span>
                       </td>
-                      <td className="p-3 text-muted-foreground">{agent.supervisor}</td>
-                      <td className="p-3 font-mono font-semibold text-blue-500">{agent.yucollectId}</td>
-                      <td className="p-3 text-muted-foreground">{agent.agency}</td>
-                      <td className="p-3 font-mono text-muted-foreground">{agent.agencyEmployeeId}</td>
-                      <td className="p-3 font-mono text-foreground font-semibold">{agent.contact}</td>
-                      <td className="p-3 font-bold text-foreground">
-                        <span className="px-2 py-0.5 rounded text-[10px] bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                      <td style={{ padding: "14px", color: "#cbd5e1" }}>{agent.supervisor}</td>
+                      <td style={{ padding: "14px", fontFamily: "monospace", fontWeight: 700, color: "#60a5fa" }}>{agent.yucollectId}</td>
+                      <td style={{ padding: "14px", color: "#cbd5e1" }}>{agent.agency}</td>
+                      <td style={{ padding: "14px", fontFamily: "monospace", color: "#94a3b8" }}>{agent.agencyEmployeeId}</td>
+                      <td style={{ padding: "14px", fontFamily: "monospace", color: "#ffffff", fontWeight: 600 }}>{agent.contact}</td>
+                      <td style={{ padding: "14px" }}>
+                        <span
+                          style={{
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            backgroundColor: "rgba(37, 99, 235, 0.15)",
+                            color: "#60a5fa",
+                            border: "1px solid rgba(37, 99, 235, 0.3)"
+                          }}
+                        >
                           {agent.channel}
                         </span>
                       </td>
-                      <td className="p-3 text-muted-foreground">{agent.product}</td>
-                      <td className="p-3">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                      <td style={{ padding: "14px", color: "#cbd5e1" }}>{agent.product}</td>
+                      <td style={{ padding: "14px" }}>
+                        <span
+                          style={{
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            backgroundColor: "rgba(245, 158, 11, 0.15)",
+                            color: "#f59e0b",
+                            border: "1px solid rgba(245, 158, 11, 0.3)"
+                          }}
+                        >
                           {agent.bucket}
                         </span>
                       </td>
-                      <td className="p-3 text-muted-foreground">{agent.dra}</td>
-                      <td className="p-3 text-muted-foreground">{agent.area}</td>
-                      <td className="p-3 font-mono text-muted-foreground">{agent.basePincode}</td>
-                      <td className="p-3 font-mono text-muted-foreground">{agent.residencePincode}</td>
-                      <td className="p-3 text-muted-foreground">{agent.currentAddress}</td>
-                      <td className="p-3 text-muted-foreground">{agent.permanentAddress}</td>
-                      <td className="p-3 font-medium text-foreground">{agent.experience}</td>
-                      <td className="p-3 text-muted-foreground truncate max-w-xs" title={agent.campaign}>
+                      <td style={{ padding: "14px", color: "#94a3b8" }}>{agent.dra}</td>
+                      <td style={{ padding: "14px", color: "#cbd5e1" }}>{agent.area}</td>
+                      <td style={{ padding: "14px", fontFamily: "monospace", color: "#94a3b8" }}>{agent.basePincode}</td>
+                      <td style={{ padding: "14px", fontFamily: "monospace", color: "#94a3b8" }}>{agent.residencePincode}</td>
+                      <td style={{ padding: "14px", color: "#cbd5e1" }}>{agent.currentAddress}</td>
+                      <td style={{ padding: "14px", color: "#cbd5e1" }}>{agent.permanentAddress}</td>
+                      <td style={{ padding: "14px", color: "#ffffff", fontWeight: 500 }}>{agent.experience}</td>
+                      <td style={{ padding: "14px", color: "#94a3b8", maxWidth: "240px", overflow: "hidden", textOverflow: "ellipsis" }} title={agent.campaign}>
                         {agent.campaign}
                       </td>
-                      <td className="p-3 font-bold text-foreground">{agent.acr}</td>
-                      <td className="p-3 text-right relative">
+                      <td style={{ padding: "14px", fontWeight: 700, color: "#ffffff" }}>{agent.acr}</td>
+                      <td style={{ padding: "14px", textAlign: "right", position: "relative" }}>
                         <button
                           onClick={() => setActionMenuOpen(actionMenuOpen === idx ? null : idx)}
-                          className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
+                          style={{
+                            padding: "4px",
+                            borderRadius: "6px",
+                            backgroundColor: "transparent",
+                            border: "none",
+                            color: "#94a3b8",
+                            cursor: "pointer"
+                          }}
                         >
-                          <MoreVertical className="w-4 h-4" />
+                          <MoreVertical style={{ width: "16px", height: "16px" }} />
                         </button>
 
                         {/* Three Dots Dropdown Menu: View Profile, Edit Profile, Offboard Agent, Unblock User */}
                         {actionMenuOpen === idx && (
                           <div
-                            className="absolute right-0 mt-1 w-44 rounded-xl bg-card border border-border p-1 shadow-xl z-50 text-left animate-in fade-in zoom-in-95"
+                            style={{
+                              position: "absolute",
+                              right: 0,
+                              marginTop: "4px",
+                              width: "180px",
+                              borderRadius: "12px",
+                              backgroundColor: "#051336",
+                              border: "1px solid rgba(255, 255, 255, 0.12)",
+                              padding: "6px",
+                              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.7)",
+                              zIndex: 50,
+                              textAlign: "left"
+                            }}
                             onClick={() => setActionMenuOpen(null)}
                           >
                             <button
@@ -497,9 +690,25 @@ export default function AgentDirectoryView() {
                                 setSelectedAgentForModal(agent);
                                 setActiveActionModal("view_profile");
                               }}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted rounded-lg"
+                              style={{
+                                width: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                padding: "8px 10px",
+                                fontSize: "12px",
+                                fontWeight: 600,
+                                color: "#ffffff",
+                                backgroundColor: "transparent",
+                                border: "none",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                textAlign: "left"
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                             >
-                              <Eye className="w-3.5 h-3.5 text-blue-500" />
+                              <Eye style={{ width: "14px", height: "14px", color: "#60a5fa" }} />
                               <span>View Profile</span>
                             </button>
                             <button
@@ -507,9 +716,25 @@ export default function AgentDirectoryView() {
                                 setSelectedAgentForModal(agent);
                                 setActiveActionModal("edit_profile");
                               }}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted rounded-lg"
+                              style={{
+                                width: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                padding: "8px 10px",
+                                fontSize: "12px",
+                                fontWeight: 600,
+                                color: "#ffffff",
+                                backgroundColor: "transparent",
+                                border: "none",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                textAlign: "left"
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                             >
-                              <Edit className="w-3.5 h-3.5 text-amber-500" />
+                              <Edit style={{ width: "14px", height: "14px", color: "#fbbf24" }} />
                               <span>Edit Profile</span>
                             </button>
                             <button
@@ -517,9 +742,25 @@ export default function AgentDirectoryView() {
                                 setSelectedAgentForModal(agent);
                                 setActiveActionModal("offboard");
                               }}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-500 hover:bg-rose-500/10 rounded-lg"
+                              style={{
+                                width: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                padding: "8px 10px",
+                                fontSize: "12px",
+                                fontWeight: 600,
+                                color: "#fb7185",
+                                backgroundColor: "transparent",
+                                border: "none",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                textAlign: "left"
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(244, 63, 94, 0.1)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                             >
-                              <UserMinus className="w-3.5 h-3.5 text-rose-500" />
+                              <UserMinus style={{ width: "14px", height: "14px", color: "#fb7185" }} />
                               <span>Offboard Agent</span>
                             </button>
                             <button
@@ -527,9 +768,25 @@ export default function AgentDirectoryView() {
                                 setSelectedAgentForModal(agent);
                                 setActiveActionModal("unblock");
                               }}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-emerald-500 hover:bg-emerald-500/10 rounded-lg"
+                              style={{
+                                width: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                padding: "8px 10px",
+                                fontSize: "12px",
+                                fontWeight: 600,
+                                color: "#34d399",
+                                backgroundColor: "transparent",
+                                border: "none",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                textAlign: "left"
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(16, 185, 129, 0.1)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                             >
-                              <Unlock className="w-3.5 h-3.5 text-emerald-500" />
+                              <Unlock style={{ width: "14px", height: "14px", color: "#34d399" }} />
                               <span>Unblock User</span>
                             </button>
                           </div>
@@ -549,13 +806,28 @@ export default function AgentDirectoryView() {
           2. AGENT GROUPS SUB-TAB (Map agents to campaigns)
          ═══════════════════════════════════════════════════════ */}
       {agentSubTab === "agent_group" && (
-        <div className="space-y-6">
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           
           {/* Header & Finish Assessment Button */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-card border border-border space-y-2 sm:space-y-0">
+          <div
+            style={{
+              padding: "20px",
+              borderRadius: "16px",
+              backgroundColor: "#041030",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "16px",
+              flexWrap: "wrap",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+            }}
+          >
             <div>
-              <h3 className="text-lg font-bold text-foreground">Map agents to campaigns</h3>
-              <p className="text-xs text-muted-foreground">
+              <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                Map agents to campaigns
+              </h3>
+              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", margin: 0 }}>
                 Assign agents or agent groups to campaigns. View, edit or delete campaigns from here.
               </p>
             </div>
@@ -563,59 +835,140 @@ export default function AgentDirectoryView() {
             {/* Top Right Button: Finish Assessment */}
             <button
               onClick={() => setAssessmentFinished(true)}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-blue-500/20 transition-all self-start sm:self-auto"
+              style={{
+                padding: "8px 16px",
+                borderRadius: "10px",
+                backgroundColor: "#1d4ed8",
+                color: "#ffffff",
+                fontWeight: 700,
+                fontSize: "12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                border: "none",
+                cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(29, 78, 216, 0.4)"
+              }}
             >
-              <Check className="w-4 h-4" />
+              <Check style={{ width: "16px", height: "16px" }} />
               <span>Finish Assessment</span>
             </button>
           </div>
 
           {assessmentFinished && (
-            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <div
+              style={{
+                padding: "12px 16px",
+                borderRadius: "12px",
+                backgroundColor: "rgba(16, 185, 129, 0.15)",
+                border: "1px solid rgba(16, 185, 129, 0.3)",
+                color: "#34d399",
+                fontSize: "12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px"
+              }}
+            >
+              <CheckCircle2 style={{ width: "16px", height: "16px", flexShrink: 0 }} />
               <span>Assessment completed and mapped campaigns synchronized across active dialers.</span>
             </div>
           )}
 
           {/* 4 KPIs */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="p-3.5 rounded-xl bg-card border border-border">
-              <span className="text-xs text-muted-foreground">Total Agents</span>
-              <div className="text-2xl font-black text-foreground mt-0.5">4</div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: "14px"
+            }}
+          >
+            <div
+              style={{
+                padding: "14px 16px",
+                borderRadius: "12px",
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)"
+              }}
+            >
+              <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Total Agents</span>
+              <div style={{ fontSize: "24px", fontWeight: 800, color: "#ffffff", marginTop: "2px" }}>4</div>
             </div>
-            <div className="p-3.5 rounded-xl bg-card border border-border">
-              <span className="text-xs text-muted-foreground">Online Agents</span>
-              <div className="text-2xl font-black text-emerald-500 mt-0.5">0</div>
+            <div
+              style={{
+                padding: "14px 16px",
+                borderRadius: "12px",
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)"
+              }}
+            >
+              <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Online Agents</span>
+              <div style={{ fontSize: "24px", fontWeight: 800, color: "#34d399", marginTop: "2px" }}>0</div>
             </div>
-            <div className="p-3.5 rounded-xl bg-card border border-border">
-              <span className="text-xs text-muted-foreground">Unallocated Agents</span>
-              <div className="text-2xl font-black text-amber-500 mt-0.5">0</div>
+            <div
+              style={{
+                padding: "14px 16px",
+                borderRadius: "12px",
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)"
+              }}
+            >
+              <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Unallocated Agents</span>
+              <div style={{ fontSize: "24px", fontWeight: 800, color: "#fbbf24", marginTop: "2px" }}>0</div>
             </div>
-            <div className="p-3.5 rounded-xl bg-card border border-border">
-              <span className="text-xs text-muted-foreground">Nil Allocated Agents</span>
-              <div className="text-2xl font-black text-rose-500 mt-0.5">0</div>
+            <div
+              style={{
+                padding: "14px 16px",
+                borderRadius: "12px",
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)"
+              }}
+            >
+              <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Nil Allocated Agents</span>
+              <div style={{ fontSize: "24px", fontWeight: 800, color: "#fb7185", marginTop: "2px" }}>0</div>
             </div>
           </div>
 
           {/* Sub-Tabs: 1. Agent Groups | 2. Ungrouped Agents */}
-          <div className="flex items-center gap-2 border-b border-border pb-2">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+              paddingBottom: "8px"
+            }}
+          >
             <button
               onClick={() => setGroupSubTab("groups")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                groupSubTab === "groups"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: groupSubTab === "groups" ? 700 : 500,
+                backgroundColor: groupSubTab === "groups" ? "#1d4ed8" : "transparent",
+                color: groupSubTab === "groups" ? "#ffffff" : "#94a3b8",
+                border: "none",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                boxShadow: groupSubTab === "groups" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none"
+              }}
             >
               1. Agent Groups
             </button>
             <button
               onClick={() => setGroupSubTab("ungrouped")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                groupSubTab === "ungrouped"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              }`}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: groupSubTab === "ungrouped" ? 700 : 500,
+                backgroundColor: groupSubTab === "ungrouped" ? "#1d4ed8" : "transparent",
+                color: groupSubTab === "ungrouped" ? "#ffffff" : "#94a3b8",
+                border: "none",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                boxShadow: groupSubTab === "ungrouped" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none"
+              }}
             >
               2. Ungrouped Agents (1)
             </button>
@@ -623,40 +976,74 @@ export default function AgentDirectoryView() {
 
           {/* 1. Agent Groups View */}
           {groupSubTab === "groups" && (
-            <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <h4 className="text-sm font-bold text-foreground">Active Agent Groups</h4>
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <div
+              style={{
+                padding: "20px",
+                borderRadius: "16px",
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+                <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Active Agent Groups</h4>
+                <div style={{ position: "relative" }}>
+                  <Search style={{ width: "14px", height: "14px", position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
                   <input
                     type="text"
                     value={searchGroup}
                     onChange={(e) => setSearchGroup(e.target.value)}
                     placeholder="Search account number, name or mobile..."
-                    className="pl-9 pr-3 py-1.5 rounded-xl bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 w-64"
+                    style={{
+                      paddingLeft: "36px",
+                      paddingRight: "14px",
+                      paddingTop: "7px",
+                      paddingBottom: "7px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      fontSize: "12px",
+                      color: "#ffffff",
+                      outline: "none",
+                      width: "260px"
+                    }}
                   />
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs whitespace-nowrap">
-                  <thead className="bg-muted text-muted-foreground font-semibold">
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", textAlign: "left", fontSize: "12px", whiteSpace: "nowrap", borderCollapse: "collapse" }}>
+                  <thead style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "#94a3b8", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     <tr>
-                      <th className="p-3">Agent Group</th>
-                      <th className="p-3">Agents Count</th>
-                      <th className="p-3">% Collections</th>
-                      <th className="p-3">Campaign</th>
-                      <th className="p-3 text-right">Action</th>
+                      <th style={{ padding: "12px 14px" }}>Agent Group</th>
+                      <th style={{ padding: "12px 14px" }}>Agents Count</th>
+                      <th style={{ padding: "12px 14px" }}>% Collections</th>
+                      <th style={{ padding: "12px 14px" }}>Campaign</th>
+                      <th style={{ padding: "12px 14px", textAlign: "right" }}>Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
-                    <tr className="hover:bg-muted/40 transition-colors">
-                      <td className="p-3 font-semibold text-foreground">Bajaj Rural Telecalling Alpha</td>
-                      <td className="p-3 font-bold text-foreground">3</td>
-                      <td className="p-3 font-bold text-emerald-500">28.4%</td>
-                      <td className="p-3 text-muted-foreground font-medium">RURAL-BAJAJ-Nov-2026-FINAL-DATA</td>
-                      <td className="p-3 text-right">
-                        <button className="px-3 py-1 rounded bg-muted hover:bg-muted/80 text-foreground text-xs font-semibold">
+                  <tbody>
+                    <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                      <td style={{ padding: "14px", fontWeight: 600, color: "#ffffff" }}>Bajaj Rural Telecalling Alpha</td>
+                      <td style={{ padding: "14px", fontWeight: 700, color: "#ffffff" }}>3</td>
+                      <td style={{ padding: "14px", fontWeight: 700, color: "#34d399" }}>28.4%</td>
+                      <td style={{ padding: "14px", color: "#cbd5e1", fontWeight: 500 }}>RURAL-BAJAJ-Nov-2026-FINAL-DATA</td>
+                      <td style={{ padding: "14px", textAlign: "right" }}>
+                        <button
+                          style={{
+                            padding: "6px 12px",
+                            borderRadius: "6px",
+                            backgroundColor: "rgba(255, 255, 255, 0.08)",
+                            color: "#ffffff",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            border: "none",
+                            cursor: "pointer"
+                          }}
+                        >
                           Manage Group
                         </button>
                       </td>
@@ -669,32 +1056,47 @@ export default function AgentDirectoryView() {
 
           {/* 2. Ungrouped Agents View */}
           {groupSubTab === "ungrouped" && (
-            <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-              <h4 className="text-sm font-bold text-foreground">Ungrouped Agents</h4>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs whitespace-nowrap">
-                  <thead className="bg-muted text-muted-foreground font-semibold">
+            <div
+              style={{
+                padding: "20px",
+                borderRadius: "16px",
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+              }}
+            >
+              <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Ungrouped Agents</h4>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", textAlign: "left", fontSize: "12px", whiteSpace: "nowrap", borderCollapse: "collapse" }}>
+                  <thead style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "#94a3b8", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     <tr>
-                      <th className="p-3">Agent Name</th>
-                      <th className="p-3">Yucollect ID</th>
-                      <th className="p-3">Agency Employee ID</th>
-                      <th className="p-3">Agent Contact</th>
-                      <th className="p-3">Product</th>
-                      <th className="p-3">Bucket</th>
-                      <th className="p-3">Experience</th>
-                      <th className="p-3">Campaign</th>
+                      <th style={{ padding: "12px 14px" }}>Agent Name</th>
+                      <th style={{ padding: "12px 14px" }}>Yucollect ID</th>
+                      <th style={{ padding: "12px 14px" }}>Agency Employee ID</th>
+                      <th style={{ padding: "12px 14px" }}>Agent Contact</th>
+                      <th style={{ padding: "12px 14px" }}>Product</th>
+                      <th style={{ padding: "12px 14px" }}>Bucket</th>
+                      <th style={{ padding: "12px 14px" }}>Experience</th>
+                      <th style={{ padding: "12px 14px" }}>Campaign</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
-                    <tr className="hover:bg-muted/40 transition-colors">
-                      <td className="p-3 font-semibold text-foreground">Manisha Shete</td>
-                      <td className="p-3 font-mono text-muted-foreground">6ad891176be37f003bc8c01f</td>
-                      <td className="p-3 font-mono text-muted-foreground">PM2610MS0004</td>
-                      <td className="p-3 font-mono text-foreground font-semibold">9359060141</td>
-                      <td className="p-3 text-muted-foreground">Consumer Durable</td>
-                      <td className="p-3"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">Writeoff</span></td>
-                      <td className="p-3 font-medium text-foreground">Freshar</td>
-                      <td className="p-3 text-muted-foreground truncate max-w-sm">
+                  <tbody>
+                    <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                      <td style={{ padding: "14px", fontWeight: 600, color: "#ffffff" }}>Manisha Shete</td>
+                      <td style={{ padding: "14px", fontFamily: "monospace", color: "#94a3b8" }}>6ad891176be37f003bc8c01f</td>
+                      <td style={{ padding: "14px", fontFamily: "monospace", color: "#94a3b8" }}>PM2610MS0004</td>
+                      <td style={{ padding: "14px", fontFamily: "monospace", color: "#ffffff", fontWeight: 600 }}>9359060141</td>
+                      <td style={{ padding: "14px", color: "#cbd5e1" }}>Consumer Durable</td>
+                      <td style={{ padding: "14px" }}>
+                        <span style={{ padding: "2px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, backgroundColor: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", border: "1px solid rgba(245, 158, 11, 0.3)" }}>
+                          Writeoff
+                        </span>
+                      </td>
+                      <td style={{ padding: "14px", color: "#ffffff", fontWeight: 500 }}>Freshar</td>
+                      <td style={{ padding: "14px", color: "#94a3b8", maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis" }}>
                         RURAL-BAJAJ-Nov-2026-FINAL-DATA, URBAN BAJAJ-NOV-2026, no Use
                       </td>
                     </tr>
@@ -711,107 +1113,185 @@ export default function AgentDirectoryView() {
           3. CAMPAIGN SUB-TAB
          ═══════════════════════════════════════════════════════ */}
       {agentSubTab === "campaign" && (
-        <div className="space-y-6">
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           
-          {/* Header */}
-          <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-            <h3 className="text-lg font-bold text-foreground">Campaign Management</h3>
+          {/* Header Card */}
+          <div
+            style={{
+              padding: "20px",
+              borderRadius: "16px",
+              backgroundColor: "#041030",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+            }}
+          >
+            <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+              Campaign Management
+            </h3>
             
             {/* 6 KPIs: Total Agents 4, Online 0, Unallocated 0, Nil Allocated 0, Total Campaigns 8, Active Campaigns 8 */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2">
-              <div className="p-3 rounded-xl bg-muted/40 border border-border">
-                <span className="text-[11px] text-muted-foreground">Total Agents</span>
-                <div className="text-xl font-bold text-foreground mt-0.5">4</div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+                gap: "12px",
+                paddingTop: "4px"
+              }}
+            >
+              <div style={{ padding: "12px 14px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Total Agents</span>
+                <div style={{ fontSize: "20px", fontWeight: 800, color: "#ffffff", marginTop: "2px" }}>4</div>
               </div>
-              <div className="p-3 rounded-xl bg-muted/40 border border-border">
-                <span className="text-[11px] text-muted-foreground">Online Agents</span>
-                <div className="text-xl font-bold text-emerald-500 mt-0.5">0</div>
+              <div style={{ padding: "12px 14px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Online Agents</span>
+                <div style={{ fontSize: "20px", fontWeight: 800, color: "#34d399", marginTop: "2px" }}>0</div>
               </div>
-              <div className="p-3 rounded-xl bg-muted/40 border border-border">
-                <span className="text-[11px] text-muted-foreground">Unallocated Agents</span>
-                <div className="text-xl font-bold text-amber-500 mt-0.5">0</div>
+              <div style={{ padding: "12px 14px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Unallocated Agents</span>
+                <div style={{ fontSize: "20px", fontWeight: 800, color: "#fbbf24", marginTop: "2px" }}>0</div>
               </div>
-              <div className="p-3 rounded-xl bg-muted/40 border border-border">
-                <span className="text-[11px] text-muted-foreground">Nil Allocated</span>
-                <div className="text-xl font-bold text-rose-500 mt-0.5">0</div>
+              <div style={{ padding: "12px 14px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Nil Allocated</span>
+                <div style={{ fontSize: "20px", fontWeight: 800, color: "#fb7185", marginTop: "2px" }}>0</div>
               </div>
-              <div className="p-3 rounded-xl bg-muted/40 border border-border">
-                <span className="text-[11px] text-muted-foreground">Total Campaigns</span>
-                <div className="text-xl font-bold text-blue-500 mt-0.5">8</div>
+              <div style={{ padding: "12px 14px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Total Campaigns</span>
+                <div style={{ fontSize: "20px", fontWeight: 800, color: "#60a5fa", marginTop: "2px" }}>8</div>
               </div>
-              <div className="p-3 rounded-xl bg-muted/40 border border-border">
-                <span className="text-[11px] text-muted-foreground">Active Campaigns</span>
-                <div className="text-xl font-bold text-emerald-500 mt-0.5">8</div>
+              <div style={{ padding: "12px 14px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block" }}>Active Campaigns</span>
+                <div style={{ fontSize: "20px", fontWeight: 800, color: "#34d399", marginTop: "2px" }}>8</div>
               </div>
             </div>
           </div>
 
           {/* Top Controls: Search + Create Campaign Button */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+            <div style={{ position: "relative" }}>
+              <Search style={{ width: "14px", height: "14px", position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
               <input
                 type="text"
                 value={searchCampaign}
                 onChange={(e) => setSearchCampaign(e.target.value)}
                 placeholder="Search by campaign name..."
-                className="pl-9 pr-3 py-1.5 rounded-xl bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 w-72"
+                style={{
+                  paddingLeft: "36px",
+                  paddingRight: "14px",
+                  paddingTop: "7px",
+                  paddingBottom: "7px",
+                  borderRadius: "10px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  fontSize: "12px",
+                  color: "#ffffff",
+                  outline: "none",
+                  width: "280px"
+                }}
               />
             </div>
 
             <button
               onClick={() => setShowCreateCampaignModal(true)}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-blue-500/20 transition-all self-start sm:self-auto"
+              style={{
+                padding: "8px 16px",
+                borderRadius: "10px",
+                backgroundColor: "#1d4ed8",
+                color: "#ffffff",
+                fontWeight: 700,
+                fontSize: "12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                border: "none",
+                cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(29, 78, 216, 0.4)"
+              }}
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus style={{ width: "16px", height: "16px" }} />
               <span>Create Campaign</span>
             </button>
           </div>
 
           {/* Exact 8 Campaign Rows Table */}
-          <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead className="bg-muted text-muted-foreground font-semibold">
+          <div
+            style={{
+              padding: "20px",
+              borderRadius: "16px",
+              backgroundColor: "#041030",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+            }}
+          >
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", textAlign: "left", fontSize: "12px", whiteSpace: "nowrap", borderCollapse: "collapse" }}>
+                <thead style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "#94a3b8", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   <tr>
-                    <th className="p-3">Campaigns</th>
-                    <th className="p-3">Category</th>
-                    <th className="p-3">Borrower Count</th>
-                    <th className="p-3">Left Out Borrower</th>
-                    <th className="p-3">Contactability</th>
-                    <th className="p-3">Agents Count</th>
-                    <th className="p-3">Completed Autochurns</th>
-                    <th className="p-3">LOB</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3 text-right">Action</th>
+                    <th style={{ padding: "12px 14px" }}>Campaigns</th>
+                    <th style={{ padding: "12px 14px" }}>Category</th>
+                    <th style={{ padding: "12px 14px" }}>Borrower Count</th>
+                    <th style={{ padding: "12px 14px" }}>Left Out Borrower</th>
+                    <th style={{ padding: "12px 14px" }}>Contactability</th>
+                    <th style={{ padding: "12px 14px" }}>Agents Count</th>
+                    <th style={{ padding: "12px 14px" }}>Completed Autochurns</th>
+                    <th style={{ padding: "12px 14px" }}>LOB</th>
+                    <th style={{ padding: "12px 14px" }}>Status</th>
+                    <th style={{ padding: "12px 14px", textAlign: "right" }}>Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody>
                   {filteredCampaigns.map((camp, idx) => (
-                    <tr key={idx} className="hover:bg-muted/40 transition-colors">
-                      <td className="p-3 font-semibold text-foreground">{camp.name}</td>
-                      <td className="p-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                          camp.category === "PREDICTIVE"
-                            ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
-                            : "bg-purple-500/10 text-purple-500 border-purple-500/20"
-                        }`}>
+                    <tr
+                      key={idx}
+                      style={{
+                        borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+                        transition: "background-color 0.15s ease"
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.02)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+                    >
+                      <td style={{ padding: "14px", fontWeight: 600, color: "#ffffff" }}>{camp.name}</td>
+                      <td style={{ padding: "14px" }}>
+                        <span
+                          style={{
+                            padding: "2px 8px",
+                            borderRadius: "4px",
+                            fontSize: "10px",
+                            fontWeight: 700,
+                            backgroundColor: camp.category === "PREDICTIVE" ? "rgba(37, 99, 235, 0.15)" : "rgba(168, 85, 247, 0.15)",
+                            color: camp.category === "PREDICTIVE" ? "#60a5fa" : "#c084fc",
+                            border: camp.category === "PREDICTIVE" ? "1px solid rgba(37, 99, 235, 0.3)" : "1px solid rgba(168, 85, 247, 0.3)"
+                          }}
+                        >
                           {camp.category}
                         </span>
                       </td>
-                      <td className="p-3 font-bold text-foreground">{camp.borrowerCount}</td>
-                      <td className="p-3 font-bold text-amber-500">{camp.leftOutBorrower}</td>
-                      <td className="p-3 font-mono font-semibold text-foreground">{camp.contactability}</td>
-                      <td className="p-3 font-bold text-foreground">{camp.agentsCount}</td>
-                      <td className="p-3 font-mono text-muted-foreground">{camp.completedAutochurns}</td>
-                      <td className="p-3 text-muted-foreground">{camp.lob}</td>
-                      <td className="p-3">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                      <td style={{ padding: "14px", fontWeight: 700, color: "#ffffff" }}>{camp.borrowerCount}</td>
+                      <td style={{ padding: "14px", fontWeight: 700, color: "#fbbf24" }}>{camp.leftOutBorrower}</td>
+                      <td style={{ padding: "14px", fontFamily: "monospace", fontWeight: 600, color: "#ffffff" }}>{camp.contactability}</td>
+                      <td style={{ padding: "14px", fontWeight: 700, color: "#ffffff" }}>{camp.agentsCount}</td>
+                      <td style={{ padding: "14px", fontFamily: "monospace", color: "#94a3b8" }}>{camp.completedAutochurns}</td>
+                      <td style={{ padding: "14px", color: "#cbd5e1" }}>{camp.lob}</td>
+                      <td style={{ padding: "14px" }}>
+                        <span style={{ padding: "2px 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, backgroundColor: "rgba(16, 185, 129, 0.15)", color: "#34d399", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
                           {camp.status}
                         </span>
                       </td>
-                      <td className="p-3 text-right">
-                        <button className="px-2.5 py-1 rounded bg-muted hover:bg-muted/80 text-foreground text-xs font-semibold">
+                      <td style={{ padding: "14px", textAlign: "right" }}>
+                        <button
+                          style={{
+                            padding: "4px 10px",
+                            borderRadius: "6px",
+                            backgroundColor: "rgba(255, 255, 255, 0.08)",
+                            color: "#ffffff",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            border: "none",
+                            cursor: "pointer"
+                          }}
+                        >
                           Configure
                         </button>
                       </td>
@@ -829,13 +1309,28 @@ export default function AgentDirectoryView() {
           4. INCENTIVE SUB-TAB
          ═══════════════════════════════════════════════════════ */}
       {agentSubTab === "incentives" && (
-        <div className="space-y-6">
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           
           {/* Top Header & New Program Button */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-card border border-border shadow-sm">
+          <div
+            style={{
+              padding: "20px",
+              borderRadius: "16px",
+              backgroundColor: "#041030",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "16px",
+              flexWrap: "wrap",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+            }}
+          >
             <div>
-              <h3 className="text-lg font-bold text-foreground">Incentive Program</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                Incentive Program
+              </h3>
+              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", margin: 0 }}>
                 Create and edit new or existing incentive programs here.
               </p>
             </div>
@@ -843,44 +1338,80 @@ export default function AgentDirectoryView() {
             {/* Top Right Button: New Program */}
             <button
               onClick={() => setShowNewProgramModal(true)}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-blue-500/20 transition-all self-start sm:self-auto"
+              style={{
+                padding: "8px 16px",
+                borderRadius: "10px",
+                backgroundColor: "#1d4ed8",
+                color: "#ffffff",
+                fontWeight: 700,
+                fontSize: "12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                border: "none",
+                cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(29, 78, 216, 0.4)"
+              }}
             >
-              <Plus className="w-3.5 h-3.5" />
+              <Plus style={{ width: "16px", height: "16px" }} />
               <span>New Program</span>
             </button>
           </div>
 
           {/* Programs List Table Section */}
-          <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h4 className="text-sm font-bold text-foreground">Programs List</h4>
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <div
+            style={{
+              padding: "20px",
+              borderRadius: "16px",
+              backgroundColor: "#041030",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+              <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Programs List</h4>
+              <div style={{ position: "relative" }}>
+                <Search style={{ width: "14px", height: "14px", position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
                 <input
                   type="text"
                   value={searchIncentive}
                   onChange={(e) => setSearchIncentive(e.target.value)}
                   placeholder="Search by incentive, product, bucket..."
-                  className="pl-9 pr-3 py-1.5 rounded-xl bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 w-72"
+                  style={{
+                    paddingLeft: "36px",
+                    paddingRight: "14px",
+                    paddingTop: "7px",
+                    paddingBottom: "7px",
+                    borderRadius: "10px",
+                    backgroundColor: "#020921",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    fontSize: "12px",
+                    color: "#ffffff",
+                    outline: "none",
+                    width: "280px"
+                  }}
                 />
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead className="bg-muted text-muted-foreground font-semibold">
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", textAlign: "left", fontSize: "12px", whiteSpace: "nowrap", borderCollapse: "collapse" }}>
+                <thead style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "#94a3b8", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   <tr>
-                    <th className="p-3">Program Name</th>
-                    <th className="p-3">Allocator</th>
-                    <th className="p-3">Product</th>
-                    <th className="p-3">Bucket</th>
-                    <th className="p-3">Criterias</th>
-                    <th className="p-3 text-right">Actions</th>
+                    <th style={{ padding: "12px 14px" }}>Program Name</th>
+                    <th style={{ padding: "12px 14px" }}>Allocator</th>
+                    <th style={{ padding: "12px 14px" }}>Product</th>
+                    <th style={{ padding: "12px 14px" }}>Bucket</th>
+                    <th style={{ padding: "12px 14px" }}>Criterias</th>
+                    <th style={{ padding: "12px 14px", textAlign: "right" }}>Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody>
                   <tr>
-                    <td colSpan="6" className="p-12 text-center text-muted-foreground font-medium">
+                    <td colSpan="6" style={{ padding: "48px 14px", textAlign: "center", color: "#94a3b8", fontWeight: 500 }}>
                       No data
                     </td>
                   </tr>
@@ -894,50 +1425,115 @@ export default function AgentDirectoryView() {
 
       {/* ── ACTION MODALS: View Profile, Edit Profile, Offboard Agent, Unblock User ── */}
       {activeActionModal && selectedAgentForModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-card border border-border rounded-2xl p-5 space-y-4 shadow-2xl animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between">
-              <h4 className="font-bold text-base text-foreground capitalize">
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 50,
+            backgroundColor: "rgba(0, 0, 0, 0.75)",
+            backdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px"
+          }}
+          onClick={() => setActiveActionModal(null)}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "460px",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              borderRadius: "16px",
+              padding: "20px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.8)"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <h4 style={{ fontWeight: 700, fontSize: "16px", color: "#ffffff", margin: 0, textTransform: "capitalize" }}>
                 {activeActionModal.replace("_", " ")} - {selectedAgentForModal.name}
               </h4>
               <button
                 onClick={() => setActiveActionModal(null)}
-                className="p-1 rounded-lg hover:bg-muted text-muted-foreground"
+                style={{
+                  padding: "4px",
+                  borderRadius: "6px",
+                  backgroundColor: "transparent",
+                  border: "none",
+                  color: "#94a3b8",
+                  cursor: "pointer"
+                }}
               >
-                <XCircle className="w-4 h-4" />
+                <XCircle style={{ width: "18px", height: "18px" }} />
               </button>
             </div>
 
-            <div className="p-3 rounded-xl bg-muted/40 border border-border space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Yucollect ID:</span>
-                <span className="font-mono font-bold text-foreground">{selectedAgentForModal.yucollectId}</span>
+            <div
+              style={{
+                padding: "14px",
+                borderRadius: "12px",
+                backgroundColor: "#020921",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+                fontSize: "12px"
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#94a3b8" }}>Yucollect ID:</span>
+                <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#ffffff" }}>{selectedAgentForModal.yucollectId}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Employee ID:</span>
-                <span className="font-mono text-muted-foreground">{selectedAgentForModal.agencyEmployeeId}</span>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#94a3b8" }}>Employee ID:</span>
+                <span style={{ fontFamily: "monospace", color: "#94a3b8" }}>{selectedAgentForModal.agencyEmployeeId}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Contact:</span>
-                <span className="font-mono font-semibold text-foreground">{selectedAgentForModal.contact}</span>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#94a3b8" }}>Contact:</span>
+                <span style={{ fontFamily: "monospace", fontWeight: 600, color: "#ffffff" }}>{selectedAgentForModal.contact}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Assigned Campaign:</span>
-                <span className="text-blue-500 font-medium truncate max-w-xs">{selectedAgentForModal.campaign}</span>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "#94a3b8" }}>Assigned Campaign:</span>
+                <span style={{ color: "#60a5fa", fontWeight: 500, maxWidth: "240px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {selectedAgentForModal.campaign}
+                </span>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", paddingTop: "8px" }}>
               <button
                 onClick={() => setActiveActionModal(null)}
-                className="px-4 py-2 rounded-xl bg-muted text-foreground text-xs font-bold"
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "10px",
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
+                  color: "#ffffff",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  border: "none",
+                  cursor: "pointer"
+                }}
               >
                 Close
               </button>
               {activeActionModal === "offboard" && (
                 <button
                   onClick={() => setActiveActionModal(null)}
-                  className="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold"
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "10px",
+                    backgroundColor: "#e11d48",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer"
+                  }}
                 >
                   Confirm Offboarding
                 </button>
@@ -945,7 +1541,16 @@ export default function AgentDirectoryView() {
               {activeActionModal === "unblock" && (
                 <button
                   onClick={() => setActiveActionModal(null)}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold"
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "10px",
+                    backgroundColor: "#059669",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer"
+                  }}
                 >
                   Confirm Unblock
                 </button>
@@ -957,30 +1562,88 @@ export default function AgentDirectoryView() {
 
       {/* ── CREATE CAMPAIGN MODAL ── */}
       {showCreateCampaignModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-card border border-border rounded-2xl p-5 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h4 className="font-bold text-base text-foreground">Create Campaign</h4>
-              <button onClick={() => setShowCreateCampaignModal(false)} className="p-1 rounded-lg hover:bg-muted">
-                <XCircle className="w-4 h-4 text-muted-foreground" />
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 50,
+            backgroundColor: "rgba(0, 0, 0, 0.75)",
+            backdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px"
+          }}
+          onClick={() => setShowCreateCampaignModal(false)}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "460px",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              borderRadius: "16px",
+              padding: "20px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.8)"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <h4 style={{ fontWeight: 700, fontSize: "16px", color: "#ffffff", margin: 0 }}>Create Campaign</h4>
+              <button
+                onClick={() => setShowCreateCampaignModal(false)}
+                style={{ padding: "4px", borderRadius: "6px", backgroundColor: "transparent", border: "none", color: "#94a3b8", cursor: "pointer" }}
+              >
+                <XCircle style={{ width: "18px", height: "18px" }} />
               </button>
             </div>
-            <div className="space-y-3 text-xs">
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "12px" }}>
               <input
                 type="text"
                 placeholder="Campaign Name (e.g. Q4 RECOVERY)"
-                className="w-full p-2.5 rounded-xl bg-muted border border-border text-foreground focus:outline-none"
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  color: "#ffffff",
+                  fontSize: "12px",
+                  outline: "none",
+                  boxSizing: "border-box"
+                }}
               />
-              <select className="w-full p-2.5 rounded-xl bg-muted border border-border text-foreground focus:outline-none">
+              <select
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  color: "#ffffff",
+                  fontSize: "12px",
+                  outline: "none",
+                  boxSizing: "border-box"
+                }}
+              >
                 <option value="PREDICTIVE">Predictive Dialer</option>
                 <option value="MANUAL">Manual Preview</option>
               </select>
             </div>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowCreateCampaignModal(false)} className="px-3 py-1.5 rounded-lg bg-muted text-foreground font-bold text-xs">
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+              <button
+                onClick={() => setShowCreateCampaignModal(false)}
+                style={{ padding: "8px 16px", borderRadius: "10px", backgroundColor: "rgba(255, 255, 255, 0.08)", color: "#ffffff", fontWeight: 700, fontSize: "12px", border: "none", cursor: "pointer" }}
+              >
                 Cancel
               </button>
-              <button onClick={() => setShowCreateCampaignModal(false)} className="px-4 py-1.5 rounded-lg bg-blue-600 text-white font-bold text-xs">
+              <button
+                onClick={() => setShowCreateCampaignModal(false)}
+                style={{ padding: "8px 16px", borderRadius: "10px", backgroundColor: "#1d4ed8", color: "#ffffff", fontWeight: 700, fontSize: "12px", border: "none", cursor: "pointer" }}
+              >
                 Create Campaign
               </button>
             </div>
@@ -990,31 +1653,87 @@ export default function AgentDirectoryView() {
 
       {/* ── NEW INCENTIVE PROGRAM MODAL ── */}
       {showNewProgramModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-card border border-border rounded-2xl p-5 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h4 className="font-bold text-base text-foreground">Configure Incentive Program</h4>
-              <button onClick={() => setShowNewProgramModal(false)} className="p-1 rounded-lg hover:bg-muted">
-                <XCircle className="w-4 h-4 text-muted-foreground" />
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 50,
+            backgroundColor: "rgba(0, 0, 0, 0.75)",
+            backdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px"
+          }}
+          onClick={() => setShowNewProgramModal(false)}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "460px",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              borderRadius: "16px",
+              padding: "20px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.8)"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <h4 style={{ fontWeight: 700, fontSize: "16px", color: "#ffffff", margin: 0 }}>Configure Incentive Program</h4>
+              <button
+                onClick={() => setShowNewProgramModal(false)}
+                style={{ padding: "4px", borderRadius: "6px", backgroundColor: "transparent", border: "none", color: "#94a3b8", cursor: "pointer" }}
+              >
+                <XCircle style={{ width: "18px", height: "18px" }} />
               </button>
             </div>
-            <div className="space-y-3 text-xs">
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "12px" }}>
               <input
                 type="text"
                 placeholder="Program Name"
-                className="w-full p-2.5 rounded-xl bg-muted border border-border text-foreground focus:outline-none"
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  color: "#ffffff",
+                  fontSize: "12px",
+                  outline: "none",
+                  boxSizing: "border-box"
+                }}
               />
               <input
                 type="text"
                 placeholder="Target Collection Threshold (%)"
-                className="w-full p-2.5 rounded-xl bg-muted border border-border text-foreground focus:outline-none"
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  color: "#ffffff",
+                  fontSize: "12px",
+                  outline: "none",
+                  boxSizing: "border-box"
+                }}
               />
             </div>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowNewProgramModal(false)} className="px-3 py-1.5 rounded-lg bg-muted text-foreground font-bold text-xs">
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+              <button
+                onClick={() => setShowNewProgramModal(false)}
+                style={{ padding: "8px 16px", borderRadius: "10px", backgroundColor: "rgba(255, 255, 255, 0.08)", color: "#ffffff", fontWeight: 700, fontSize: "12px", border: "none", cursor: "pointer" }}
+              >
                 Cancel
               </button>
-              <button onClick={() => setShowNewProgramModal(false)} className="px-4 py-1.5 rounded-lg bg-blue-600 text-white font-bold text-xs">
+              <button
+                onClick={() => setShowNewProgramModal(false)}
+                style={{ padding: "8px 16px", borderRadius: "10px", backgroundColor: "#1d4ed8", color: "#ffffff", fontWeight: 700, fontSize: "12px", border: "none", cursor: "pointer" }}
+              >
                 Save Program
               </button>
             </div>
