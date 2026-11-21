@@ -25,7 +25,9 @@ import {
   ChevronLeft,
   ChevronRight,
   TrendingUp,
-  MapPin
+  MapPin,
+  Phone,
+  Minus
 } from "lucide-react";
 import api from "../services/api";
 import ThemeToggle from "./ThemeToggle";
@@ -99,6 +101,11 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
   const [activeCallCase, setActiveCallCase] = useState(null);
   const [callState, setCallState] = useState("IDLE"); // IDLE | DIALING | CONNECTED | ENDED
   const [callTimer, setCallTimer] = useState(0);
+
+  // Floating WebPhone Dialer State (Reference: media_1794236906364_2d86cd87.jpg)
+  const [webPhoneOpen, setWebPhoneOpen] = useState(false);
+  const [webPhoneMinimized, setWebPhoneMinimized] = useState(false);
+  const [dialNumber, setDialNumber] = useState("+91 9876543210");
 
   // Disposition Modal State
   const [selectedCaseForDisposition, setSelectedCaseForDisposition] = useState(null);
@@ -277,6 +284,11 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
   // Click-to-call softphone workflow
   const handleStartCall = (targetCase) => {
     setActiveCallCase(targetCase);
+    if (targetCase?.phone_number) {
+      setDialNumber(targetCase.phone_number);
+    }
+    setWebPhoneOpen(true);
+    setWebPhoneMinimized(false);
     setCallState("DIALING");
     setCallTimer(0);
 
@@ -284,6 +296,30 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
     setTimeout(() => {
       setCallState("CONNECTED");
     }, 1500);
+  };
+
+  const handleDialPadClick = (val) => {
+    setDialNumber((prev) => (prev || "") + val);
+  };
+
+  const handleBackspace = () => {
+    setDialNumber((prev) => (prev ? prev.slice(0, -1) : ""));
+  };
+
+  const handleWebPhoneCall = () => {
+    if (callState === "CONNECTED" || callState === "DIALING") {
+      handleEndCall();
+      return;
+    }
+    const cleanNum = dialNumber ? dialNumber.trim() : "";
+    const targetCase =
+      casesList.find((c) => c.phone_number === cleanNum) || {
+        id: "manual_" + Date.now(),
+        borrower_name: "Outbound Borrower",
+        phone_number: cleanNum || "+91 9876543210",
+        outstanding_amount: 45000
+      };
+    handleStartCall(targetCase);
   };
 
   const handleEndCall = async () => {
@@ -1726,6 +1762,377 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── FLOATING CIRCULAR OPTION (BOTTOM RIGHT) ── */}
+      <button
+        type="button"
+        onClick={() => {
+          setWebPhoneOpen(!webPhoneOpen);
+          if (webPhoneMinimized) setWebPhoneMinimized(false);
+        }}
+        title={webPhoneOpen ? "Minimize WebPhone" : "Open WebPhone Dialer"}
+        style={{
+          position: "fixed",
+          bottom: "24px",
+          right: "24px",
+          width: "56px",
+          height: "56px",
+          borderRadius: "9999px",
+          backgroundColor: callState === "CONNECTED" ? "#ef4444" : "#10B981",
+          border: "2px solid rgba(255, 255, 255, 0.2)",
+          color: "#ffffff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          boxShadow: callState === "CONNECTED"
+            ? "0 0 20px rgba(239, 68, 68, 0.8), 0 8px 24px rgba(0, 0, 0, 0.4)"
+            : "0 8px 24px rgba(16, 185, 129, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3)",
+          zIndex: 9999,
+          transition: "all 0.2s ease"
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "scale(1.06)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "scale(1)";
+        }}
+      >
+        {callState === "CONNECTED" ? (
+          <PhoneCall style={{ width: "24px", height: "24px" }} className="animate-pulse" />
+        ) : (
+          <Phone style={{ width: "24px", height: "24px" }} />
+        )}
+
+        {/* Online Indicator Badge */}
+        <span
+          style={{
+            position: "absolute",
+            top: "2px",
+            right: "2px",
+            width: "14px",
+            height: "14px",
+            borderRadius: "9999px",
+            backgroundColor: callState === "CONNECTED" ? "#ef4444" : "#22c55e",
+            border: "2px solid #041030"
+          }}
+        />
+      </button>
+
+      {/* ── FLOATING WEBPHONE DIALER PANEL (MATCHES REFERENCE media_1794236906364_2d86cd87.jpg) ── */}
+      {webPhoneOpen && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "90px",
+            right: "24px",
+            width: "300px",
+            backgroundColor: "#071126",
+            border: "1px solid rgba(59, 130, 246, 0.3)",
+            borderRadius: "16px",
+            boxShadow: "0 24px 48px rgba(0, 0, 0, 0.75)",
+            zIndex: 9999,
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column"
+          }}
+        >
+          {/* Header */}
+          <div
+            style={{
+              padding: "12px 16px",
+              backgroundColor: "rgba(255, 255, 255, 0.04)",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between"
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff" }}>WebPhone</span>
+                <span style={{ fontSize: "11px", color: "#94a3b8", fontFamily: "monospace" }}>1012</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                <span
+                  style={{
+                    width: "7px",
+                    height: "7px",
+                    borderRadius: "9999px",
+                    backgroundColor: callState === "CONNECTED" ? "#ef4444" : "#10b981"
+                  }}
+                />
+                <span style={{ fontSize: "11px", fontWeight: 600, color: callState === "CONNECTED" ? "#ef4444" : "#10b981" }}>
+                  {callState === "CONNECTED" ? "In Call" : callState === "DIALING" ? "Dialing..." : "Ready"}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <button
+                type="button"
+                onClick={() => setWebPhoneMinimized(!webPhoneMinimized)}
+                style={{
+                  padding: "4px",
+                  borderRadius: "6px",
+                  backgroundColor: "transparent",
+                  border: "none",
+                  color: "#94a3b8",
+                  cursor: "pointer"
+                }}
+                title={webPhoneMinimized ? "Expand" : "Minimize"}
+              >
+                <Minus style={{ width: "16px", height: "16px" }} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setWebPhoneOpen(false)}
+                style={{
+                  padding: "4px",
+                  borderRadius: "6px",
+                  backgroundColor: "transparent",
+                  border: "none",
+                  color: "#94a3b8",
+                  cursor: "pointer"
+                }}
+                title="Close"
+              >
+                <X style={{ width: "16px", height: "16px" }} />
+              </button>
+            </div>
+          </div>
+
+          {!webPhoneMinimized && (
+            <>
+              {/* Dialed Number Display */}
+              <div
+                style={{
+                  padding: "10px 14px",
+                  backgroundColor: "rgba(0, 0, 0, 0.35)",
+                  borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px"
+                }}
+              >
+                <span style={{ fontSize: "16px" }}>🇮🇳</span>
+                <input
+                  type="text"
+                  value={dialNumber}
+                  onChange={(e) => setDialNumber(e.target.value)}
+                  placeholder="Enter number..."
+                  style={{
+                    flex: 1,
+                    backgroundColor: "transparent",
+                    border: "none",
+                    color: "#ffffff",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    fontFamily: "monospace",
+                    outline: "none"
+                  }}
+                />
+                {dialNumber && (
+                  <button
+                    type="button"
+                    onClick={handleBackspace}
+                    style={{
+                      padding: "4px 6px",
+                      borderRadius: "6px",
+                      backgroundColor: "rgba(255, 255, 255, 0.08)",
+                      border: "none",
+                      color: "#94a3b8",
+                      fontSize: "12px",
+                      cursor: "pointer"
+                    }}
+                    title="Backspace"
+                  >
+                    ⌫
+                  </button>
+                )}
+              </div>
+
+              {/* In-Call Active Display or 12-Key Pad */}
+              {callState === "CONNECTED" || callState === "DIALING" ? (
+                <div
+                  style={{
+                    padding: "24px 16px",
+                    textAlign: "center",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "12px"
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "60px",
+                      height: "60px",
+                      borderRadius: "9999px",
+                      backgroundColor: callState === "CONNECTED" ? "rgba(16, 185, 129, 0.15)" : "rgba(37, 99, 235, 0.15)",
+                      border: callState === "CONNECTED" ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid rgba(37, 99, 235, 0.3)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}
+                  >
+                    <PhoneCall
+                      style={{
+                        width: "28px",
+                        height: "28px",
+                        color: callState === "CONNECTED" ? "#10b981" : "#60a5fa"
+                      }}
+                      className="animate-pulse"
+                    />
+                  </div>
+
+                  <div>
+                    <h4 style={{ fontSize: "15px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                      {activeCallCase?.borrower_name || activeCallCase?.customer_name || "Borrower Call"}
+                    </h4>
+                    <span style={{ fontSize: "12px", color: "#94a3b8", fontFamily: "monospace" }}>
+                      {dialNumber}
+                    </span>
+                  </div>
+
+                  {/* Timer */}
+                  <div style={{ fontSize: "24px", fontWeight: 800, color: "#10b981", fontFamily: "monospace" }}>
+                    {formatTimer(callTimer)}
+                  </div>
+
+                  <span
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 700,
+                      padding: "2px 8px",
+                      borderRadius: "9999px",
+                      backgroundColor: "rgba(239, 68, 68, 0.15)",
+                      color: "#f87171",
+                      border: "1px solid rgba(239, 68, 68, 0.3)"
+                    }}
+                  >
+                    ● Auto-Recording
+                  </span>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3, 1fr)",
+                    gap: "8px",
+                    padding: "14px"
+                  }}
+                >
+                  {[
+                    { num: "1", sub: "" },
+                    { num: "2", sub: "ABC" },
+                    { num: "3", sub: "DEF" },
+                    { num: "4", sub: "GHI" },
+                    { num: "5", sub: "JKL" },
+                    { num: "6", sub: "MNO" },
+                    { num: "7", sub: "PQRS" },
+                    { num: "8", sub: "TUV" },
+                    { num: "9", sub: "WXYZ" },
+                    { num: "*", sub: "" },
+                    { num: "0", sub: "+" },
+                    { num: "#", sub: "" }
+                  ].map((key) => (
+                    <button
+                      key={key.num}
+                      type="button"
+                      onClick={() => handleDialPadClick(key.num)}
+                      style={{
+                        height: "46px",
+                        borderRadius: "10px",
+                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                        border: "1px solid rgba(255, 255, 255, 0.08)",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        transition: "all 0.1s ease"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.12)";
+                        e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.4)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+                        e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
+                      }}
+                    >
+                      <span style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", lineHeight: 1 }}>
+                        {key.num}
+                      </span>
+                      {key.sub && (
+                        <span style={{ fontSize: "8px", color: "#94a3b8", marginTop: "2px", letterSpacing: "0.05em" }}>
+                          {key.sub}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Call / End Call Button */}
+              <div style={{ padding: "0 14px 14px 14px" }}>
+                {callState === "CONNECTED" || callState === "DIALING" ? (
+                  <button
+                    type="button"
+                    onClick={handleEndCall}
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#ef4444",
+                      color: "#ffffff",
+                      fontSize: "14px",
+                      fontWeight: 800,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      border: "none",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 12px rgba(239, 68, 68, 0.35)",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    <PhoneOff style={{ width: "16px", height: "16px" }} />
+                    <span>End Call</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleWebPhoneCall}
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#10b981",
+                      color: "#ffffff",
+                      fontSize: "14px",
+                      fontWeight: 800,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      border: "none",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 12px rgba(16, 185, 129, 0.35)",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    <Phone style={{ width: "16px", height: "16px" }} />
+                    <span>Call</span>
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
