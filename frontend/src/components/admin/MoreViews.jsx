@@ -1,134 +1,170 @@
 import React, { useState } from "react";
 import {
+  FileText,
   BarChart3,
   PhoneCall,
-  Award,
-  FileText,
-  Megaphone,
-  CheckCircle2,
   Download,
   Search,
   Filter,
-  Play,
-  Volume2,
   Calendar,
   Layers,
-  ArrowRight
+  ChevronRight,
+  TrendingUp,
+  Headphones,
+  CheckCircle2,
+  Clock,
+  Sparkles,
+  FileSpreadsheet,
+  Volume2
 } from "lucide-react";
 
 export default function MoreViews({ activeTab }) {
-  const [playingAudio, setPlayingAudio] = useState(null);
+  // If activeTab is 'more_reports' or starts with 'more_reports', show the Reports suite with its sidebar:
+  // a. One View
+  // b. CC Report
+  // c. Field Report
+  // d. Digital Engagement Report
+  // e. Call Recording
+  const [reportSidebar, setReportSidebar] = useState("one_view"); // 'one_view' | 'cc_report' | 'field_report' | 'digital_report' | 'call_recording'
+  
+  // Date filter state
+  const [reportStartDate, setReportStartDate] = useState("2026-11-18");
+  const [reportEndDate, setReportEndDate] = useState("2026-11-18");
+  const [searchReportQuery, setSearchReportQuery] = useState("");
+  const [selectedAllocationFile, setSelectedAllocationFile] = useState("");
 
-  // 1. ANALYTICS & DPD BUCKETS
-  if (activeTab === "more_analytics") {
-    return (
-      <div className="space-y-6 animate-in fade-in duration-150">
-        <div className="p-5 rounded-2xl bg-card border border-border shadow-sm">
-          <h2 className="text-xl font-bold text-foreground">Portfolio Analytics &amp; DPD Buckets</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Days Past Due (DPD) migration analysis, liquidation rates, and vintage recovery performance
-          </p>
-        </div>
+  const allocationsList = [
+    {
+      name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-18_16:32",
+      product: "Personal Loan",
+      bucket: "Writeoff",
+      channel: "Call",
+      records: 117,
+      uploadedOn: "2026-11-18 16:32:00",
+      scoreStatus: "Scored",
+      score: 84.5
+    },
+    {
+      name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-13_10:13",
+      product: "Personal Loan",
+      bucket: "Writeoff",
+      channel: "Call",
+      records: 117,
+      uploadedOn: "2026-11-13 10:13:00",
+      scoreStatus: "Scored",
+      score: 82.0
+    },
+    {
+      name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-04_13:45",
+      product: "Personal Loan",
+      bucket: "Writeoff",
+      channel: "Call",
+      records: 293,
+      uploadedOn: "2026-11-04 13:45:00",
+      scoreStatus: "Scored",
+      score: 79.8
+    },
+    {
+      name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-04_11:31",
+      product: "Personal Loan",
+      bucket: "Writeoff",
+      channel: "Call",
+      records: 4,
+      uploadedOn: "2026-11-04 11:31:00",
+      scoreStatus: "Scored",
+      score: 71.2
+    }
+  ];
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <span className="text-xs text-muted-foreground">0-30 DPD (Early)</span>
-            <div className="text-2xl font-bold text-foreground mt-1">₹14.2 Cr</div>
-            <div className="text-xs text-emerald-500 font-semibold mt-1">68.4% Roll-forward recovery</div>
-          </div>
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <span className="text-xs text-muted-foreground">31-60 DPD (Mid)</span>
-            <div className="text-2xl font-bold text-foreground mt-1">₹8.9 Cr</div>
-            <div className="text-xs text-blue-500 font-semibold mt-1">42.1% Contact resolution</div>
-          </div>
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <span className="text-xs text-muted-foreground">61-90 DPD (Critical)</span>
-            <div className="text-2xl font-bold text-foreground mt-1">₹5.3 Cr</div>
-            <div className="text-xs text-amber-500 font-semibold mt-1">29.6% PTP fulfillment</div>
-          </div>
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <span className="text-xs text-muted-foreground">90+ DPD / Writeoff</span>
-            <div className="text-2xl font-bold text-foreground mt-1">₹4.74 Cr</div>
-            <div className="text-xs text-rose-500 font-semibold mt-1">18.2% Legal &amp; OTS yield</div>
-          </div>
-        </div>
+  const handleDownloadReport = (name, type) => {
+    const csvContent = "data:text/csv;charset=utf-8,Allocation_Name,Product,Bucket,Channel,Status,Generated_At\n" +
+      `"${name}","Personal Loan","Writeoff","Call","Completed","2026-11-21"\n`;
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${name}_${type}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
-        <div className="p-5 rounded-2xl bg-card border border-border space-y-3">
-          <h3 className="text-sm font-bold text-foreground">DPD Migration Flow Matrix</h3>
-          <p className="text-xs text-muted-foreground">
-            Algorithmically models delinquency roll-backs against traditional T+30 aging trends
-          </p>
-          <div className="p-8 rounded-xl bg-muted/20 border border-dashed border-border text-center text-xs text-muted-foreground">
-            Real-time Markov chain transition matrix generated based on 4 Active Portfolios.
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // 2. VOICE TELEPHONY CDR
-  if (activeTab === "more_telephony") {
+  // ═══════════════════════════════════════════════════════
+  // 3. SCORE: YUCOLLECT SCORE
+  // ═══════════════════════════════════════════════════════
+  if (activeTab === "more_score") {
     return (
       <div className="space-y-6 animate-in fade-in duration-150">
         <div className="p-5 rounded-2xl bg-card border border-border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold text-foreground">Voice Telephony CDR &amp; Audio Vault</h2>
+            <h2 className="text-xl font-bold text-foreground">Yucollect Score</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Statutory call recordings, conversational metadata, and sentiment tags
+              Proprietary recovery likelihood propensity scores calculated per portfolio bucket
             </p>
           </div>
-          <button className="px-3.5 py-1.5 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-xs font-bold flex items-center gap-1.5 border border-border">
-            <Download className="w-3.5 h-3.5" />
-            <span>Export CDR Audit</span>
+          <button className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Recalculate AI Scores</span>
           </button>
         </div>
 
+        {/* Yucollect Score Table */}
         <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs whitespace-nowrap">
               <thead className="bg-muted text-muted-foreground font-semibold">
                 <tr>
-                  <th className="p-3">Call ID</th>
-                  <th className="p-3">Agent</th>
-                  <th className="p-3">Borrower Number</th>
-                  <th className="p-3">Disposition</th>
-                  <th className="p-3">Duration</th>
-                  <th className="p-3">Recording</th>
-                  <th className="p-3">Date &amp; Time</th>
+                  <th className="p-3">Allocation Name</th>
+                  <th className="p-3">Product</th>
+                  <th className="p-3">Bucket</th>
+                  <th className="p-3">Total Records</th>
+                  <th className="p-3">Uploaded On</th>
+                  <th className="p-3">Score Status</th>
+                  <th className="p-3">Collection Score</th>
+                  <th className="p-3 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                <tr className="hover:bg-muted/40">
-                  <td className="p-3 font-mono font-bold text-foreground">CDR-20261118-0912</td>
-                  <td className="p-3 font-semibold text-foreground">Manisha Shete</td>
-                  <td className="p-3 font-mono text-muted-foreground">xxxxxx6505</td>
-                  <td className="p-3"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20">PTP</span></td>
-                  <td className="p-3 font-mono">03:42</td>
-                  <td className="p-3">
-                    <button
-                      onClick={() => setPlayingAudio(playingAudio === "1" ? null : "1")}
-                      className="px-2 py-1 rounded bg-muted hover:bg-muted/80 text-blue-500 font-bold flex items-center gap-1"
-                    >
-                      <Volume2 className="w-3 h-3" />
-                      <span>{playingAudio === "1" ? "Pause" : "Play (03:42)"}</span>
-                    </button>
-                  </td>
-                  <td className="p-3 text-muted-foreground font-mono">2026-11-18 10:14:22</td>
-                </tr>
-                <tr className="hover:bg-muted/40">
-                  <td className="p-3 font-mono font-bold text-foreground">CDR-20261118-0913</td>
-                  <td className="p-3 font-semibold text-foreground">Priya Talekar</td>
-                  <td className="p-3 font-mono text-muted-foreground">xxxxxx2559</td>
-                  <td className="p-3"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">Callback</span></td>
-                  <td className="p-3 font-mono">01:15</td>
-                  <td className="p-3">
-                    <button className="px-2 py-1 rounded bg-muted hover:bg-muted/80 text-blue-500 font-bold flex items-center gap-1">
-                      <Volume2 className="w-3 h-3" />
-                      <span>Play (01:15)</span>
-                    </button>
-                  </td>
-                  <td className="p-3 text-muted-foreground font-mono">2026-11-18 11:32:05</td>
-                </tr>
+                {allocationsList.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-muted/40 transition-colors">
+                    <td className="p-3 font-semibold text-foreground flex items-center gap-2">
+                      <FileSpreadsheet className="w-4 h-4 text-blue-500 shrink-0" />
+                      <span>{item.name}</span>
+                    </td>
+                    <td className="p-3 text-muted-foreground">{item.product}</td>
+                    <td className="p-3">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                        {item.bucket}
+                      </span>
+                    </td>
+                    <td className="p-3 font-bold text-foreground">{item.records}</td>
+                    <td className="p-3 font-mono text-muted-foreground">{item.uploadedOn}</td>
+                    <td className="p-3">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                        {item.scoreStatus}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-2 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full bg-blue-600 rounded-full"
+                            style={{ width: `${item.score}%` }}
+                          />
+                        </div>
+                        <span className="font-bold text-foreground">{item.score} / 100</span>
+                      </div>
+                    </td>
+                    <td className="p-3 text-right">
+                      <button
+                        onClick={() => handleDownloadReport(item.name, "score_audit")}
+                        className="px-3 py-1 rounded bg-muted hover:bg-muted/80 text-blue-500 font-semibold text-xs inline-flex items-center gap-1"
+                      >
+                        <Download className="w-3 h-3" />
+                        <span>Export</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -137,125 +173,473 @@ export default function MoreViews({ activeTab }) {
     );
   }
 
-  // 3. AUTOMATED INCENTIVES
-  if (activeTab === "more_incentives") {
-    return (
-      <div className="space-y-6 animate-in fade-in duration-150">
-        <div className="p-5 rounded-2xl bg-card border border-border shadow-sm">
-          <h2 className="text-xl font-bold text-foreground">Automated Agent Incentives</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Transparent, audited recovery slabs calculating bonus incentives based on atomic ledger transactions
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <span className="text-xs text-muted-foreground">Standard Recovery Slab</span>
-            <div className="text-xl font-bold text-foreground mt-1">1.5% Incentive</div>
-            <div className="text-xs text-muted-foreground mt-1">For collections up to 20% bucket target</div>
-          </div>
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <span className="text-xs text-muted-foreground">Accelerated Slab</span>
-            <div className="text-xl font-bold text-blue-500 mt-1">3.0% Incentive</div>
-            <div className="text-xs text-muted-foreground mt-1">For collections exceeding 35% target</div>
-          </div>
-          <div className="p-4 rounded-xl bg-card border border-border">
-            <span className="text-xs text-muted-foreground">OTS &amp; Hard Recovery Slab</span>
-            <div className="text-xl font-bold text-emerald-500 mt-1">5.0% Incentive</div>
-            <div className="text-xs text-muted-foreground mt-1">For full resolution of 90+ DPD writeoffs</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // 4. REGULATORY REPORTS
-  if (activeTab === "more_reports") {
-    return (
-      <div className="space-y-6 animate-in fade-in duration-150">
-        <div className="p-5 rounded-2xl bg-card border border-border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-bold text-foreground">Regulatory &amp; Statutory Compliance Reports</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              RBI Fair Practices Code audits, permissible call hours compliance, and data privacy exports
-            </p>
-          </div>
-          <button className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5">
-            <Download className="w-3.5 h-3.5" />
-            <span>Generate Regulatory Audit Pack</span>
-          </button>
-        </div>
-
-        <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-          <div className="space-y-2 text-xs">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/40">
-              <span className="font-semibold text-foreground">Statutory Permissible Hours Adherence (08:00 - 19:00 IST)</span>
-              <span className="text-emerald-500 font-bold">100.0% Compliant</span>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/40">
-              <span className="font-semibold text-foreground">Mandatory Call Recording Disclosure Verified</span>
-              <span className="text-emerald-500 font-bold">100.0% Compliant</span>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/40">
-              <span className="font-semibold text-foreground">Borrower Dignity &amp; Anti-Harassment Algorithmic Frequency Gate</span>
-              <span className="text-emerald-500 font-bold">Active (Max 3 attempts/day)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // 5. CAMPAIGNS
-  if (activeTab === "more_campaigns") {
-    return (
-      <div className="space-y-6 animate-in fade-in duration-150">
-        <div className="p-5 rounded-2xl bg-card border border-border shadow-sm">
-          <h2 className="text-xl font-bold text-foreground">Campaign Strategies &amp; Dialers</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Configure automated predictive dialers, voice broadcast drops, and channel allocation routing
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-5 rounded-2xl bg-card border border-border space-y-3">
-            <h4 className="font-bold text-foreground text-sm">New URBAN BAJAJ-NOV-2026 - PREDICTIVE</h4>
-            <div className="text-xs text-muted-foreground space-y-1">
-              <div>Type: <strong>Predictive Voice Dialer</strong></div>
-              <div>Pacing Ratio: <strong>1.4 lines / active agent</strong></div>
-              <div>Status: <span className="text-emerald-500 font-bold">Active</span></div>
-            </div>
-          </div>
-          <div className="p-5 rounded-2xl bg-card border border-border space-y-3">
-            <h4 className="font-bold text-foreground text-sm">RURAL-BAJAJ-Nov-2026-FINAL-DATA</h4>
-            <div className="text-xs text-muted-foreground space-y-1">
-              <div>Type: <strong>Progressive Dialer</strong></div>
-              <div>Pacing Ratio: <strong>1.0 line / active agent</strong></div>
-              <div>Status: <span className="text-emerald-500 font-bold">Active</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // 6. PAYMENT VERIFICATION
+  // ═══════════════════════════════════════════════════════
+  // 1. REPORT SUITE (DEFAULT FOR MORE)
+  // ═══════════════════════════════════════════════════════
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
+      
+      {/* Top Header */}
       <div className="p-5 rounded-2xl bg-card border border-border shadow-sm">
-        <h2 className="text-xl font-bold text-foreground">Payment Recovery &amp; Collections Desk</h2>
+        <h2 className="text-xl font-bold text-foreground">Operational Reports Center</h2>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Atomic verification of bank settlement receipts, UPI transactions, and promissory notes
+          Download omnichannel reports, call center metrics, field recovery logs, and voice recordings
         </p>
       </div>
 
-      <div className="p-8 rounded-2xl bg-card border border-border text-center space-y-2">
-        <CheckCircle2 className="w-8 h-8 mx-auto text-emerald-500" />
-        <div className="font-bold text-sm text-foreground">All Settlements Atomically Audited</div>
-        <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-          Every recovered payment is reconciled in database transactions with automated receipt distribution.
-        </p>
+      <div className="flex flex-col md:flex-row gap-6">
+        
+        {/* Reports Left Sidebar:
+            a. One View
+            b. CC Report
+            c. Field Report
+            d. Digital Engagement Report
+            e. Call Recording
+        */}
+        <aside className="w-full md:w-60 lg:w-64 shrink-0">
+          <div className="sticky top-24 rounded-2xl bg-card border border-border p-3 space-y-1.5 shadow-sm">
+            <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/60 mb-2">
+              Report Categories
+            </div>
+
+            <button
+              onClick={() => setReportSidebar("one_view")}
+              className={`w-full flex items-center justify-between p-3 rounded-xl text-left text-xs transition-all ${
+                reportSidebar === "one_view"
+                  ? "bg-blue-600 text-white font-bold shadow-sm shadow-blue-500/20"
+                  : "text-foreground hover:bg-muted font-medium"
+              }`}
+            >
+              <span>a. One View</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={() => setReportSidebar("cc_report")}
+              className={`w-full flex items-center justify-between p-3 rounded-xl text-left text-xs transition-all ${
+                reportSidebar === "cc_report"
+                  ? "bg-blue-600 text-white font-bold shadow-sm shadow-blue-500/20"
+                  : "text-foreground hover:bg-muted font-medium"
+              }`}
+            >
+              <span>b. CC Report</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={() => setReportSidebar("field_report")}
+              className={`w-full flex items-center justify-between p-3 rounded-xl text-left text-xs transition-all ${
+                reportSidebar === "field_report"
+                  ? "bg-blue-600 text-white font-bold shadow-sm shadow-blue-500/20"
+                  : "text-foreground hover:bg-muted font-medium"
+              }`}
+            >
+              <span>c. Field Report</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={() => setReportSidebar("digital_report")}
+              className={`w-full flex items-center justify-between p-3 rounded-xl text-left text-xs transition-all ${
+                reportSidebar === "digital_report"
+                  ? "bg-blue-600 text-white font-bold shadow-sm shadow-blue-500/20"
+                  : "text-foreground hover:bg-muted font-medium"
+              }`}
+            >
+              <span>d. Digital Engagement Report</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={() => setReportSidebar("call_recording")}
+              className={`w-full flex items-center justify-between p-3 rounded-xl text-left text-xs transition-all ${
+                reportSidebar === "call_recording"
+                  ? "bg-blue-600 text-white font-bold shadow-sm shadow-blue-500/20"
+                  : "text-foreground hover:bg-muted font-medium"
+              }`}
+            >
+              <span>e. Call Recording</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </aside>
+
+        {/* Reports Content Area */}
+        <main className="flex-1 min-w-0 space-y-6">
+          
+          {/* ── a. ONE VIEW ── */}
+          {reportSidebar === "one_view" && (
+            <div className="p-5 rounded-2xl bg-card border border-border space-y-5 animate-in fade-in">
+              <div>
+                <h3 className="text-lg font-bold text-foreground">All Reports</h3>
+                <p className="text-xs text-muted-foreground">
+                  Download reports from different channels to track performance
+                </p>
+              </div>
+
+              {/* Date Filters: 18-11-2026 to 18-11-2026 & Search */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted border border-border font-mono font-semibold">
+                    <Calendar className="w-3.5 h-3.5 text-blue-500" />
+                    <span>18-11-2026</span>
+                  </div>
+                  <span className="text-muted-foreground">to</span>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted border border-border font-mono font-semibold">
+                    <Calendar className="w-3.5 h-3.5 text-blue-500" />
+                    <span>18-11-2026</span>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={searchReportQuery}
+                    onChange={(e) => setSearchReportQuery(e.target.value)}
+                    placeholder="Search Allocations, Bucket, Product, Channel..."
+                    className="pl-9 pr-3 py-1.5 rounded-xl bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 w-72"
+                  />
+                </div>
+              </div>
+
+              {/* Exact 4 Rows Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs whitespace-nowrap">
+                  <thead className="bg-muted text-muted-foreground font-semibold">
+                    <tr>
+                      <th className="p-3">Allocation Name</th>
+                      <th className="p-3">Product</th>
+                      <th className="p-3">Bucket</th>
+                      <th className="p-3">Channel</th>
+                      <th className="p-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {allocationsList.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-muted/40 transition-colors">
+                        <td className="p-3 font-semibold text-foreground flex items-center gap-2">
+                          <FileSpreadsheet className="w-4 h-4 text-blue-500 shrink-0" />
+                          <span>{item.name}</span>
+                        </td>
+                        <td className="p-3 text-muted-foreground">{item.product}</td>
+                        <td className="p-3">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                            {item.bucket}
+                          </span>
+                        </td>
+                        <td className="p-3 font-semibold text-foreground">{item.channel}</td>
+                        <td className="p-3 text-right">
+                          <button
+                            onClick={() => handleDownloadReport(item.name, "one_view")}
+                            className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs inline-flex items-center gap-1 shadow-sm"
+                          >
+                            <Download className="w-3 h-3" />
+                            <span>Download</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── b. CC REPORT (Contact Center) ── */}
+          {reportSidebar === "cc_report" && (
+            <div className="p-5 rounded-2xl bg-card border border-border space-y-5 animate-in fade-in">
+              <div>
+                <h3 className="text-lg font-bold text-foreground">Contact Center (CC) Reports</h3>
+                <p className="text-xs text-muted-foreground">
+                  Call center dialer statistics, talk time analysis, and telecaller disposition summaries
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs">
+                <div className="px-3 py-1.5 rounded-lg bg-muted border border-border font-mono font-semibold">
+                  18-11-2026
+                </div>
+                <span className="text-muted-foreground">to</span>
+                <div className="px-3 py-1.5 rounded-lg bg-muted border border-border font-mono font-semibold">
+                  18-11-2026
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs whitespace-nowrap">
+                  <thead className="bg-muted text-muted-foreground font-semibold">
+                    <tr>
+                      <th className="p-3">Allocation Name</th>
+                      <th className="p-3">Product</th>
+                      <th className="p-3">Bucket</th>
+                      <th className="p-3">Channel</th>
+                      <th className="p-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {allocationsList.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-muted/40 transition-colors">
+                        <td className="p-3 font-semibold text-foreground">{item.name}</td>
+                        <td className="p-3 text-muted-foreground">{item.product}</td>
+                        <td className="p-3">{item.bucket}</td>
+                        <td className="p-3 font-semibold text-foreground">Call Center</td>
+                        <td className="p-3 text-right">
+                          <button
+                            onClick={() => handleDownloadReport(item.name, "cc_report")}
+                            className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs inline-flex items-center gap-1"
+                          >
+                            <Download className="w-3 h-3" />
+                            <span>Download CC</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── c. FIELD REPORT ── */}
+          {reportSidebar === "field_report" && (
+            <div className="p-5 rounded-2xl bg-card border border-border space-y-5 animate-in fade-in">
+              <div>
+                <h3 className="text-lg font-bold text-foreground">Field Reports</h3>
+                <p className="text-xs text-muted-foreground">
+                  Download reports from different channels to track performance
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted border border-border font-mono font-semibold">
+                    <Calendar className="w-3.5 h-3.5 text-blue-500" />
+                    <span>18-11-2026</span>
+                  </div>
+                  <span className="text-muted-foreground">to</span>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted border border-border font-mono font-semibold">
+                    <Calendar className="w-3.5 h-3.5 text-blue-500" />
+                    <span>18-11-2026</span>
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search Allocations, Bucket, Product, Channel..."
+                    className="pl-9 pr-3 py-1.5 rounded-xl bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 w-72"
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs whitespace-nowrap">
+                  <thead className="bg-muted text-muted-foreground font-semibold">
+                    <tr>
+                      <th className="p-3">Allocation Name</th>
+                      <th className="p-3">Product</th>
+                      <th className="p-3">Bucket</th>
+                      <th className="p-3">Channel</th>
+                      <th className="p-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {allocationsList.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-muted/40 transition-colors">
+                        <td className="p-3 font-semibold text-foreground">{item.name}</td>
+                        <td className="p-3 text-muted-foreground">{item.product}</td>
+                        <td className="p-3">{item.bucket}</td>
+                        <td className="p-3 font-semibold text-foreground">Field Recovery</td>
+                        <td className="p-3 text-right">
+                          <button
+                            onClick={() => handleDownloadReport(item.name, "field_report")}
+                            className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs inline-flex items-center gap-1"
+                          >
+                            <Download className="w-3 h-3" />
+                            <span>Download Field</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ── d. DIGITAL ENGAGEMENT REPORT ── */}
+          {reportSidebar === "digital_report" && (
+            <div className="p-5 rounded-2xl bg-card border border-border space-y-5 animate-in fade-in">
+              <div>
+                <h3 className="text-lg font-bold text-foreground">Filter and Download Report</h3>
+                <p className="text-xs text-muted-foreground">
+                  Digital channel dispatch logs (SMS, WhatsApp, Automated BOT)
+                </p>
+              </div>
+
+              {/* Date Filters: Start date & End date */}
+              <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-3 text-xs">
+                <span className="font-bold text-foreground">Date Range</span>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Start Date:</span>
+                    <input
+                      type="date"
+                      value={reportStartDate}
+                      onChange={(e) => setReportStartDate(e.target.value)}
+                      className="px-2.5 py-1.5 rounded-lg bg-card border border-border text-xs text-foreground focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">End Date:</span>
+                    <input
+                      type="date"
+                      value={reportEndDate}
+                      onChange={(e) => setReportEndDate(e.target.value)}
+                      className="px-2.5 py-1.5 rounded-lg bg-card border border-border text-xs text-foreground focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section: All Downloads */}
+              <div className="space-y-3 pt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <h4 className="text-sm font-bold text-foreground">All Downloads</h4>
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Search reports..."
+                      className="pl-9 pr-3 py-1.5 rounded-xl bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 w-64"
+                    />
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs whitespace-nowrap">
+                    <thead className="bg-muted text-muted-foreground font-semibold">
+                      <tr>
+                        <th className="p-3">Date</th>
+                        <th className="p-3">Requested by</th>
+                        <th className="p-3">Date Range</th>
+                        <th className="p-3">Allocator</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3 text-right">Download</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      <tr>
+                        <td colSpan="6" className="p-12 text-center text-muted-foreground font-medium">
+                          No data
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {/* ── e. CALL RECORDING ── */}
+          {reportSidebar === "call_recording" && (
+            <div className="p-5 rounded-2xl bg-card border border-border space-y-5 animate-in fade-in">
+              <div>
+                <h3 className="text-lg font-bold text-foreground">Filter and Download all Call Recordings</h3>
+                <p className="text-xs text-muted-foreground">
+                  Statutory audio recordings archive for institutional compliance and dispute reviews
+                </p>
+              </div>
+
+              {/* Filters: Allocation File & Date range */}
+              <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-3 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  
+                  {/* Allocation File Dropdown */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-foreground">Allocation File</label>
+                    <select
+                      value={selectedAllocationFile}
+                      onChange={(e) => setSelectedAllocationFile(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-card border border-border text-xs text-foreground focus:outline-none"
+                    >
+                      <option value="">Select allocation file</option>
+                      <option value="bajaj_18">BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-18_16:32</option>
+                      <option value="bajaj_13">BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-13_10:13</option>
+                      <option value="bajaj_04_13">BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-04_13:45</option>
+                    </select>
+                  </div>
+
+                  {/* Date range */}
+                  <div className="space-y-1">
+                    <label className="font-bold text-foreground">Date range</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="date"
+                        value={reportStartDate}
+                        onChange={(e) => setReportStartDate(e.target.value)}
+                        className="w-full px-2 py-2 rounded-xl bg-card border border-border text-xs text-foreground focus:outline-none"
+                      />
+                      <input
+                        type="date"
+                        value={reportEndDate}
+                        onChange={(e) => setReportEndDate(e.target.value)}
+                        className="w-full px-2 py-2 rounded-xl bg-card border border-border text-xs text-foreground focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Section: All Downloads */}
+              <div className="space-y-3 pt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <h4 className="text-sm font-bold text-foreground">All Downloads</h4>
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Search recordings..."
+                      className="pl-9 pr-3 py-1.5 rounded-xl bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 w-64"
+                    />
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs whitespace-nowrap">
+                    <thead className="bg-muted text-muted-foreground font-semibold">
+                      <tr>
+                        <th className="p-3">Date</th>
+                        <th className="p-3">Date Range</th>
+                        <th className="p-3">Allocator</th>
+                        <th className="p-3">Request Criteria</th>
+                        <th className="p-3">Requested by</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3">File Size</th>
+                        <th className="p-3 text-right">Download</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      <tr>
+                        <td colSpan="8" className="p-12 text-center text-muted-foreground font-medium">
+                          No data
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+        </main>
       </div>
+
     </div>
   );
 }

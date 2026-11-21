@@ -7,7 +7,9 @@ import {
   Radio,
   FileSpreadsheet,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  FileText,
+  Sparkles
 } from "lucide-react";
 import ThemeToggle from "../ThemeToggle";
 
@@ -55,7 +57,7 @@ export default function AdminNavbar({
             </div>
           </div>
 
-          {/* Top Navigation Links */}
+          {/* Top Navigation Links: 1. Home | 2. Allocation | 3. Agent | 4. More */}
           <nav className="hidden md:flex items-center gap-1">
             <button
               onClick={() => {
@@ -99,13 +101,13 @@ export default function AdminNavbar({
               Agent
             </button>
 
-            {/* More Dropdown */}
+            {/* 4. More Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
                 className={`px-3.5 py-2 rounded-lg text-sm font-semibold flex items-center gap-1.5 transition-all ${
                   topNav.startsWith("more_")
-                    ? "bg-blue-600/10 text-blue-500 border border-blue-500/20"
+                    ? "bg-blue-600 text-white shadow-sm shadow-blue-500/30"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               >
@@ -119,40 +121,24 @@ export default function AdminNavbar({
                   onClick={() => setMoreDropdownOpen(false)}
                 >
                   <button
-                    onClick={() => setTopNav("more_analytics")}
-                    className="w-full text-left px-3 py-2 text-xs font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-between"
-                  >
-                    <span>Analytics & DPD Buckets</span>
-                  </button>
-                  <button
-                    onClick={() => setTopNav("more_telephony")}
-                    className="w-full text-left px-3 py-2 text-xs font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-between"
-                  >
-                    <span>Voice Telephony CDR</span>
-                  </button>
-                  <button
-                    onClick={() => setTopNav("more_incentives")}
-                    className="w-full text-left px-3 py-2 text-xs font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-between"
-                  >
-                    <span>Automated Incentives</span>
-                  </button>
-                  <button
                     onClick={() => setTopNav("more_reports")}
-                    className="w-full text-left px-3 py-2 text-xs font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-between"
+                    className="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-foreground hover:bg-muted transition-colors flex items-center justify-between"
                   >
-                    <span>Regulatory & Statutory</span>
+                    <span className="flex items-center gap-2">
+                      <FileText className="w-3.5 h-3.5 text-blue-500" />
+                      <span>1. Report</span>
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">5 categories</span>
                   </button>
                   <button
-                    onClick={() => setTopNav("more_campaigns")}
-                    className="w-full text-left px-3 py-2 text-xs font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-between"
+                    onClick={() => setTopNav("more_score")}
+                    className="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg text-foreground hover:bg-muted transition-colors flex items-center justify-between"
                   >
-                    <span>Campaign Strategies</span>
-                  </button>
-                  <button
-                    onClick={() => setTopNav("more_payments")}
-                    className="w-full text-left px-3 py-2 text-xs font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-between"
-                  >
-                    <span>Payment Verification</span>
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      <span>3. Score</span>
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">Yucollect</span>
                   </button>
                 </div>
               )}
