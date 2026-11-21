@@ -361,7 +361,7 @@ export default function HomePortfolioView({
             {[
               { id: "one_view", label: "1. One View" },
               { id: "call", label: "2. Call" },
-              { id: "field", label: "3. Field" },
+              { id: "field", label: "3. Field Dashboard" },
               { id: "digital", label: "4. Digital" }
             ].map((tab) => {
               const isActive = detailTab === tab.id;
@@ -564,9 +564,9 @@ export default function HomePortfolioView({
               </div>
               <button
                 onClick={onNavigateToCallMonitoring}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-sm shadow-blue-500/20 transition-all self-start sm:self-auto"
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-sm shadow-blue-500/20 transition-all self-start sm:self-auto cursor-pointer"
               >
-                <span>Agent Monitoring</span>
+                <span>Call Agent Monitoring</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </button>
             </div>

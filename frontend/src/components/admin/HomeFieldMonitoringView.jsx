@@ -112,11 +112,11 @@ export default function HomeFieldMonitoringView() {
                   <thead className="bg-muted text-muted-foreground font-semibold">
                     <tr>
                       <th className="p-3">Agent Name</th>
-                      <th className="p-3">Yucollect ID</th>
+                      <th className="p-3">Agent ID</th>
                       <th className="p-3">Status</th>
-                      <th className="p-3">Check-in Time</th>
-                      <th className="p-3">Check-out Time</th>
-                      <th className="p-3">Deviation Distance</th>
+                      <th className="p-3">Check in Time</th>
+                      <th className="p-3">Check out Time</th>
+                      <th className="p-3">Accounts Deviation</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -200,7 +200,7 @@ export default function HomeFieldMonitoringView() {
                       <th className="p-3">Borrower Name</th>
                       <th className="p-3">Account Number</th>
                       <th className="p-3">Deviation Distance</th>
-                      <th className="p-3">Date &amp; Time</th>
+                      <th className="p-3">Visit Date &amp; Time</th>
                       <th className="p-3">Amount</th>
                     </tr>
                   </thead>

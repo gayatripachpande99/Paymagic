@@ -99,13 +99,17 @@ export default function AllocationView({
       name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-18_16:32",
       product: "Personal Loan",
       bucket: "Writeoff",
-      accounts: 117,
-      collectable: "₹2.81 Cr",
-      outstanding: "₹4.74 Cr",
-      status: "Partially Allocated",
-      statusType: "partially",
-      duration: "Ends in 18 days",
-      uploadedOn: "2026-11-18 16:32"
+      caseCounts: 117,
+      dnd: 0,
+      sumOfOutstanding: "₹2.81 Cr",
+      createdOn: "18-Nov-2026 16:32",
+      allocStatus: "Partially allocated",
+      collectionPct: "0.00%",
+      paymentFileStatus: "Upload File",
+      allocationExpiringOn: "2026-12-05",
+      uploadedBy: "Priya Talekar",
+      uploader: "PayMagic PVT LTD",
+      statusType: "partially"
     },
     {
       id: "bajaj_nov_13",
@@ -113,13 +117,17 @@ export default function AllocationView({
       name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-13_10:13",
       product: "Personal Loan",
       bucket: "Writeoff",
-      accounts: 117,
-      collectable: "₹2.81 Cr",
-      outstanding: "₹4.74 Cr",
-      status: "100% Allocated",
-      statusType: "100",
-      duration: "Ends in 18 days",
-      uploadedOn: "2026-11-13 10:13"
+      caseCounts: 117,
+      dnd: 0,
+      sumOfOutstanding: "₹2.81 Cr",
+      createdOn: "13-Nov-2026 10:13",
+      allocStatus: "100% Allocated",
+      collectionPct: "0.00%",
+      paymentFileStatus: "Uploaded",
+      allocationExpiringOn: "2026-12-01",
+      uploadedBy: "Priya Talekar",
+      uploader: "PayMagic PVT LTD",
+      statusType: "100"
     },
     {
       id: "bajaj_nov_04_13",
@@ -127,13 +135,17 @@ export default function AllocationView({
       name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-04_13:45",
       product: "Personal Loan",
       bucket: "Writeoff",
-      accounts: 293,
-      collectable: "₹3.85 Cr",
-      outstanding: "₹6.11 Cr",
-      status: "100% Allocated",
-      statusType: "100",
-      duration: "Ends in 18 days",
-      uploadedOn: "2026-11-04 13:45"
+      caseCounts: 293,
+      dnd: 0,
+      sumOfOutstanding: "₹3.85 Cr",
+      createdOn: "04-Nov-2026 13:45",
+      allocStatus: "100% Allocated",
+      collectionPct: "0.00%",
+      paymentFileStatus: "Uploaded",
+      allocationExpiringOn: "2026-11-22",
+      uploadedBy: "Priya Talekar",
+      uploader: "PayMagic PVT LTD",
+      statusType: "100"
     },
     {
       id: "bajaj_nov_04_11",
@@ -141,13 +153,17 @@ export default function AllocationView({
       name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-04_11:31",
       product: "Personal Loan",
       bucket: "Writeoff",
-      accounts: 4,
-      collectable: "₹14.20 Lakh",
-      outstanding: "₹22.08 Lakh",
-      status: "Closed",
-      statusType: "closed",
-      duration: "Expired",
-      uploadedOn: "2026-11-04 11:31"
+      caseCounts: 4,
+      dnd: 0,
+      sumOfOutstanding: "₹14.20 Lakh",
+      createdOn: "04-Nov-2026 11:31",
+      allocStatus: "Closed",
+      collectionPct: "0.00%",
+      paymentFileStatus: "Expired",
+      allocationExpiringOn: "2026-11-18",
+      uploadedBy: "Priya Talekar",
+      uploader: "PayMagic PVT LTD",
+      statusType: "closed"
     },
     // ── 2. PUNEWALA ALLOCATIONS (ISOLATED TO PUNEWALA) ──
     {
@@ -156,13 +172,17 @@ export default function AllocationView({
       name: "PUNEWALA_Personal Loan_Writeoff_2026-11-16_14:20",
       product: "Personal Loan",
       bucket: "Writeoff",
-      accounts: 85,
-      collectable: "₹1.55 Cr",
-      outstanding: "₹2.40 Cr",
-      status: "100% Allocated",
-      statusType: "100",
-      duration: "Ends in 22 days",
-      uploadedOn: "2026-11-16 14:20"
+      caseCounts: 85,
+      dnd: 0,
+      sumOfOutstanding: "₹1.55 Cr",
+      createdOn: "16-Nov-2026 14:20",
+      allocStatus: "100% Allocated",
+      collectionPct: "0.00%",
+      paymentFileStatus: "Uploaded",
+      allocationExpiringOn: "2026-12-08",
+      uploadedBy: "Priya Talekar",
+      uploader: "PayMagic PVT LTD",
+      statusType: "100"
     },
     {
       id: "punewala_nov_10",
@@ -170,13 +190,17 @@ export default function AllocationView({
       name: "PUNEWALA_Business Loan_Writeoff_2026-11-10_11:15",
       product: "Business Loan",
       bucket: "Writeoff",
-      accounts: 64,
-      collectable: "₹1.10 Cr",
-      outstanding: "₹1.85 Cr",
-      status: "Partially Allocated",
-      statusType: "partially",
-      duration: "Ends in 14 days",
-      uploadedOn: "2026-11-10 11:15"
+      caseCounts: 64,
+      dnd: 0,
+      sumOfOutstanding: "₹1.10 Cr",
+      createdOn: "10-Nov-2026 11:15",
+      allocStatus: "Partially allocated",
+      collectionPct: "0.00%",
+      paymentFileStatus: "Upload File",
+      allocationExpiringOn: "2026-11-24",
+      uploadedBy: "Priya Talekar",
+      uploader: "PayMagic PVT LTD",
+      statusType: "partially"
     }
   ]);
 
@@ -311,81 +335,92 @@ export default function AllocationView({
       }}
     >
 
-      {/* ── UNIFIED ALLOCATION MANAGEMENT HEADER ── */}
+      {/* ── ALLOCATION LIST HEADER ── */}
       <div
         style={{
           display: "flex",
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: "12px",
+          gap: "16px",
           paddingTop: "4px",
           borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-          paddingBottom: "12px",
+          paddingBottom: "16px",
           flexWrap: "wrap"
         }}
       >
         <div>
           <h1 style={{ fontSize: "24px", fontWeight: 700, color: "#ffffff", letterSpacing: "-0.02em", margin: 0 }}>
-            Allocation Management
+            Allocation list
           </h1>
+          <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", marginBottom: 0, maxWidth: "680px" }}>
+            The Allocation Summary gives you a complete view of all allocations, allocation history. You may also add and view new allocations here.
+          </p>
         </div>
 
-        {/* Sub-navigation tabs: Allocation List | Upload New File | Upload History */}
-        <div style={{ display: "flex", alignItems: "center", gap: "20px", flexShrink: 0 }}>
-          <button
-            onClick={() => setCurrentView("list")}
-            style={{
-              fontSize: "12px",
-              fontWeight: currentView === "list" ? 700 : 500,
-              color: currentView === "list" ? "#ffffff" : "#94a3b8",
-              borderBottom: currentView === "list" ? "2px solid #ffffff" : "2px solid transparent",
-              paddingBottom: "2px",
-              background: "none",
-              borderLeft: "none",
-              borderRight: "none",
-              borderTop: "none",
-              cursor: "pointer",
-              transition: "all 0.15s ease"
-            }}
-          >
-            Allocation List
-          </button>
+        {/* Action Buttons: Upload New File | Upload History | View Allocation List */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+          {currentView !== "list" && (
+            <button
+              onClick={() => setCurrentView("list")}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 16px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(255, 255, 255, 0.06)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                color: "#cbd5e1",
+                fontSize: "12px",
+                fontWeight: 600,
+                cursor: "pointer"
+              }}
+            >
+              <ArrowLeft style={{ width: "14px", height: "14px" }} />
+              <span>View Allocation List</span>
+            </button>
+          )}
+
           <button
             onClick={() => setCurrentView("upload")}
             style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 16px",
+              borderRadius: "10px",
+              backgroundColor: currentView === "upload" ? "#2563eb" : "#1d4ed8",
+              color: "#ffffff",
               fontSize: "12px",
-              fontWeight: currentView === "upload" ? 700 : 500,
-              color: currentView === "upload" ? "#ffffff" : "#94a3b8",
-              borderBottom: currentView === "upload" ? "2px solid #ffffff" : "2px solid transparent",
-              paddingBottom: "2px",
-              background: "none",
-              borderLeft: "none",
-              borderRight: "none",
-              borderTop: "none",
+              fontWeight: 700,
+              border: "none",
               cursor: "pointer",
-              transition: "all 0.15s ease"
+              boxShadow: "0 2px 6px rgba(29, 78, 216, 0.4)"
             }}
           >
-            Upload New File
+            <Plus style={{ width: "14px", height: "14px" }} />
+            <span>Upload New File</span>
           </button>
+
           <button
             onClick={() => setCurrentView("history")}
             style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 16px",
+              borderRadius: "10px",
+              backgroundColor: currentView === "history" ? "#0f172a" : "rgba(255, 255, 255, 0.08)",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              color: "#ffffff",
               fontSize: "12px",
-              fontWeight: currentView === "history" ? 700 : 500,
-              color: currentView === "history" ? "#ffffff" : "#94a3b8",
-              borderBottom: currentView === "history" ? "2px solid #ffffff" : "2px solid transparent",
-              paddingBottom: "2px",
-              background: "none",
-              borderLeft: "none",
-              borderRight: "none",
-              borderTop: "none",
-              cursor: "pointer",
-              transition: "all 0.15s ease"
+              fontWeight: 600,
+              cursor: "pointer"
             }}
           >
-            Upload History
+            <History style={{ width: "14px", height: "14px" }} />
+            <span>Upload History</span>
           </button>
         </div>
       </div>
@@ -523,14 +558,20 @@ export default function AllocationView({
             <table style={{ width: "100%", textAlign: "left", fontSize: "12px", whiteSpace: "nowrap", borderCollapse: "collapse" }}>
               <thead style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "#94a3b8", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <tr>
-                  <th style={{ padding: "12px 16px 12px 4px" }}>ALLOCATION NAME</th>
-                  <th style={{ padding: "12px 16px" }}>PRODUCT</th>
-                  <th style={{ padding: "12px 16px" }}>BUCKET</th>
-                  <th style={{ padding: "12px 16px" }}>TOTAL ACCOUNTS</th>
-                  <th style={{ padding: "12px 16px" }}>COLLECTABLE</th>
-                  <th style={{ padding: "12px 16px" }}>OUTSTANDING</th>
-                  <th style={{ padding: "12px 16px" }}>STATUS</th>
-                  <th style={{ padding: "12px 4px 12px 16px", textAlign: "right" }}>ACTIONS</th>
+                  <th style={{ padding: "12px 14px 12px 4px" }}>Allocation name</th>
+                  <th style={{ padding: "12px 14px" }}>Product</th>
+                  <th style={{ padding: "12px 14px" }}>Buckets</th>
+                  <th style={{ padding: "12px 14px" }}>Case counts</th>
+                  <th style={{ padding: "12px 14px" }}>DND</th>
+                  <th style={{ padding: "12px 14px" }}>Sum of Outstanding</th>
+                  <th style={{ padding: "12px 14px" }}>Created On</th>
+                  <th style={{ padding: "12px 14px" }}>Alloc. Status</th>
+                  <th style={{ padding: "12px 14px" }}>Collection %</th>
+                  <th style={{ padding: "12px 14px" }}>Payment file status</th>
+                  <th style={{ padding: "12px 14px" }}>Allocation Expiring On</th>
+                  <th style={{ padding: "12px 14px" }}>Uploaded By</th>
+                  <th style={{ padding: "12px 14px" }}>Uploader</th>
+                  <th style={{ padding: "12px 4px 12px 14px", textAlign: "right" }}>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -544,32 +585,58 @@ export default function AllocationView({
                     onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.02)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
                   >
-                    <td style={{ padding: "14px 16px 14px 4px", fontWeight: 600, color: "#ffffff" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <td style={{ padding: "14px 14px 14px 4px", fontWeight: 600, color: "#ffffff" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         <FileSpreadsheet style={{ width: "16px", height: "16px", color: "#3b82f6", flexShrink: 0 }} />
-                        <span style={{ maxWidth: "480px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={item.name}>
+                        <span style={{ maxWidth: "340px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={item.name}>
                           {item.name}
                         </span>
                       </div>
                     </td>
 
-                    <td style={{ padding: "14px 16px", color: "#cbd5e1" }}>{item.product}</td>
+                    <td style={{ padding: "14px 14px", color: "#cbd5e1" }}>{item.product}</td>
 
-                    <td style={{ padding: "14px 16px" }}>
+                    <td style={{ padding: "14px 14px" }}>
                       <span style={{ fontWeight: 700, color: "#f59e0b" }}>
                         {item.bucket}
                       </span>
                     </td>
 
-                    <td style={{ padding: "14px 16px", fontWeight: 700, color: "#ffffff" }}>{item.accounts}</td>
+                    <td style={{ padding: "14px 14px", fontWeight: 700, color: "#ffffff" }}>{item.caseCounts || item.accounts}</td>
 
-                    <td style={{ padding: "14px 16px", fontWeight: 700, color: "#ffffff" }}>{item.collectable}</td>
+                    <td style={{ padding: "14px 14px", color: "#94a3b8" }}>{item.dnd !== undefined ? item.dnd : 0}</td>
 
-                    <td style={{ padding: "14px 16px", color: "#94a3b8", fontWeight: 400 }}>{item.outstanding}</td>
+                    <td style={{ padding: "14px 14px", fontWeight: 700, color: "#ffffff" }}>{item.sumOfOutstanding || item.collectable || item.outstanding}</td>
 
-                    <td style={{ padding: "14px 16px", color: "#cbd5e1" }}>{item.status}</td>
+                    <td style={{ padding: "14px 14px", color: "#94a3b8", fontFamily: "monospace" }}>{item.createdOn || item.uploadedOn}</td>
 
-                    <td style={{ padding: "14px 4px 14px 16px", textAlign: "right", position: "relative" }}>
+                    <td style={{ padding: "14px 14px", color: "#cbd5e1" }}>{item.allocStatus || item.status}</td>
+
+                    <td style={{ padding: "14px 14px", fontWeight: 700, color: "#34d399" }}>{item.collectionPct || "0.00%"}</td>
+
+                    <td style={{ padding: "14px 14px" }}>
+                      <span
+                        style={{
+                          padding: "2px 8px",
+                          borderRadius: "6px",
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          backgroundColor: item.paymentFileStatus === "Upload File" ? "rgba(59, 130, 246, 0.15)" : item.paymentFileStatus === "Uploaded" ? "rgba(16, 185, 129, 0.15)" : "rgba(244, 63, 94, 0.15)",
+                          color: item.paymentFileStatus === "Upload File" ? "#60a5fa" : item.paymentFileStatus === "Uploaded" ? "#34d399" : "#fb7185",
+                          border: `1px solid ${item.paymentFileStatus === "Upload File" ? "rgba(59, 130, 246, 0.3)" : item.paymentFileStatus === "Uploaded" ? "rgba(16, 185, 129, 0.3)" : "rgba(244, 63, 94, 0.3)"}`
+                        }}
+                      >
+                        {item.paymentFileStatus || "Upload File"}
+                      </span>
+                    </td>
+
+                    <td style={{ padding: "14px 14px", color: "#94a3b8", fontFamily: "monospace" }}>{item.allocationExpiringOn || "2026-12-05"}</td>
+
+                    <td style={{ padding: "14px 14px", color: "#cbd5e1" }}>{item.uploadedBy || "Priya Talekar"}</td>
+
+                    <td style={{ padding: "14px 14px", color: "#94a3b8" }}>{item.uploader || "PayMagic PVT LTD"}</td>
+
+                    <td style={{ padding: "14px 4px 14px 14px", textAlign: "right", position: "relative" }}>
                       <button
                         onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
                         style={{
@@ -732,8 +799,39 @@ export default function AllocationView({
           2. UPLOAD NEW FILE VIEW
       ───────────────────────────────────────────────────────────── */}
       {currentView === "upload" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px", paddingTop: "8px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px", paddingTop: "8px" }}>
           
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+            <div>
+              <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                Upload New File
+              </h2>
+              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", marginBottom: 0 }}>
+                Upload a new allocation file here to begin planning and assignment to channels
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCurrentView("list")}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 16px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(255, 255, 255, 0.06)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                color: "#cbd5e1",
+                fontSize: "12px",
+                fontWeight: 600,
+                cursor: "pointer"
+              }}
+            >
+              <ArrowLeft style={{ width: "14px", height: "14px" }} />
+              <span>View Allocation List</span>
+            </button>
+          </div>
+
           {/* Form Card */}
           <form
             onSubmit={handleUploadSubmit}
@@ -938,6 +1036,9 @@ export default function AllocationView({
                   <Download style={{ width: "14px", height: "14px" }} />
                   <span>Download Sample Allocation File</span>
                 </button>
+                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginTop: "2px" }}>
+                  Use this template for correctly formatted, smooth processing.
+                </span>
               </div>
 
               <button
@@ -988,6 +1089,111 @@ export default function AllocationView({
       {currentView === "history" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "24px", paddingTop: "8px" }}>
           
+          {/* Upload History File Card */}
+          <div
+            style={{
+              padding: "24px",
+              borderRadius: "16px",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
+              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.3)"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+              <div>
+                <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                  Upload History File
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCurrentView("list")}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "8px 16px",
+                  borderRadius: "10px",
+                  backgroundColor: "rgba(255, 255, 255, 0.06)",
+                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                  color: "#cbd5e1",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer"
+                }}
+              >
+                <ArrowLeft style={{ width: "14px", height: "14px" }} />
+                <span>View Allocation List</span>
+              </button>
+            </div>
+
+            <div
+              onClick={() => fileInputRef.current && fileInputRef.current.click()}
+              style={{
+                border: "2px dashed rgba(255, 255, 255, 0.15)",
+                borderRadius: "16px",
+                padding: "36px",
+                textAlign: "center",
+                cursor: "pointer",
+                backgroundColor: "rgba(255, 255, 255, 0.02)",
+                transition: "all 0.15s ease"
+              }}
+            >
+              <UploadCloud style={{ width: "48px", height: "48px", margin: "0 auto 8px auto", color: "#60a5fa" }} />
+              <div style={{ fontWeight: 700, fontSize: "14px", color: "#ffffff" }}>
+                Drag &amp; drop files or Browse
+              </div>
+              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", marginBottom: 0 }}>
+                Supported formats: <strong style={{ color: "#e2e8f0" }}>.xls, .xlsx, .xlsb, .csv</strong>
+              </p>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", paddingTop: "8px" }}>
+              <button
+                type="button"
+                onClick={handleDownloadSample}
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  color: "#60a5fa",
+                  backgroundColor: "transparent",
+                  border: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  cursor: "pointer"
+                }}
+              >
+                <Download style={{ width: "14px", height: "14px" }} />
+                <span>download sample</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setUploadMessage({ type: "success", text: "Historical allocation log ingested successfully!" });
+                  setTimeout(() => setUploadMessage(null), 2500);
+                }}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: "12px",
+                  backgroundColor: "#2563eb",
+                  color: "#ffffff",
+                  fontWeight: 700,
+                  fontSize: "12px",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 6px rgba(37, 99, 235, 0.2)"
+                }}
+              >
+                proceed
+              </button>
+            </div>
+          </div>
+
           {/* History Table */}
           <div
             style={{
@@ -1103,15 +1309,17 @@ export default function AllocationView({
               style={{
                 border: "1px dashed rgba(255, 255, 255, 0.15)",
                 borderRadius: "12px",
-                padding: "24px",
+                padding: "28px",
                 textAlign: "center",
                 backgroundColor: "rgba(255, 255, 255, 0.02)",
                 cursor: "pointer"
               }}
             >
-              <UploadCloud style={{ width: "32px", height: "32px", margin: "0 auto 4px auto", color: "#60a5fa" }} />
-              <div style={{ fontSize: "12px", fontWeight: 600, color: "#ffffff" }}>Drag &amp; drop accounts file or browse</div>
-              <span style={{ fontSize: "10px", color: "#94a3b8" }}>Supported: .csv, .xlsx</span>
+              <UploadCloud style={{ width: "36px", height: "36px", margin: "0 auto 6px auto", color: "#60a5fa" }} />
+              <div style={{ fontSize: "13px", fontWeight: 700, color: "#ffffff" }}>Drag &amp; drop files or Browse</div>
+              <span style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginTop: "4px" }}>
+                Supported formats: <strong style={{ color: "#cbd5e1" }}>.xls,.xlsx,.xlsb,.csv</strong>
+              </span>
             </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", paddingTop: "8px" }}>

@@ -430,33 +430,53 @@ export default function HomeCRMView() {
               <table className="w-full text-left text-xs whitespace-nowrap">
                 <thead className="bg-muted text-muted-foreground font-semibold">
                   <tr>
-                    <th className="p-2.5">Mobile Number</th>
-                    <th className="p-2.5">Message</th>
-                    <th className="p-2.5">Template Name</th>
-                    <th className="p-2.5">Sent Date &amp; Time</th>
-                    <th className="p-2.5">Delivery Status</th>
-                    <th className="p-2.5">Read Status</th>
-                    <th className="p-2.5">Response</th>
+                    <th className="p-2.5">Name</th>
+                    <th className="p-2.5">Account No.</th>
+                    <th className="p-2.5">Phone Number</th>
+                    <th className="p-2.5">Product</th>
+                    <th className="p-2.5">Bucket</th>
+                    <th className="p-2.5">Allocator</th>
+                    <th className="p-2.5">Outstanding</th>
+                    <th className="p-2.5">Date</th>
+                    <th className="p-2.5">Time</th>
+                    <th className="p-2.5">Status</th>
+                    <th className="p-2.5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   <tr className="hover:bg-muted/40">
-                    <td className="p-2.5 font-mono">919876543210</td>
-                    <td className="p-2.5 truncate max-w-xs">Dear Borrower, your EMI of ₹12,500 is overdue...</td>
-                    <td className="p-2.5 font-mono text-muted-foreground">bajaj_overdue_notice_v1</td>
-                    <td className="p-2.5 font-mono text-muted-foreground">2026-11-18 10:24:12</td>
-                    <td className="p-2.5"><span className="text-emerald-500 font-bold">Delivered</span></td>
-                    <td className="p-2.5"><span className="text-blue-500 font-bold">Read</span></td>
-                    <td className="p-2.5 text-muted-foreground">Will pay on 22nd Nov</td>
+                    <td className="p-2.5 font-bold text-foreground">Mahendra Krushnarao Kodgirwar</td>
+                    <td className="p-2.5 font-mono text-muted-foreground">xxxxxxxxxx2278</td>
+                    <td className="p-2.5 font-mono">xxxxxx6505</td>
+                    <td className="p-2.5">Personal Loan</td>
+                    <td className="p-2.5"><span className="text-amber-500 font-bold">Writeoff</span></td>
+                    <td className="p-2.5">Bajaj Finserve</td>
+                    <td className="p-2.5 font-bold text-foreground">₹1.21 Lakh</td>
+                    <td className="p-2.5 font-mono text-muted-foreground">18-11-2026</td>
+                    <td className="p-2.5 font-mono text-muted-foreground">10:24 AM</td>
+                    <td className="p-2.5"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Delivered</span></td>
+                    <td className="p-2.5 text-right">
+                      <button className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs">
+                        View
+                      </button>
+                    </td>
                   </tr>
                   <tr className="hover:bg-muted/40">
-                    <td className="p-2.5 font-mono">919812345678</td>
-                    <td className="p-2.5 truncate max-w-xs">Immediate settlement offer available on account...</td>
-                    <td className="p-2.5 font-mono text-muted-foreground">settlement_waiver_discount</td>
-                    <td className="p-2.5 font-mono text-muted-foreground">2026-11-18 11:05:40</td>
-                    <td className="p-2.5"><span className="text-emerald-500 font-bold">Delivered</span></td>
-                    <td className="p-2.5"><span className="text-muted-foreground font-bold">Unread</span></td>
-                    <td className="p-2.5 text-muted-foreground">-</td>
+                    <td className="p-2.5 font-bold text-foreground">Sachin Sopanrao Mandale</td>
+                    <td className="p-2.5 font-mono text-muted-foreground">xxxxxxxxxx4631</td>
+                    <td className="p-2.5 font-mono">xxxxxx2559</td>
+                    <td className="p-2.5">Personal Loan</td>
+                    <td className="p-2.5"><span className="text-amber-500 font-bold">Writeoff</span></td>
+                    <td className="p-2.5">Bajaj Finserve</td>
+                    <td className="p-2.5 font-bold text-foreground">₹3.73 Lakh</td>
+                    <td className="p-2.5 font-mono text-muted-foreground">18-11-2026</td>
+                    <td className="p-2.5 font-mono text-muted-foreground">11:05 AM</td>
+                    <td className="p-2.5"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20">Sent</span></td>
+                    <td className="p-2.5 text-right">
+                      <button className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs">
+                        View
+                      </button>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -528,71 +548,218 @@ export default function HomeCRMView() {
             </div>
 
             {/* Content Area */}
-            <div className="p-4 max-h-[460px] overflow-x-auto">
+            <div className="p-4 max-h-[500px] overflow-y-auto space-y-4">
+              
               {/* Tab 1: PTP / Call Back */}
               {prioritySubTab === "ptp" && (
-                <table className="w-full text-left text-xs whitespace-nowrap">
-                  <thead className="bg-muted text-muted-foreground font-semibold">
-                    <tr>
-                      <th className="p-2.5">Name</th>
-                      <th className="p-2.5">Account Number</th>
-                      <th className="p-2.5">Disposition</th>
-                      <th className="p-2.5">Amount</th>
-                      <th className="p-2.5">Status</th>
-                      <th className="p-2.5 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    <tr className="hover:bg-muted/40">
-                      <td className="p-2.5 font-bold text-foreground">Abhishek Wayal</td>
-                      <td className="p-2.5 font-mono text-muted-foreground">xxxxxxxxxx5172</td>
-                      <td className="p-2.5"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20">PTP</span></td>
-                      <td className="p-2.5 font-bold text-foreground">₹5.72 Lakh</td>
-                      <td className="p-2.5 text-rose-500 font-bold">Overdue: 34 hrs</td>
-                      <td className="p-2.5 text-right">
-                        <button className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs">
-                          Call
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div className="space-y-4">
+                  {/* Top Counters: PTP & Call Back */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-xl bg-muted/40 border border-border">
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold">PTP</span>
+                      <div className="flex items-center gap-4 mt-1">
+                        <div><span className="text-[10px] text-muted-foreground">Accounts: </span><strong className="text-foreground">0</strong></div>
+                        <div><span className="text-[10px] text-muted-foreground">Amount: </span><strong className="text-foreground">₹0</strong></div>
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-muted/40 border border-border">
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold">Call Back</span>
+                      <div className="flex items-center gap-4 mt-1">
+                        <div><span className="text-[10px] text-muted-foreground">Accounts: </span><strong className="text-foreground">1</strong></div>
+                        <div><span className="text-[10px] text-muted-foreground">Amount: </span><strong className="text-foreground">₹0</strong></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Search Bar & Date Filter */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <input
+                      type="text"
+                      placeholder="Search accounts, names, mobile numbers..."
+                      className="w-full sm:w-72 px-3 py-1.5 rounded-lg bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+                    />
+                    <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+                      <span className="px-2.5 py-1 rounded bg-muted border border-border">19-10-2026</span>
+                      <span>to</span>
+                      <span className="px-2.5 py-1 rounded bg-muted border border-border">18-11-2026</span>
+                    </div>
+                  </div>
+
+                  {/* Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs whitespace-nowrap">
+                      <thead className="bg-muted text-muted-foreground font-semibold">
+                        <tr>
+                          <th className="p-2.5">Name</th>
+                          <th className="p-2.5">Account Number</th>
+                          <th className="p-2.5">Phone Number</th>
+                          <th className="p-2.5">Product</th>
+                          <th className="p-2.5">Bucket</th>
+                          <th className="p-2.5">Location</th>
+                          <th className="p-2.5">Outstanding</th>
+                          <th className="p-2.5">Last Disposition</th>
+                          <th className="p-2.5">Followup Date</th>
+                          <th className="p-2.5">PTP Date</th>
+                          <th className="p-2.5">Best Disposition</th>
+                          <th className="p-2.5">Last Campaign</th>
+                          <th className="p-2.5 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        <tr className="hover:bg-muted/40">
+                          <td className="p-2.5 font-bold text-foreground">Abhishek Wayal</td>
+                          <td className="p-2.5 font-mono text-muted-foreground">**********5917</td>
+                          <td className="p-2.5 font-mono">******2022</td>
+                          <td className="p-2.5">Personal Loan</td>
+                          <td className="p-2.5"><span className="text-amber-500 font-bold">Writeoff</span></td>
+                          <td className="p-2.5 text-muted-foreground">-</td>
+                          <td className="p-2.5 font-bold text-foreground">₹8,572</td>
+                          <td className="p-2.5"><span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-500 border border-blue-500/20">Call Back</span></td>
+                          <td className="p-2.5 font-mono text-muted-foreground">18/11/26</td>
+                          <td className="p-2.5 text-muted-foreground">-</td>
+                          <td className="p-2.5 font-semibold text-emerald-500">PTP</td>
+                          <td className="p-2.5 text-muted-foreground">RURAL-BAJAJ-Nov-2026-FINAL-DATA</td>
+                          <td className="p-2.5 text-right">
+                            <button className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs">
+                              Call
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               )}
 
-              {/* Tab 2: Call Drop (10 Records) */}
+              {/* Tab 2: Call Drop */}
               {prioritySubTab === "call_drop" && (
-                <table className="w-full text-left text-xs whitespace-nowrap">
-                  <thead className="bg-muted text-muted-foreground font-semibold">
-                    <tr>
-                      <th className="p-2.5">Borrower Name</th>
-                      <th className="p-2.5">Account Number</th>
-                      <th className="p-2.5">Default Amount</th>
-                      <th className="p-2.5 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {callDropRecords.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-muted/40">
-                        <td className="p-2.5 font-bold text-foreground">{item.name}</td>
-                        <td className="p-2.5 font-mono text-muted-foreground">{item.acc}</td>
-                        <td className="p-2.5 font-bold text-amber-500">{item.amount}</td>
-                        <td className="p-2.5 text-right">
-                          <button className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs">
-                            Redial
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="space-y-4">
+                  {/* Top Counters: Total Call Drop & Pending Call Drop */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-xl bg-muted/40 border border-border">
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold">Total Call Drop</span>
+                      <div className="flex items-center gap-4 mt-1">
+                        <div><span className="text-[10px] text-muted-foreground">Accounts: </span><strong className="text-foreground">17</strong></div>
+                        <div><span className="text-[10px] text-muted-foreground">Amount: </span><strong className="text-foreground">₹26.42 Lakh</strong></div>
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-muted/40 border border-border">
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold">Pending Call Drop</span>
+                      <div className="flex items-center gap-4 mt-1">
+                        <div><span className="text-[10px] text-muted-foreground">Accounts: </span><strong className="text-foreground">12</strong></div>
+                        <div><span className="text-[10px] text-muted-foreground">Amount: </span><strong className="text-foreground">₹17.51 Lakh</strong></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Search Bar & Date Filter */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <input
+                      type="text"
+                      placeholder="Search accounts, names, mobile numbers..."
+                      className="w-full sm:w-72 px-3 py-1.5 rounded-lg bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+                    />
+                    <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+                      <span className="px-2.5 py-1 rounded bg-muted border border-border">18-11-2026</span>
+                      <span>to</span>
+                      <span className="px-2.5 py-1 rounded bg-muted border border-border">18-11-2026</span>
+                    </div>
+                  </div>
+
+                  {/* Table with 10 exact rows */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs whitespace-nowrap">
+                      <thead className="bg-muted text-muted-foreground font-semibold">
+                        <tr>
+                          <th className="p-2.5">Name</th>
+                          <th className="p-2.5">Account Number</th>
+                          <th className="p-2.5">Phone Number</th>
+                          <th className="p-2.5">Product</th>
+                          <th className="p-2.5">Bucket</th>
+                          <th className="p-2.5">Location</th>
+                          <th className="p-2.5">Outstanding</th>
+                          <th className="p-2.5">Call Drop Time</th>
+                          <th className="p-2.5">Last Disposition</th>
+                          <th className="p-2.5">Best Disposition</th>
+                          <th className="p-2.5">Last Campaign</th>
+                          <th className="p-2.5">Dialed</th>
+                          <th className="p-2.5">Dialed Date</th>
+                          <th className="p-2.5 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {[
+                          { name: "AKASH WAGH", acc: "**********9962", phone: "******4832", prod: "Personal Loan", buck: "Writeoff", loc: "-", out: "₹11,790", time: "18/11/26 03:24 PM", lastD: "-", bestD: "Call Back", camp: "RURAL-BAJAJ-Nov-2026-FINAL-DATA - 2026-11-04T11:51:10.944597521", dialed: "No", dDate: "-" },
+                          { name: "GANESH GAIKWAD", acc: "**********4305", phone: "******5905", prod: "Personal Loan", buck: "Writeoff", loc: "-", out: "₹32,398", time: "18/11/26 03:06 PM", lastD: "-", bestD: "Not Contacted", camp: "RURAL-BAJAJ-Nov-2026-FINAL-DATA - 2026-11-04T11:51:10.944597521", dialed: "No", dDate: "-" },
+                          { name: "Basant Kumar Behera", acc: "***********4206", phone: "******5001", prod: "Personal Loan", buck: "Writeoff", loc: "-", out: "₹1.02 Lakh", time: "18/11/26 09:07 AM", lastD: "-", bestD: "Not Contacted", camp: "URBAN BAJAJ-NOV-2026 - 2026-11-14T04:10:45.055221698", dialed: "No", dDate: "-" },
+                          { name: "AKASH GADEKAR", acc: "**********2434", phone: "******0177", prod: "Personal Loan", buck: "Writeoff", loc: "-", out: "₹9,498", time: "18/11/26 03:17 PM", lastD: "-", bestD: "Call Back", camp: "RURAL-BAJAJ-Nov-2026-FINAL-DATA - 2026-11-04T11:51:10.944597521", dialed: "No", dDate: "-" },
+                          { name: "SACHIN NAVNATH MALI", acc: "**********0198", phone: "******3749", prod: "Personal Loan", buck: "Writeoff", loc: "-", out: "₹2.29 Lakh", time: "18/11/26 03:35 PM", lastD: "-", bestD: "Call Back", camp: "RURAL-BAJAJ-Nov-2026-FINAL-DATA - 2026-11-04T11:51:10.944597521", dialed: "No", dDate: "-" },
+                          { name: "Prasad Ramakant Zarkar", acc: "***********3991", phone: "******2253", prod: "Personal Loan", buck: "Writeoff", loc: "-", out: "₹5.23 Lakh", time: "18/11/26 11:38 AM", lastD: "-", bestD: "Not Contacted", camp: "URBAN BAJAJ-NOV-2026 - 2026-11-14T04:10:45.055221698", dialed: "No", dDate: "-" },
+                          { name: "Prachi Arvind Meshram", acc: "***********0551", phone: "******7680", prod: "Personal Loan", buck: "Writeoff", loc: "-", out: "₹2 Lakh", time: "18/11/26 11:51 AM", lastD: "-", bestD: "Not Contacted", camp: "URBAN BAJAJ-NOV-2026 - 2026-11-14T04:10:45.055221698", dialed: "No", dDate: "-" },
+                          { name: "GHARU DHONDIBA NAIK", acc: "**********8762", phone: "******7984", prod: "Personal Loan", buck: "Writeoff", loc: "-", out: "₹93,723", time: "18/11/26 11:45 AM", lastD: "-", bestD: "Dispute", camp: "URBAN BAJAJ-NOV-2026 - 2026-11-14T04:10:45.055221698", dialed: "No", dDate: "-" },
+                          { name: "SANIYA NADEEM SAYYED", acc: "***********3810", phone: "******0258", prod: "Personal Loan", buck: "Writeoff", loc: "-", out: "₹2.33 Lakh", time: "18/11/26 09:36 AM", lastD: "-", bestD: "PTP", camp: "URBAN BAJAJ-NOV-2026 - 2026-11-14T04:10:45.055221698", dialed: "No", dDate: "-" },
+                          { name: "RANJANA KHANZODE", acc: "***********9127", phone: "******8898", prod: "Personal Loan", buck: "Writeoff", loc: "-", out: "₹96,125", time: "18/11/26 05:56 PM", lastD: "-", bestD: "Not Contacted", camp: "RURAL-BAJAJ-Nov-2026-FINAL-DATA - 2026-11-04T11:51:10.944597521", dialed: "No", dDate: "-" }
+                        ].map((row, idx) => (
+                          <tr key={idx} className="hover:bg-muted/40">
+                            <td className="p-2.5 font-bold text-foreground">{row.name}</td>
+                            <td className="p-2.5 font-mono text-muted-foreground">{row.acc}</td>
+                            <td className="p-2.5 font-mono">{row.phone}</td>
+                            <td className="p-2.5">{row.prod}</td>
+                            <td className="p-2.5"><span className="text-amber-500 font-bold">{row.buck}</span></td>
+                            <td className="p-2.5 text-muted-foreground">{row.loc}</td>
+                            <td className="p-2.5 font-bold text-foreground">{row.out}</td>
+                            <td className="p-2.5 font-mono text-muted-foreground">{row.time}</td>
+                            <td className="p-2.5 text-muted-foreground">{row.lastD}</td>
+                            <td className="p-2.5 font-semibold text-blue-500">{row.bestD}</td>
+                            <td className="p-2.5 text-muted-foreground truncate max-w-xs" title={row.camp}>{row.camp}</td>
+                            <td className="p-2.5 text-muted-foreground">{row.dialed}</td>
+                            <td className="p-2.5 text-muted-foreground">{row.dDate}</td>
+                            <td className="p-2.5 text-right">
+                              <button className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs">
+                                Redial
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               )}
 
               {/* Tab 3: Missed Call (Empty State) */}
               {prioritySubTab === "missed_call" && (
-                <div className="py-12 text-center text-muted-foreground space-y-2">
-                  <PhoneForwarded className="w-8 h-8 mx-auto text-muted-foreground/40" />
-                  <div className="font-bold text-sm text-foreground">No Data Available</div>
-                  <p className="text-xs">No missed inbound calls recorded for this campaign today.</p>
+                <div className="space-y-4">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs whitespace-nowrap">
+                      <thead className="bg-muted text-muted-foreground font-semibold">
+                        <tr>
+                          <th className="p-2.5">Name</th>
+                          <th className="p-2.5">Mobile Number</th>
+                          <th className="p-2.5">Account Number</th>
+                          <th className="p-2.5">Campaign Name</th>
+                          <th className="p-2.5">Campaign Type</th>
+                          <th className="p-2.5">Last Agent Called</th>
+                          <th className="p-2.5">Product</th>
+                          <th className="p-2.5">Bucket</th>
+                          <th className="p-2.5">Outstanding</th>
+                          <th className="p-2.5">Missed Call Date</th>
+                          <th className="p-2.5">Missed Call Time</th>
+                          <th className="p-2.5">Last Disposition</th>
+                          <th className="p-2.5">Best Disposition</th>
+                          <th className="p-2.5 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        <tr>
+                          <td colSpan="14" className="py-12 text-center text-muted-foreground">
+                            <PhoneForwarded className="w-8 h-8 mx-auto text-muted-foreground/40 mb-2" />
+                            <div className="font-bold text-sm text-foreground">No data</div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>

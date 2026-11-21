@@ -23,9 +23,6 @@ import {
 function getInitialTopNav() {
   if (typeof window === "undefined") return "home";
   const p = window.location.pathname.toLowerCase();
-  if (p.includes("call-monitoring") || p.includes("call_monitoring")) return "call_monitoring";
-  if (p.includes("crm")) return "crm";
-  if (p.includes("field-monitoring") || p.includes("field_monitoring")) return "field_monitoring";
   if (p.includes("allocation")) return "allocation";
   if (p.includes("agent") || p.includes("employee")) return "agent";
   if (p.includes("report")) return "more_reports";
@@ -35,6 +32,15 @@ function getInitialTopNav() {
   if (p.includes("incentive")) return "more_incentives";
   if (p.includes("campaign")) return "more_campaigns";
   return "home";
+}
+
+function getInitialHomeSidebarTab() {
+  if (typeof window === "undefined") return "portfolio";
+  const p = window.location.pathname.toLowerCase();
+  if (p.includes("call-monitoring") || p.includes("call_monitoring")) return "call_monitoring";
+  if (p.includes("crm")) return "crm";
+  if (p.includes("field-monitoring") || p.includes("field_monitoring")) return "field_monitoring";
+  return "portfolio";
 }
 
 const TAB_TITLES = {
@@ -60,6 +66,9 @@ export default function AdminPortalShell({
   // Top Navbar State initialized from URL
   const [topNav, setTopNavState] = useState(getInitialTopNav);
 
+  // Home Page Left Sidebar Tab State: 'portfolio' | 'call_monitoring' | 'crm' | 'field_monitoring'
+  const [homeSidebarTab, setHomeSidebarTab] = useState(getInitialHomeSidebarTab);
+
   // Selected portfolio for One View deep dive
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
 
@@ -78,10 +87,7 @@ export default function AdminPortalShell({
   const setTopNav = (newTab) => {
     setTopNavState(newTab);
     let targetPath = "/admin/overview";
-    if (newTab === "call_monitoring") targetPath = "/admin/call-monitoring";
-    else if (newTab === "crm") targetPath = "/admin/crm";
-    else if (newTab === "field_monitoring") targetPath = "/admin/field-monitoring";
-    else if (newTab === "allocation") targetPath = "/admin/allocations";
+    if (newTab === "allocation") targetPath = "/admin/allocations";
     else if (newTab === "agent") targetPath = "/admin/employees";
     else if (newTab === "more_reports") targetPath = "/admin/reports";
     else if (newTab === "more_score") targetPath = "/admin/score";
@@ -95,6 +101,7 @@ export default function AdminPortalShell({
     const onPop = () => {
       const current = getInitialTopNav();
       setTopNavState(current);
+      setHomeSidebarTab(getInitialHomeSidebarTab());
       document.title = TAB_TITLES[current] || "PayMagic Administration";
     };
     window.addEventListener("popstate", onPop);
@@ -148,52 +155,116 @@ export default function AdminPortalShell({
         }}
       >
         
-        {/* 1. PORTFOLIO PERFORMANCE PAGE (OVERVIEW - CLEAN FULL-WIDTH, NO SIDEBAR) */}
+        {/* 1. HOME PAGE (WITH LEFT SIDEBAR: A. PORTFOLIO, B. CALL MONITORING, C. CRM, D. FIELD MONITORING) */}
         {topNav === "home" && (
-          <main className="w-full">
-            <HomePortfolioView
-              selectedPortfolioId={selectedPortfolioId}
-              setSelectedPortfolioId={setSelectedPortfolioId}
-              onNavigateToCallMonitoring={() => setTopNav("call_monitoring")}
-              allocators={allocators}
-              setAllocators={setAllocators}
-              selectedAllocatorId={selectedAllocatorId}
-              setSelectedAllocatorId={setSelectedAllocatorId}
-              portfolios={portfolios}
-              setPortfolios={setPortfolios}
-              showCreateModal={showCreateAllocatorModal}
-              setShowCreateModal={setShowCreateAllocatorModal}
-            />
-          </main>
+          <div
+            className="home-page-layout"
+            style={{
+              display: "flex",
+              gap: "24px",
+              alignItems: "flex-start",
+              width: "100%"
+            }}
+          >
+            {/* Left Sidebar for Home Page */}
+            <aside
+              className="home-sidebar"
+              style={{
+                width: "240px",
+                flexShrink: 0,
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "16px",
+                padding: "12px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "6px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+              }}
+            >
+              {[
+                { id: "portfolio", label: "A. Portfolio Performance", icon: Layers },
+                { id: "call_monitoring", label: "B. Call Agent Monitoring", icon: PhoneCall },
+                { id: "crm", label: "C. CRM", icon: UserCheck },
+                { id: "field_monitoring", label: "D. Field Agent Monitoring", icon: Compass }
+              ].map((item) => {
+                const isActive = homeSidebarTab === item.id;
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setHomeSidebarTab(item.id)}
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      fontSize: "13px",
+                      fontWeight: isActive ? 700 : 500,
+                      backgroundColor: isActive ? "#1d4ed8" : "transparent",
+                      color: isActive ? "#ffffff" : "#cbd5e1",
+                      border: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      cursor: "pointer",
+                      boxShadow: isActive ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none",
+                      transition: "all 0.15s ease"
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.04)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) e.currentTarget.style.backgroundColor = "transparent";
+                    }}
+                  >
+                    <Icon style={{ width: "16px", height: "16px", flexShrink: 0, color: isActive ? "#ffffff" : "#94a3b8" }} />
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</span>
+                  </button>
+                );
+              })}
+            </aside>
+
+            {/* Right Sub-View for Home Page */}
+            <main style={{ flex: 1, minWidth: 0, width: "100%" }}>
+              {homeSidebarTab === "portfolio" && (
+                <HomePortfolioView
+                  selectedPortfolioId={selectedPortfolioId}
+                  setSelectedPortfolioId={setSelectedPortfolioId}
+                  onNavigateToCallMonitoring={() => setHomeSidebarTab("call_monitoring")}
+                  allocators={allocators}
+                  setAllocators={setAllocators}
+                  selectedAllocatorId={selectedAllocatorId}
+                  setSelectedAllocatorId={setSelectedAllocatorId}
+                  portfolios={portfolios}
+                  setPortfolios={setPortfolios}
+                  showCreateModal={showCreateAllocatorModal}
+                  setShowCreateModal={setShowCreateAllocatorModal}
+                />
+              )}
+
+              {homeSidebarTab === "call_monitoring" && (
+                <HomeCallMonitoringView />
+              )}
+
+              {homeSidebarTab === "crm" && (
+                <HomeCRMView />
+              )}
+
+              {homeSidebarTab === "field_monitoring" && (
+                <HomeFieldMonitoringView />
+              )}
+            </main>
+          </div>
         )}
 
-        {/* 2. CALL AGENT MONITORING PAGE */}
-        {topNav === "call_monitoring" && (
-          <main className="w-full">
-            <HomeCallMonitoringView />
-          </main>
-        )}
-
-        {/* 3. CRM PAGE */}
-        {topNav === "crm" && (
-          <main className="w-full">
-            <HomeCRMView />
-          </main>
-        )}
-
-        {/* 4. FIELD AGENT MONITORING PAGE */}
-        {topNav === "field_monitoring" && (
-          <main className="w-full">
-            <HomeFieldMonitoringView />
-          </main>
-        )}
-
-        {/* 5. ALLOCATION MANAGEMENT PAGE */}
+        {/* 2. ALLOCATION MANAGEMENT PAGE */}
         {topNav === "allocation" && (
           <main className="w-full">
             <AllocationView
               onOpenPortfolioDashboard={(portfolioId) => {
                 setTopNav("home");
+                setHomeSidebarTab("portfolio");
                 setSelectedPortfolioId(portfolioId);
               }}
               selectedAllocatorId={selectedAllocatorId}
