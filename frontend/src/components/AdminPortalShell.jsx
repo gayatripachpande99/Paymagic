@@ -7,6 +7,7 @@ import HomeFieldMonitoringView from "./admin/HomeFieldMonitoringView";
 import AllocationView from "./admin/AllocationView";
 import AgentDirectoryView from "./admin/AgentDirectoryView";
 import MoreViews from "./admin/MoreViews";
+import AgentPresenceDialerWidget from "./common/AgentPresenceDialerWidget";
 import {
   Layers,
   PhoneCall,
@@ -72,8 +73,24 @@ export default function AdminPortalShell({
   // Selected portfolio for One View deep dive
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
 
-  // Agent Online / Offline Presence State
-  const [presenceOnline, setPresenceOnline] = useState(true);
+  // Agent Online / Offline Presence State (starts OFFLINE by default on login)
+  const [presenceOnline, setPresenceOnline] = useState(false);
+  const [presenceStatus, setPresenceStatus] = useState("OFFLINE");
+  const [activeBreakType, setActiveBreakType] = useState(null);
+  const [breakSeconds, setBreakSeconds] = useState(0);
+  const [isHeadsetConnected, setIsHeadsetConnected] = useState(false);
+  const [isDialerWidgetOpen, setIsDialerWidgetOpen] = useState(false);
+
+  // Sync presenceOnline with presenceStatus
+  const updatePresenceStatus = (status) => {
+    setPresenceStatus(status);
+    setPresenceOnline(status === "ONLINE");
+  };
+  const togglePresenceOnline = (val) => {
+    setPresenceOnline(val);
+    setPresenceStatus(val ? "ONLINE" : "OFFLINE");
+    if (!val) setActiveBreakType(null);
+  };
 
   // Institutional Allocator State (Single selection with strict isolation)
   const [allocators, setAllocators] = useState(INITIAL_ALLOCATORS);
@@ -130,7 +147,7 @@ export default function AdminPortalShell({
         topNav={topNav}
         setTopNav={setTopNav}
         presenceOnline={presenceOnline}
-        setPresenceOnline={setPresenceOnline}
+        setPresenceOnline={togglePresenceOnline}
         activeAllocationName={activeAllocationName}
         allocators={allocators}
         selectedAllocatorId={selectedAllocatorId}
@@ -288,6 +305,21 @@ export default function AdminPortalShell({
         )}
 
       </div>
+
+      {/* ── AGENT & CALLER FLOATING PRESENCE DIALER WIDGET ── */}
+      <AgentPresenceDialerWidget
+        presenceStatus={presenceStatus}
+        setPresenceStatus={updatePresenceStatus}
+        activeBreakType={activeBreakType}
+        setActiveBreakType={setActiveBreakType}
+        breakSeconds={breakSeconds}
+        setBreakSeconds={setBreakSeconds}
+        isHeadsetConnected={isHeadsetConnected}
+        setIsHeadsetConnected={setIsHeadsetConnected}
+        user={user}
+        isOpen={isDialerWidgetOpen}
+        setIsOpen={setIsDialerWidgetOpen}
+      />
     </div>
   );
 }

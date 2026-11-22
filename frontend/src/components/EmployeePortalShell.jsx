@@ -27,10 +27,12 @@ import {
   TrendingUp,
   MapPin,
   Phone,
-  Minus
+  Minus,
+  Radio
 } from "lucide-react";
 import api from "../services/api";
 import ThemeToggle from "./ThemeToggle";
+import AgentPresenceDialerWidget from "./common/AgentPresenceDialerWidget";
 
 export const EMPLOYEE_TAB_ROUTES = {
   queue: "/employee/queue",
@@ -56,7 +58,12 @@ function getInitialEmployeeTab() {
 }
 
 export default function EmployeePortalShell({ user, onLogout, onBackToHome, theme = "dark", toggleTheme }) {
-  const [presenceStatus, setPresenceStatus] = useState("ONLINE");
+  // Initial presence is strictly OFFLINE on login
+  const [presenceStatus, setPresenceStatus] = useState("OFFLINE");
+  const [activeBreakType, setActiveBreakType] = useState(null);
+  const [breakSeconds, setBreakSeconds] = useState(0);
+  const [isHeadsetConnected, setIsHeadsetConnected] = useState(false);
+  const [isDialerWidgetOpen, setIsDialerWidgetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(getInitialEmployeeTab);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -485,37 +492,61 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
 
         {/* Presence & Profile Controls */}
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          {/* Presence Selector (Architecture Section 6) */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "11px", color: isLight ? "#64748B" : "#9AAAC2" }}>Presence:</span>
-            <select
-              value={presenceStatus}
-              onChange={(e) => {
-                if (e.target.value === "ONLINE" && presenceStatus !== "ONLINE") {
-                  setShowReadinessModal(true);
-                } else {
-                  handlePresenceChange(e.target.value);
-                }
-              }}
-              style={{
-                padding: "6px 12px",
-                borderRadius: "8px",
-                background: isLight ? "#F1F5F9" : "#14223A",
-                border: `1px solid ${isLight ? "#CBD5E1" : "#263957"}`,
-                color: presenceStatus === "ONLINE" ? "#00C995" : "#FFB800",
-                fontSize: "12px",
-                fontWeight: 700,
-                outline: "none",
-                cursor: "pointer"
-              }}
-            >
-              <option value="ONLINE">🟢 Online &amp; Ready</option>
-              <option value="LUNCH_BREAK">🥪 Lunch Break (30m)</option>
-              <option value="TEA_BREAK">☕ Tea Break (15m)</option>
-              <option value="TRAINING">📚 Training / Meeting</option>
-              <option value="OFFLINE">⚪ Shift Complete / Offline</option>
-            </select>
-          </div>
+          {/* Online / Offline Presence Icon Button (Icon Only, No Text: Red when offline, Green when online) */}
+          <button
+            onClick={() => {
+              if (presenceStatus === "OFFLINE") {
+                setIsDialerWidgetOpen(true);
+              } else {
+                setPresenceStatus("OFFLINE");
+                setActiveBreakType(null);
+                handlePresenceChange("OFFLINE");
+              }
+            }}
+            title={presenceStatus === "ONLINE" ? "Online (Click to change)" : presenceStatus === "BREAK" ? `${activeBreakType || "Break"} (Click to change)` : "Offline (Click to change)"}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              backgroundColor:
+                presenceStatus === "ONLINE"
+                  ? "rgba(34, 197, 94, 0.15)"
+                  : presenceStatus === "BREAK"
+                  ? "rgba(245, 158, 11, 0.15)"
+                  : "rgba(239, 68, 68, 0.15)",
+              border:
+                presenceStatus === "ONLINE"
+                  ? "1px solid #22c55e"
+                  : presenceStatus === "BREAK"
+                  ? "1px solid #fbbf24"
+                  : "1px solid #ef4444",
+              color:
+                presenceStatus === "ONLINE"
+                  ? "#22c55e"
+                  : presenceStatus === "BREAK"
+                  ? "#fbbf24"
+                  : "#ef4444",
+              boxShadow:
+                presenceStatus === "ONLINE"
+                  ? "0 0 8px rgba(34, 197, 94, 0.3)"
+                  : presenceStatus === "BREAK"
+                  ? "0 0 8px rgba(245, 158, 11, 0.3)"
+                  : "0 0 8px rgba(239, 68, 68, 0.3)",
+              cursor: "pointer",
+              transition: "all 0.15s ease"
+            }}
+          >
+            {presenceStatus === "ONLINE" ? (
+              <Radio style={{ width: "16px", height: "16px" }} />
+            ) : presenceStatus === "BREAK" ? (
+              <Coffee style={{ width: "16px", height: "16px" }} />
+            ) : (
+              <PhoneOff style={{ width: "15px", height: "15px" }} />
+            )}
+          </button>
 
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: "13px", fontWeight: 700, color: isLight ? "#0F172A" : "#f8fafc" }}>
@@ -2135,6 +2166,23 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
           )}
         </div>
       )}
+      {/* ── AGENT & CALLER FLOATING PRESENCE DIALER WIDGET ── */}
+      <AgentPresenceDialerWidget
+        presenceStatus={presenceStatus}
+        setPresenceStatus={(newStatus) => {
+          setPresenceStatus(newStatus);
+          handlePresenceChange(newStatus);
+        }}
+        activeBreakType={activeBreakType}
+        setActiveBreakType={setActiveBreakType}
+        breakSeconds={breakSeconds}
+        setBreakSeconds={setBreakSeconds}
+        isHeadsetConnected={isHeadsetConnected}
+        setIsHeadsetConnected={setIsHeadsetConnected}
+        user={user}
+        isOpen={isDialerWidgetOpen}
+        setIsOpen={setIsDialerWidgetOpen}
+      />
     </div>
   );
 }

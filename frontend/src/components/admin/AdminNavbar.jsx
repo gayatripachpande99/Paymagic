@@ -5,6 +5,8 @@ import {
   LogOut,
   User,
   Radio,
+  PhoneOff,
+  PhoneCall,
   FileSpreadsheet,
   CheckCircle2,
   ExternalLink,
@@ -286,33 +288,30 @@ export default function AdminNavbar({
         {/* Right Section: Online/Offline, Active Allocation, Theme, Profile */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           
-          {/* Online / Offline Presence Pill */}
+          {/* Online / Offline Presence Icon Button (Icon Only, No Text: Red when offline, Green when online) */}
           <button
             onClick={() => setPresenceOnline(!presenceOnline)}
-            title="Click to toggle agent availability"
+            title={presenceOnline ? "Online (Click to change)" : "Offline (Click to change)"}
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "6px",
-              padding: "4px 12px",
-              borderRadius: "9999px",
-              fontSize: "12px",
-              fontWeight: 600,
-              backgroundColor: presenceOnline ? "#042617" : "rgba(136, 19, 55, 0.4)",
-              border: presenceOnline ? "1px solid #0d5936" : "1px solid rgba(159, 18, 57, 0.4)",
-              color: presenceOnline ? "#22c55e" : "#fb7185",
-              cursor: "pointer"
+              justifyContent: "center",
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              backgroundColor: presenceOnline ? "rgba(34, 197, 94, 0.15)" : "rgba(239, 68, 68, 0.15)",
+              border: presenceOnline ? "1px solid #22c55e" : "1px solid #ef4444",
+              color: presenceOnline ? "#22c55e" : "#ef4444",
+              boxShadow: presenceOnline ? "0 0 8px rgba(34, 197, 94, 0.3)" : "0 0 8px rgba(239, 68, 68, 0.3)",
+              cursor: "pointer",
+              transition: "all 0.15s ease"
             }}
           >
-            <span
-              style={{
-                width: "8px",
-                height: "8px",
-                borderRadius: "9999px",
-                backgroundColor: presenceOnline ? "#22c55e" : "#f43f5e"
-              }}
-            />
-            <span>{presenceOnline ? "Online" : "Offline"}</span>
+            {presenceOnline ? (
+              <Radio style={{ width: "16px", height: "16px" }} />
+            ) : (
+              <PhoneOff style={{ width: "15px", height: "15px" }} />
+            )}
           </button>
 
           {/* Active Allocator Dropdown Pill */}
