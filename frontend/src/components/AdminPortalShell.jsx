@@ -87,6 +87,11 @@ export default function AdminPortalShell({
     setPresenceOnline(status === "ONLINE");
   };
   const togglePresenceOnline = (val) => {
+    if (val && !isHeadsetConnected) {
+      // Must not turn online if headset is not connected
+      setIsDialerWidgetOpen(true);
+      return;
+    }
     setPresenceOnline(val);
     setPresenceStatus(val ? "ONLINE" : "OFFLINE");
     if (!val) setActiveBreakType(null);

@@ -67,6 +67,36 @@ export default function AgentPresenceDialerWidget({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [setPresenceStatus, setActiveBreakType]);
 
+  // Listen for hardware audio/headset device changes if supported
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && navigator?.mediaDevices?.addEventListener) {
+      const handleDeviceChange = async () => {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const hasAudioInput = devices.some(
+            (d) =>
+              d.kind === "audioinput" &&
+              (d.label.toLowerCase().includes("headset") ||
+                d.label.toLowerCase().includes("headphone") ||
+                d.label.toLowerCase().includes("bluetooth") ||
+                d.label.toLowerCase().includes("usb") ||
+                (d.deviceId && d.deviceId !== "default"))
+          );
+          if (hasAudioInput && !isHeadsetConnected) {
+            setIsHeadsetConnected(true);
+            setHeadsetAlert("");
+          }
+        } catch {
+          // ignore error if browser permissions not granted
+        }
+      };
+      navigator.mediaDevices.addEventListener("devicechange", handleDeviceChange);
+      return () => {
+        navigator.mediaDevices.removeEventListener("devicechange", handleDeviceChange);
+      };
+    }
+  }, [isHeadsetConnected, setIsHeadsetConnected]);
+
   // Format seconds to HH:MM:SS
   const formatTimer = (totalSeconds = 0) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -75,10 +105,24 @@ export default function AgentPresenceDialerWidget({
     return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   };
 
-  // Turn Online handler (checks headset connection)
+  // Toggle headset connection status
+  const handleToggleHeadset = () => {
+    const nextState = !isHeadsetConnected;
+    setIsHeadsetConnected(nextState);
+    if (!nextState) {
+      if (presenceStatus === "ONLINE") {
+        setPresenceStatus("OFFLINE");
+      }
+      setHeadsetAlert("Headset of headphone must be connected to go online.");
+    } else {
+      setHeadsetAlert("");
+    }
+  };
+
+  // Turn Online handler (analyses headset connection every time)
   const handleConnectToOnline = () => {
     if (!isHeadsetConnected) {
-      setHeadsetAlert("Please connect your headset or headphone to join online.");
+      setHeadsetAlert("Headset of headphone must be connected to go online.");
       return;
     }
     setHeadsetAlert("");
@@ -105,8 +149,13 @@ export default function AgentPresenceDialerWidget({
     setShowBreakSelector(false);
   };
 
-  // Turn off break time and go online
+  // Turn off break time and go online (analyses headset connection)
   const handleEndBreakToGoOnline = () => {
+    if (!isHeadsetConnected) {
+      setHeadsetAlert("Headset of headphone must be connected to go online.");
+      return;
+    }
+    setHeadsetAlert("");
     setPresenceStatus("ONLINE");
     setActiveBreakType(null);
     setBreakSeconds(0);
@@ -468,10 +517,7 @@ export default function AgentPresenceDialerWidget({
                       </span>
                     </div>
                     <button
-                      onClick={() => {
-                        setIsHeadsetConnected(!isHeadsetConnected);
-                        setHeadsetAlert("");
-                      }}
+                      onClick={handleToggleHeadset}
                       style={{
                         padding: "4px 8px",
                         borderRadius: "6px",
@@ -697,6 +743,27 @@ export default function AgentPresenceDialerWidget({
                 >
                   {formatTimer(breakSeconds)}
                 </div>
+
+                {headsetAlert && (
+                  <div
+                    style={{
+                      padding: "8px 10px",
+                      borderRadius: "6px",
+                      backgroundColor: "rgba(239, 68, 68, 0.15)",
+                      border: "1px solid rgba(239, 68, 68, 0.3)",
+                      color: "#f87171",
+                      fontSize: "11px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      width: "100%",
+                      boxSizing: "border-box"
+                    }}
+                  >
+                    <AlertCircle style={{ width: "14px", height: "14px", flexShrink: 0 }} />
+                    <span>{headsetAlert}</span>
+                  </div>
+                )}
 
                 {/* Primary Button: Go Online */}
                 <button

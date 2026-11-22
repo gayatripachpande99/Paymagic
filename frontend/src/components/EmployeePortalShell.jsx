@@ -496,7 +496,12 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
           <button
             onClick={() => {
               if (presenceStatus === "OFFLINE") {
-                setIsDialerWidgetOpen(true);
+                if (!isHeadsetConnected) {
+                  setIsDialerWidgetOpen(true);
+                  return;
+                }
+                setPresenceStatus("ONLINE");
+                handlePresenceChange("ONLINE");
               } else {
                 setPresenceStatus("OFFLINE");
                 setActiveBreakType(null);
