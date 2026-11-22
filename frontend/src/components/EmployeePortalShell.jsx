@@ -462,9 +462,9 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
     >
       {/* ── TOPBAR ── */}
       <header style={{
-        height: "64px",
-        background: isLight ? "#FFFFFF" : "#08132D",
-        borderBottom: `1px solid ${isLight ? "#E2E8F0" : "#263957"}`,
+        height: "60px",
+        background: isLight ? "#FFFFFF" : "#080f24",
+        borderBottom: isLight ? "1px solid #E2E8F0" : "1px solid rgba(255, 255, 255, 0.08)",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -475,18 +475,18 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <div onClick={onBackToHome} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
-            <img src="/Logo_Name_PayMagic.png" alt="PayMagic" style={{ height: "30px" }} />
+            <img src="/Logo_Name_PayMagic.png" alt="PayMagic" style={{ height: "28px" }} />
           </div>
           <span style={{
             fontSize: "11px",
-            fontWeight: 700,
-            color: "#00C995",
-            background: "rgba(0, 201, 149, 0.15)",
+            fontWeight: 600,
+            color: "#94a3b8",
+            background: "rgba(255, 255, 255, 0.05)",
             padding: "3px 10px",
-            borderRadius: "12px",
-            border: "1px solid rgba(0, 201, 149, 0.3)"
+            borderRadius: "6px",
+            border: "1px solid rgba(255, 255, 255, 0.08)"
           }}>
-            EMPLOYEE OPERATIONS WORKSPACE
+            Caller Workspace
           </span>
         </div>
 
@@ -554,7 +554,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
           </button>
 
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: isLight ? "#0F172A" : "#f8fafc" }}>
+            <div style={{ fontSize: "13px", fontWeight: 600, color: isLight ? "#0F172A" : "#f8fafc" }}>
               {user.fullName || user.name || "Agent"}
             </div>
             <div style={{ fontSize: "11px", color: isLight ? "#64748B" : "#94a3b8" }}>
@@ -567,11 +567,11 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
           <button
             onClick={onLogout}
             style={{
-              padding: "7px 12px",
+              padding: "6px 12px",
               borderRadius: "8px",
-              background: isLight ? "#F1F5F9" : "#14223A",
-              border: `1px solid ${isLight ? "#CBD5E1" : "#263957"}`,
-              color: isLight ? "#0F172A" : "#f8fafc",
+              background: isLight ? "#F1F5F9" : "rgba(255, 255, 255, 0.05)",
+              border: isLight ? "1px solid #CBD5E1" : "1px solid rgba(255, 255, 255, 0.08)",
+              color: isLight ? "#0F172A" : "#cbd5e1",
               fontSize: "12px",
               cursor: "pointer",
               display: "flex",
@@ -606,18 +606,18 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
           className="portal-sidebar-nav"
           style={{
             width: "240px",
-            background: isLight ? "#FFFFFF" : "#0B1733",
-            borderRight: `1px solid ${isLight ? "#E2E8F0" : "#263957"}`,
+            background: isLight ? "#FFFFFF" : "#070e22",
+            borderRight: isLight ? "1px solid #E2E8F0" : "1px solid rgba(255, 255, 255, 0.08)",
             padding: "20px 12px",
             display: "flex",
             flexDirection: "column",
-            gap: "6px"
+            gap: "4px"
           }}
         >
           {[
-            { id: "queue", label: "My Working Queue", icon: Layers, badge: summary.assigned_accounts },
+            { id: "queue", label: "Working Queue", icon: Layers, badge: summary.assigned_accounts },
             { id: "tasks", label: "Priority Tasks & PTP", icon: Calendar, badge: summary.pending_followups },
-            { id: "calls", label: "Call History & Audio", icon: PhoneCall },
+            { id: "calls", label: "Call History", icon: PhoneCall },
             { id: "field", label: "Field Route Visits", icon: MapPin, badge: fieldVisitsList.filter(v => v.status !== "COMPLETED").length },
             { id: "profile", label: "Profile & Quota", icon: User }
           ].map((item) => {
@@ -631,30 +631,31 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  border: active ? "1px solid rgba(0, 201, 149, 0.4)" : "1px solid transparent",
-                  background: active ? "rgba(0, 201, 149, 0.15)" : "transparent",
-                  color: active ? "#00C995" : "#94a3b8",
-                  fontWeight: active ? 700 : 500,
+                  padding: "9px 12px",
+                  borderRadius: "8px",
+                  border: active ? "1px solid rgba(59, 130, 246, 0.3)" : "1px solid transparent",
+                  background: active ? "rgba(59, 130, 246, 0.12)" : "transparent",
+                  color: active ? "#60a5fa" : "#94a3b8",
+                  fontWeight: active ? 600 : 500,
                   fontSize: "13px",
                   cursor: "pointer",
                   textAlign: "left",
-                  transition: "all 0.15s"
+                  transition: "all 0.15s ease"
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <Icon className={`w-4 h-4 ${active ? "text-[#00C995]" : "text-slate-400"}`} />
+                  <Icon style={{ width: "16px", height: "16px", color: active ? "#60a5fa" : "#94a3b8" }} />
                   <span>{item.label}</span>
                 </div>
                 {item.badge > 0 && (
                   <span style={{
-                    fontSize: "10px",
+                    fontSize: "11px",
                     padding: "1px 6px",
-                    borderRadius: "10px",
-                    background: active ? "#00C995" : "#263957",
-                    color: active ? "#050B20" : "#ffffff",
-                    fontWeight: 700
+                    borderRadius: "6px",
+                    background: active ? "#1d4ed8" : "rgba(255, 255, 255, 0.08)",
+                    color: active ? "#ffffff" : "#cbd5e1",
+                    fontWeight: 600,
+                    fontFamily: "monospace"
                   }}>
                     {item.badge}
                   </span>
@@ -665,14 +666,14 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
         </aside>
 
         {/* CONTENT BODY */}
-        <main className="portal-main-area" style={{ flex: 1, padding: "28px", overflowY: "auto", background: isLight ? "#F8FAFC" : "transparent" }}>
-          {/* Active Allocator & Campaign Context Strip (Architecture Section 3) */}
+        <main className="portal-main-area" style={{ flex: 1, padding: "24px", overflowY: "auto", background: isLight ? "#F8FAFC" : "transparent" }}>
+          {/* Active Allocator & Campaign Context Strip */}
           <div style={{
-            padding: "16px 20px",
-            borderRadius: "14px",
-            background: "#0B1733",
-            border: "1px solid #263957",
-            marginBottom: "24px",
+            padding: "14px 18px",
+            borderRadius: "12px",
+            background: "#08132e",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
+            marginBottom: "20px",
             display: "flex",
             flexWrap: "wrap",
             justifyContent: "space-between",
@@ -681,73 +682,73 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
               <div>
-                <span style={{ fontSize: "10px", color: "#9AAAC2", textTransform: "uppercase", fontWeight: 700 }}>Authorized Allocator</span>
+                <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500, display: "block" }}>Authorized Allocator</span>
                 <select
                   value={selectedAllocator}
                   onChange={(e) => setSelectedAllocator(e.target.value)}
-                  style={{ display: "block", marginTop: "2px", background: "#08132D", border: "1px solid #263957", color: "#315CFF", fontWeight: 800, fontSize: "13px", padding: "4px 8px", borderRadius: "6px" }}
+                  style={{ display: "block", marginTop: "4px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.12)", color: "#ffffff", fontWeight: 600, fontSize: "12px", padding: "4px 8px", borderRadius: "6px" }}
                 >
                   <option value="BAJAJ FINSERVE">BAJAJ FINSERVE</option>
                   <option value="HDFC Bank">HDFC Bank</option>
                   <option value="SBI Cards">SBI Cards</option>
                 </select>
               </div>
-              <span style={{ color: "#263957" }}>|</span>
+              <span style={{ color: "rgba(255, 255, 255, 0.12)" }}>|</span>
               <div>
-                <span style={{ fontSize: "10px", color: "#9AAAC2", textTransform: "uppercase", fontWeight: 700 }}>Allocation Portfolio</span>
-                <div style={{ fontSize: "13px", fontWeight: 700, color: "#f8fafc", marginTop: "4px" }}>Bajaj Personal Loan Writeoff</div>
+                <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500, display: "block" }}>Allocation Portfolio</span>
+                <div style={{ fontSize: "12px", fontWeight: 600, color: "#f8fafc", marginTop: "4px" }}>Bajaj Personal Loan Writeoff</div>
               </div>
-              <span style={{ color: "#263957" }}>|</span>
+              <span style={{ color: "rgba(255, 255, 255, 0.12)" }}>|</span>
               <div>
-                <span style={{ fontSize: "10px", color: "#9AAAC2", textTransform: "uppercase", fontWeight: 700 }}>Assigned Dialing Campaign</span>
-                <div style={{ fontSize: "13px", fontWeight: 700, color: "#00C995", marginTop: "4px" }}>URBAN BAJAJ-NOV-2026 (Predictive)</div>
+                <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500, display: "block" }}>Assigned Dialing Campaign</span>
+                <div style={{ fontSize: "12px", fontWeight: 600, color: "#60a5fa", marginTop: "4px" }}>URBAN BAJAJ-NOV-2026 (Predictive)</div>
               </div>
             </div>
 
-            <div style={{ fontSize: "11px", color: "#00C995", display: "flex", alignItems: "center", gap: "6px", background: "rgba(0, 201, 149, 0.1)", padding: "4px 10px", borderRadius: "20px" }}>
-              <ShieldCheck className="w-3.5 h-3.5" />
+            <div style={{ fontSize: "11px", color: "#34d399", display: "flex", alignItems: "center", gap: "6px", background: "rgba(16, 185, 129, 0.1)", padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+              <ShieldCheck style={{ width: "14px", height: "14px" }} />
               <span>Queue Synchronized with Server</span>
             </div>
           </div>
 
           {/* Quick Metrics */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "16px", marginBottom: "24px" }}>
-            <div style={{ padding: "18px", borderRadius: "12px", background: "#0B1733", border: "1px solid #263957" }}>
-              <span style={{ fontSize: "11px", fontWeight: 600, color: "#9AAAC2", textTransform: "uppercase" }}>Assigned Accounts</span>
-              <div style={{ fontSize: "22px", fontWeight: 800, color: "#315CFF", marginTop: "4px", fontFamily: "monospace" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "16px", marginBottom: "20px" }}>
+            <div style={{ padding: "16px 18px", borderRadius: "12px", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+              <span style={{ fontSize: "11px", fontWeight: 500, color: "#94a3b8" }}>Assigned Accounts</span>
+              <div style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", marginTop: "4px", fontFamily: "monospace" }}>
                 {summary.assigned_accounts}
               </div>
-              <span style={{ fontSize: "11px", color: "#9AAAC2", marginTop: "2px", display: "block" }}>
+              <span style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px", display: "block" }}>
                 {summary.untouched_accounts} Untouched in Queue
               </span>
             </div>
 
-            <div style={{ padding: "18px", borderRadius: "12px", background: "#0B1733", border: "1px solid #263957" }}>
-              <span style={{ fontSize: "11px", fontWeight: 600, color: "#9AAAC2", textTransform: "uppercase" }}>Pending Follow-ups</span>
-              <div style={{ fontSize: "22px", fontWeight: 800, color: "#FFB800", marginTop: "4px", fontFamily: "monospace" }}>
+            <div style={{ padding: "16px 18px", borderRadius: "12px", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+              <span style={{ fontSize: "11px", fontWeight: 500, color: "#94a3b8" }}>Pending Follow-ups</span>
+              <div style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", marginTop: "4px", fontFamily: "monospace" }}>
                 {summary.pending_followups}
               </div>
-              <span style={{ fontSize: "11px", color: "#9AAAC2", marginTop: "2px", display: "block" }}>
+              <span style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px", display: "block" }}>
                 {summary.ptp_accounts} PTP Promises Active
               </span>
             </div>
 
-            <div style={{ padding: "18px", borderRadius: "12px", background: "#0B1733", border: "1px solid #263957" }}>
-              <span style={{ fontSize: "11px", fontWeight: 600, color: "#9AAAC2", textTransform: "uppercase" }}>Calls Dialed Today</span>
-              <div style={{ fontSize: "22px", fontWeight: 800, color: "#5945F5", marginTop: "4px", fontFamily: "monospace" }}>
+            <div style={{ padding: "16px 18px", borderRadius: "12px", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+              <span style={{ fontSize: "11px", fontWeight: 500, color: "#94a3b8" }}>Calls Dialed Today</span>
+              <div style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", marginTop: "4px", fontFamily: "monospace" }}>
                 {summary.calls_dialed_today}
               </div>
-              <span style={{ fontSize: "11px", color: "#00C995", marginTop: "2px", display: "block" }}>
+              <span style={{ fontSize: "11px", color: "#34d399", marginTop: "4px", display: "block" }}>
                 {summary.connection_rate_pct}% Connection Rate
               </span>
             </div>
 
-            <div style={{ padding: "18px", borderRadius: "12px", background: "#0B1733", border: "1px solid #263957" }}>
-              <span style={{ fontSize: "11px", fontWeight: 600, color: "#9AAAC2", textTransform: "uppercase" }}>Verified Collections</span>
-              <div style={{ fontSize: "22px", fontWeight: 800, color: "#00C995", marginTop: "4px", fontFamily: "monospace" }}>
+            <div style={{ padding: "16px 18px", borderRadius: "12px", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
+              <span style={{ fontSize: "11px", fontWeight: 500, color: "#94a3b8" }}>Verified Collections</span>
+              <div style={{ fontSize: "20px", fontWeight: 700, color: "#34d399", marginTop: "4px", fontFamily: "monospace" }}>
                 ₹{Number(summary.verified_recovered_amount).toLocaleString("en-IN")}
               </div>
-              <span style={{ fontSize: "11px", color: "#00C995", fontWeight: 600, marginTop: "2px", display: "block" }}>
+              <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500, marginTop: "4px", display: "block" }}>
                 {summary.target_achievement_pct}% Quota Attainment
               </span>
             </div>
@@ -757,13 +758,13 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               TAB 1: MY WORKING QUEUE (Step 6 Workflow)
           ═══════════════════════════════════════════════════════ */}
           {activeTab === "queue" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               {/* Queue Filter Toolbar */}
               <div style={{
-                padding: "16px",
+                padding: "14px 16px",
                 borderRadius: "12px",
-                background: "#0B1733",
-                border: "1px solid #263957",
+                background: "#08132e",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
                 display: "flex",
                 flexWrap: "wrap",
                 gap: "12px",
@@ -777,12 +778,12 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && loadCases(1)}
-                      placeholder="Search Borrower Name, Phone, Account..."
+                      placeholder="Search account or borrower"
                       style={{
                         padding: "8px 12px 8px 32px",
                         borderRadius: "8px",
-                        background: "#08132D",
-                        border: "1px solid #263957",
+                        background: "#03081a",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
                         color: "#f8fafc",
                         fontSize: "12px",
                         outline: "none",
@@ -795,7 +796,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    style={{ padding: "8px 12px", borderRadius: "8px", background: "#08132D", border: "1px solid #263957", color: "#f8fafc", fontSize: "12px" }}
+                    style={{ padding: "8px 12px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px" }}
                   >
                     <option value="ALL">All Statuses</option>
                     <option value="New">New / Untouched</option>
@@ -810,7 +811,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                   <select
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
-                    style={{ padding: "8px 12px", borderRadius: "8px", background: "#08132D", border: "1px solid #263957", color: "#f8fafc", fontSize: "12px" }}
+                    style={{ padding: "8px 12px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px" }}
                   >
                     <option value="ALL">All Priorities</option>
                     <option value="CRITICAL">Critical</option>
@@ -821,7 +822,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
 
                   <button
                     onClick={() => loadCases(1)}
-                    style={{ padding: "8px 14px", borderRadius: "8px", background: "#14223A", border: "1px solid #00C995", color: "#00C995", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+                    style={{ padding: "8px 14px", borderRadius: "8px", background: "#1d4ed8", border: "none", color: "#ffffff", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}
                   >
                     Filter Queue
                   </button>
@@ -829,10 +830,10 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               </div>
 
               {/* Working Accounts Table */}
-              <div style={{ borderRadius: "14px", background: "#0B1733", border: "1px solid #263957", overflowX: "auto" }}>
+              <div style={{ borderRadius: "12px", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.08)", overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", textAlign: "left" }}>
                   <thead>
-                    <tr style={{ background: "#08132D", borderBottom: "1px solid #263957", color: "#9AAAC2" }}>
+                    <tr style={{ background: "rgba(255, 255, 255, 0.02)", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "#94a3b8" }}>
                       <th style={{ padding: "12px 14px" }}>Case #</th>
                       <th style={{ padding: "12px 14px" }}>Borrower Name</th>
                       <th style={{ padding: "12px 14px" }}>Phone</th>
@@ -850,21 +851,21 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                       <tr><td colSpan="8" style={{ padding: "30px", textAlign: "center", color: "#94a3b8" }}>No assigned accounts in this queue.</td></tr>
                     ) : (
                       casesList.map((c) => (
-                        <tr key={c.id} style={{ borderBottom: "1px solid rgba(38, 57, 87, 0.5)", color: "#f8fafc" }}>
-                          <td style={{ padding: "12px 14px", fontFamily: "monospace", color: "#315CFF", fontWeight: 700 }}>{c.case_number}</td>
+                        <tr key={c.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.04)", color: "#f8fafc" }}>
+                          <td style={{ padding: "12px 14px", fontFamily: "monospace", color: "#60a5fa", fontWeight: 600 }}>{c.case_number}</td>
                           <td style={{ padding: "12px 14px", fontWeight: 600 }}>{c.borrower_name || c.customer_name}</td>
-                          <td style={{ padding: "12px 14px", color: "#9AAAC2" }}>{c.phone_number || "+91 98******10"}</td>
-                          <td style={{ padding: "12px 14px", fontFamily: "monospace", color: "#FFB800", fontWeight: 700 }}>
+                          <td style={{ padding: "12px 14px", color: "#94a3b8", fontFamily: "monospace" }}>{c.phone_number || "+91 98******10"}</td>
+                          <td style={{ padding: "12px 14px", fontFamily: "monospace", color: "#ffffff", fontWeight: 600 }}>
                             ₹{Number(c.outstanding_amount).toLocaleString("en-IN")}
                           </td>
                           <td style={{ padding: "12px 14px" }}>
                             <span style={{
                               padding: "2px 6px",
                               borderRadius: "4px",
-                              fontSize: "10px",
-                              fontWeight: 700,
-                              background: c.dpd >= 90 ? "rgba(255, 82, 122, 0.2)" : "rgba(49, 92, 255, 0.2)",
-                              color: c.dpd >= 90 ? "#FF527A" : "#315CFF"
+                              fontSize: "11px",
+                              fontWeight: 600,
+                              background: c.dpd >= 90 ? "rgba(244, 63, 94, 0.15)" : "rgba(255, 255, 255, 0.06)",
+                              color: c.dpd >= 90 ? "#fb7185" : "#cbd5e1"
                             }}>
                               {c.dpd || 45} DPD
                             </span>
@@ -872,16 +873,16 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                           <td style={{ padding: "12px 14px" }}>
                             <span style={{
                               padding: "2px 8px",
-                              borderRadius: "12px",
-                              fontSize: "10px",
-                              fontWeight: 700,
-                              background: c.status === "Fully Paid" ? "rgba(0, 201, 149, 0.2)" : "rgba(49, 92, 255, 0.15)",
-                              color: c.status === "Fully Paid" ? "#00C995" : "#315CFF"
+                              borderRadius: "6px",
+                              fontSize: "11px",
+                              fontWeight: 600,
+                              background: c.status === "Fully Paid" ? "rgba(16, 185, 129, 0.15)" : "rgba(59, 130, 246, 0.12)",
+                              color: c.status === "Fully Paid" ? "#34d399" : "#60a5fa"
                             }}>
                               {c.status}
                             </span>
                           </td>
-                          <td style={{ padding: "12px 14px", fontSize: "11px", fontWeight: 600 }}>{c.priority}</td>
+                          <td style={{ padding: "12px 14px", fontSize: "11px", fontWeight: 500, color: "#94a3b8" }}>{c.priority}</td>
                           <td style={{ padding: "12px 14px", textAlign: "center" }}>
                             <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
                               {/* Softphone Click to Call */}
@@ -890,11 +891,11 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                                 style={{
                                   padding: "5px 10px",
                                   borderRadius: "6px",
-                                  background: "#00C995",
+                                  background: "#16a34a",
                                   border: "none",
-                                  color: "#050B20",
+                                  color: "#ffffff",
                                   fontSize: "11px",
-                                  fontWeight: 700,
+                                  fontWeight: 600,
                                   cursor: "pointer",
                                   display: "inline-flex",
                                   alignItems: "center",
@@ -914,11 +915,11 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                                 style={{
                                   padding: "5px 10px",
                                   borderRadius: "6px",
-                                  background: "#14223A",
-                                  border: "1px solid #315CFF",
-                                  color: "#315CFF",
+                                  background: "rgba(255, 255, 255, 0.05)",
+                                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                                  color: "#cbd5e1",
                                   fontSize: "11px",
-                                  fontWeight: 700,
+                                  fontWeight: 500,
                                   cursor: "pointer",
                                   display: "inline-flex",
                                   alignItems: "center",
@@ -938,11 +939,11 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                                 style={{
                                   padding: "5px 10px",
                                   borderRadius: "6px",
-                                  background: "#14223A",
-                                  border: "1px solid #FFB800",
-                                  color: "#FFB800",
+                                  background: "rgba(255, 255, 255, 0.05)",
+                                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                                  color: "#cbd5e1",
                                   fontSize: "11px",
-                                  fontWeight: 700,
+                                  fontWeight: 500,
                                   cursor: "pointer",
                                   display: "inline-flex",
                                   alignItems: "center",
@@ -962,14 +963,14 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
 
                 {/* Queue Pagination Bar */}
                 <div style={{
-                  padding: "14px 20px",
-                  background: "#08132D",
-                  borderTop: "1px solid #263957",
+                  padding: "12px 18px",
+                  background: "rgba(255, 255, 255, 0.02)",
+                  borderTop: "1px solid rgba(255, 255, 255, 0.08)",
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
                   fontSize: "12px",
-                  color: "#9AAAC2"
+                  color: "#94a3b8"
                 }}>
                   <div>
                     Showing {((casesPagination.page - 1) * casesPagination.limit) + 1} to {Math.min(casesPagination.page * casesPagination.limit, casesPagination.total)} of {casesPagination.total} assigned accounts
@@ -981,8 +982,8 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                       style={{
                         padding: "6px 10px",
                         borderRadius: "6px",
-                        background: "#14223A",
-                        border: "1px solid #263957",
+                        background: "rgba(255, 255, 255, 0.05)",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
                         color: casesPagination.page <= 1 ? "#475569" : "#f8fafc",
                         cursor: casesPagination.page <= 1 ? "not-allowed" : "pointer",
                         display: "flex",
@@ -993,7 +994,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                       <ChevronLeft className="w-3.5 h-3.5" />
                       <span>Prev</span>
                     </button>
-                    <span style={{ padding: "0 6px", fontWeight: 700, color: "#00C995" }}>
+                    <span style={{ padding: "0 6px", fontWeight: 600, color: "#60a5fa" }}>
                       Page {casesPagination.page} of {casesPagination.totalPages}
                     </span>
                     <button
@@ -1002,8 +1003,8 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                       style={{
                         padding: "6px 10px",
                         borderRadius: "6px",
-                        background: "#14223A",
-                        border: "1px solid #263957",
+                        background: "rgba(255, 255, 255, 0.05)",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
                         color: casesPagination.page >= casesPagination.totalPages ? "#475569" : "#f8fafc",
                         cursor: casesPagination.page >= casesPagination.totalPages ? "not-allowed" : "pointer",
                         display: "flex",
@@ -1024,56 +1025,53 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               TAB 2: PRIORITY TASKS & PTP COMMITMENTS (Section 6)
           ═══════════════════════════════════════════════════════ */}
           {activeTab === "tasks" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
-                <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#f8fafc" }}>
-                  Priority Tasks, PTP Commitments &amp; Callbacks
+                <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#f8fafc", margin: 0 }}>
+                  Priority Tasks &amp; PTP Commitments
                 </h3>
-                <p style={{ fontSize: "12px", color: "#9AAAC2", marginTop: "2px" }}>
-                  Time-bound borrower follow-ups generated from structured call dispositions.
-                </p>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
                 {followupsList.map((f) => (
                   <div key={f.id} style={{
-                    padding: "18px",
-                    borderRadius: "14px",
-                    background: "#0B1733",
-                    border: "1px solid #263957",
+                    padding: "16px",
+                    borderRadius: "12px",
+                    background: "#08132e",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
                     display: "flex",
                     flexDirection: "column",
                     gap: "12px"
                   }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <div>
-                        <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#315CFF", fontWeight: 700 }}>
+                        <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#60a5fa", fontWeight: 600 }}>
                           {f.case_number}
                         </span>
-                        <div style={{ fontWeight: 700, fontSize: "14px", color: "#f8fafc", marginTop: "2px" }}>
+                        <div style={{ fontWeight: 600, fontSize: "13px", color: "#f8fafc", marginTop: "2px" }}>
                           {f.borrower_name}
                         </div>
                       </div>
                       <span style={{
-                        fontSize: "10px",
+                        fontSize: "11px",
                         padding: "2px 8px",
-                        borderRadius: "10px",
-                        background: f.type === "PTP_PROMISE" ? "rgba(0, 201, 149, 0.2)" : "rgba(255, 184, 0, 0.2)",
-                        color: f.type === "PTP_PROMISE" ? "#00C995" : "#FFB800",
-                        fontWeight: 700
+                        borderRadius: "6px",
+                        background: f.type === "PTP_PROMISE" ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)",
+                        color: f.type === "PTP_PROMISE" ? "#34d399" : "#fbbf24",
+                        fontWeight: 600
                       }}>
-                        {f.type === "PTP_PROMISE" ? "💰 PROMISE TO PAY" : "📞 CALLBACK"}
+                        {f.type === "PTP_PROMISE" ? "Promise to Pay" : "Callback"}
                       </span>
                     </div>
 
-                    <p style={{ fontSize: "12px", color: "#94a3b8", fontStyle: "italic", margin: 0 }}>
+                    <p style={{ fontSize: "12px", color: "#94a3b8", margin: 0 }}>
                       "{f.remarks}"
                     </p>
 
-                    <div style={{ borderTop: "1px solid #263957", paddingTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ borderTop: "1px solid rgba(255, 255, 255, 0.06)", paddingTop: "10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div>
-                        <span style={{ fontSize: "10px", color: "#9AAAC2" }}>DUE / COMMITMENT</span>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#f8fafc" }}>
+                        <span style={{ fontSize: "10px", color: "#94a3b8" }}>Due Date</span>
+                        <div style={{ fontSize: "12px", fontWeight: 600, color: "#f8fafc" }}>
                           {f.due_date} {f.target_amount ? `(₹${Number(f.target_amount).toLocaleString("en-IN")})` : ""}
                         </div>
                       </div>
@@ -1091,11 +1089,11 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                         style={{
                           padding: "6px 12px",
                           borderRadius: "6px",
-                          background: "#00C995",
+                          background: "#16a34a",
                           border: "none",
-                          color: "#050B20",
+                          color: "#ffffff",
                           fontSize: "11px",
-                          fontWeight: 700,
+                          fontWeight: 600,
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
@@ -1116,20 +1114,17 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               TAB 3: CALL HISTORY & AUDIO VAULT
           ═══════════════════════════════════════════════════════ */}
           {activeTab === "calls" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
-                <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#f8fafc" }}>
-                  My Calling History &amp; Recording Evidence
+                <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#f8fafc", margin: 0 }}>
+                  Call History &amp; Recording Evidence
                 </h3>
-                <p style={{ fontSize: "12px", color: "#9AAAC2", marginTop: "2px" }}>
-                  Full telephony evidence stream archived with S3 KMS WORM compliance.
-                </p>
               </div>
 
-              <div style={{ borderRadius: "14px", background: "#0B1733", border: "1px solid #263957", overflowX: "auto" }}>
+              <div style={{ borderRadius: "12px", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.08)", overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", textAlign: "left" }}>
                   <thead>
-                    <tr style={{ background: "#08132D", borderBottom: "1px solid #263957", color: "#9AAAC2" }}>
+                    <tr style={{ background: "rgba(255, 255, 255, 0.02)", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "#94a3b8" }}>
                       <th style={{ padding: "12px 14px" }}>Call ID</th>
                       <th style={{ padding: "12px 14px" }}>Direction</th>
                       <th style={{ padding: "12px 14px" }}>Duration</th>
@@ -1145,27 +1140,27 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                       { id: "call_03", dir: "INBOUND", dur: 240, outcome: "Payment Claim Logged (₹5,000 via UPI)", time: "01:15 PM" },
                       { id: "call_04", dir: "OUTBOUND", dur: 38, outcome: "Not Reachable", time: "03:45 PM" }
                     ].map((call) => (
-                      <tr key={call.id} style={{ borderBottom: "1px solid rgba(38, 57, 87, 0.5)", color: "#f8fafc" }}>
-                        <td style={{ padding: "12px 14px", fontFamily: "monospace", color: "#315CFF" }}>{call.id}</td>
+                      <tr key={call.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.04)", color: "#f8fafc" }}>
+                        <td style={{ padding: "12px 14px", fontFamily: "monospace", color: "#60a5fa" }}>{call.id}</td>
                         <td style={{ padding: "12px 14px" }}>
-                          <span style={{ fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: call.dir === "OUTBOUND" ? "rgba(49, 92, 255, 0.2)" : "rgba(168, 85, 247, 0.2)", color: call.dir === "OUTBOUND" ? "#315CFF" : "#A855F7", fontWeight: 700 }}>
+                          <span style={{ fontSize: "11px", padding: "2px 6px", borderRadius: "4px", background: call.dir === "OUTBOUND" ? "rgba(59, 130, 246, 0.15)" : "rgba(168, 85, 247, 0.15)", color: call.dir === "OUTBOUND" ? "#60a5fa" : "#c084fc", fontWeight: 600 }}>
                             {call.dir}
                           </span>
                         </td>
                         <td style={{ padding: "12px 14px", fontFamily: "monospace" }}>{call.dur}s</td>
-                        <td style={{ padding: "12px 14px", fontWeight: 600 }}>{call.outcome}</td>
-                        <td style={{ padding: "12px 14px", color: "#9AAAC2" }}>Today, {call.time}</td>
+                        <td style={{ padding: "12px 14px", fontWeight: 500 }}>{call.outcome}</td>
+                        <td style={{ padding: "12px 14px", color: "#94a3b8" }}>Today, {call.time}</td>
                         <td style={{ padding: "12px 14px" }}>
                           <button
                             onClick={() => setPlayingAudioId(playingAudioId === call.id ? null : call.id)}
                             style={{
                               padding: "4px 8px",
                               borderRadius: "6px",
-                              background: playingAudioId === call.id ? "#00C995" : "#14223A",
-                              border: "1px solid #263957",
-                              color: playingAudioId === call.id ? "#050B20" : "#315CFF",
+                              background: playingAudioId === call.id ? "rgba(16, 185, 129, 0.2)" : "rgba(255, 255, 255, 0.05)",
+                              border: "1px solid rgba(255, 255, 255, 0.1)",
+                              color: playingAudioId === call.id ? "#34d399" : "#cbd5e1",
                               fontSize: "11px",
-                              fontWeight: 700,
+                              fontWeight: 600,
                               cursor: "pointer",
                               display: "inline-flex",
                               alignItems: "center",
@@ -1188,15 +1183,12 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               TAB 3B: FIELD ROUTE VISITS & GPS CHECK-IN (Section 10)
           ═══════════════════════════════════════════════════════ */}
           {activeTab === "field" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
                 <div>
-                  <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#f8fafc" }}>
-                    Assigned Field Route Run-Sheet &amp; On-Site Visits
+                  <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#f8fafc", margin: 0 }}>
+                    Field Route Visits &amp; On-Site Queue
                   </h3>
-                  <p style={{ fontSize: "12px", color: "#9AAAC2", marginTop: "2px" }}>
-                    Section 10: GPS on-site arrival verification, visit outcome logging, dynamic UPI QR collections, and spot digital receipts.
-                  </p>
                 </div>
                 <button
                   onClick={loadFieldVisits}
@@ -1204,13 +1196,13 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                     display: "flex",
                     alignItems: "center",
                     gap: "6px",
-                    padding: "8px 14px",
+                    padding: "7px 12px",
                     borderRadius: "8px",
-                    background: "#14223A",
-                    border: "1px solid #263957",
-                    color: "#f8fafc",
+                    background: "rgba(255, 255, 255, 0.05)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    color: "#cbd5e1",
                     fontSize: "12px",
-                    fontWeight: 600,
+                    fontWeight: 500,
                     cursor: "pointer"
                   }}
                 >
@@ -1220,15 +1212,15 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               </div>
 
               {/* Field Visits Cards */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {fieldVisitsList.map((visit) => (
                   <div
                     key={visit.id}
                     style={{
-                      background: "#0B1733",
-                      border: "1px solid #263957",
-                      borderRadius: "14px",
-                      padding: "20px",
+                      background: "#08132e",
+                      border: "1px solid rgba(255, 255, 255, 0.08)",
+                      borderRadius: "12px",
+                      padding: "16px",
                       display: "flex",
                       flexWrap: "wrap",
                       justifyContent: "space-between",
@@ -1236,28 +1228,28 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                       gap: "16px"
                     }}
                   >
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxWidth: "450px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxWidth: "480px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "15px", fontWeight: 800, color: "#f8fafc" }}>
+                        <span style={{ fontSize: "14px", fontWeight: 600, color: "#f8fafc" }}>
                           {visit.borrower_name}
                         </span>
                         <span style={{
-                          fontSize: "10px",
-                          fontWeight: 700,
-                          padding: "2px 8px",
-                          borderRadius: "10px",
-                          background: visit.priority === "URGENT" ? "rgba(239, 68, 68, 0.2)" : "rgba(255, 184, 0, 0.2)",
-                          color: visit.priority === "URGENT" ? "#f87171" : "#FFB800"
+                          fontSize: "11px",
+                          fontWeight: 600,
+                          padding: "2px 6px",
+                          borderRadius: "4px",
+                          background: visit.priority === "URGENT" ? "rgba(244, 63, 94, 0.15)" : "rgba(245, 158, 11, 0.15)",
+                          color: visit.priority === "URGENT" ? "#fb7185" : "#fbbf24"
                         }}>
                           {visit.priority} Priority
                         </span>
                         <span style={{
-                          fontSize: "10px",
-                          fontWeight: 700,
+                          fontSize: "11px",
+                          fontWeight: 600,
                           padding: "2px 8px",
-                          borderRadius: "10px",
-                          background: visit.status === "COMPLETED" ? "rgba(0, 201, 149, 0.2)" : "rgba(49, 92, 255, 0.2)",
-                          color: visit.status === "COMPLETED" ? "#00C995" : "#315CFF"
+                          borderRadius: "6px",
+                          background: visit.status === "COMPLETED" ? "rgba(16, 185, 129, 0.15)" : "rgba(59, 130, 246, 0.12)",
+                          color: visit.status === "COMPLETED" ? "#34d399" : "#60a5fa"
                         }}>
                           {visit.status}
                         </span>
@@ -1265,21 +1257,21 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
 
                       <div style={{ fontSize: "12px", color: "#cbd5e1", display: "flex", alignItems: "flex-start", gap: "6px" }}>
                         <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5" />
-                        <span>{visit.address} (Zone: <strong style={{ color: "#315CFF" }}>{visit.geographic_zone}</strong>)</span>
+                        <span>{visit.address} (Zone: <strong style={{ color: "#60a5fa" }}>{visit.geographic_zone}</strong>)</span>
                       </div>
 
-                      <div style={{ fontSize: "11px", color: "#9AAAC2" }}>
-                        Account: <strong style={{ color: "#f8fafc", fontFamily: "monospace" }}>{visit.account_number}</strong> • Time Slot: <strong style={{ color: "#FFB800" }}>{visit.time_slot}</strong> • Phone: <strong style={{ color: "#38bdf8" }}>{visit.phone}</strong>
+                      <div style={{ fontSize: "11px", color: "#94a3b8" }}>
+                        Account: <strong style={{ color: "#f8fafc", fontFamily: "monospace" }}>{visit.account_number}</strong> • Time Slot: <strong style={{ color: "#fbbf24" }}>{visit.time_slot}</strong> • Phone: <strong style={{ color: "#94a3b8", fontFamily: "monospace" }}>{visit.phone}</strong>
                       </div>
 
                       {visit.visit_notes && (
-                        <div style={{ fontSize: "11px", color: "#94a3b8", fontStyle: "italic", background: "#08132D", padding: "8px 10px", borderRadius: "8px", marginTop: "4px" }}>
+                        <div style={{ fontSize: "11px", color: "#94a3b8", background: "rgba(255, 255, 255, 0.03)", padding: "6px 10px", borderRadius: "6px", marginTop: "2px" }}>
                           Notes: "{visit.visit_notes}"
                         </div>
                       )}
 
                       {visit.receipt_ref && (
-                        <div style={{ fontSize: "11px", color: "#00C995", fontWeight: 700, display: "flex", alignItems: "center", gap: "4px" }}>
+                        <div style={{ fontSize: "11px", color: "#34d399", fontWeight: 600, display: "flex", alignItems: "center", gap: "4px" }}>
                           <CheckCircle2 size={13} />
                           <span>Spot Collection: ₹{visit.collected_amount.toLocaleString("en-IN")} via {visit.payment_mode} (Receipt: {visit.receipt_ref})</span>
                         </div>
@@ -1287,7 +1279,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                     </div>
 
                     {/* Actions */}
-                    <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                       {visit.status !== "COMPLETED" && (
                         <>
                           <button
@@ -1296,17 +1288,17 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                               display: "flex",
                               alignItems: "center",
                               gap: "6px",
-                              padding: "9px 14px",
-                              borderRadius: "8px",
-                              background: visit.gps_latitude ? "rgba(0, 201, 149, 0.15)" : "#14223A",
-                              border: visit.gps_latitude ? "1px solid #00C995" : "1px solid #263957",
-                              color: visit.gps_latitude ? "#00C995" : "#f8fafc",
+                              padding: "7px 12px",
+                              borderRadius: "6px",
+                              background: visit.gps_latitude ? "rgba(16, 185, 129, 0.15)" : "rgba(255, 255, 255, 0.05)",
+                              border: visit.gps_latitude ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid rgba(255, 255, 255, 0.1)",
+                              color: visit.gps_latitude ? "#34d399" : "#cbd5e1",
                               fontSize: "12px",
-                              fontWeight: 700,
+                              fontWeight: 500,
                               cursor: "pointer"
                             }}
                           >
-                            <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                            <MapPin className="w-3.5 h-3.5" />
                             <span>{visit.gps_latitude ? "GPS Checked-In ✓" : "On-Site Check-In"}</span>
                           </button>
 
@@ -1319,26 +1311,26 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                               display: "flex",
                               alignItems: "center",
                               gap: "6px",
-                              padding: "9px 16px",
-                              borderRadius: "8px",
-                              background: "#00C995",
+                              padding: "7px 14px",
+                              borderRadius: "6px",
+                              background: "#16a34a",
                               border: "none",
-                              color: "#050B20",
+                              color: "#ffffff",
                               fontSize: "12px",
-                              fontWeight: 700,
+                              fontWeight: 600,
                               cursor: "pointer"
                             }}
                           >
                             <DollarSign className="w-3.5 h-3.5" />
-                            <span>Record Outcome &amp; Spot Receipt</span>
+                            <span>Record Outcome</span>
                           </button>
                         </>
                       )}
 
                       {visit.status === "COMPLETED" && (
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#00C995", fontSize: "12px", fontWeight: 700 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#34d399", fontSize: "12px", fontWeight: 600 }}>
                           <CheckCircle2 size={16} />
-                          <span>Visit Finalized &amp; Audited</span>
+                          <span>Visit Finalized</span>
                         </div>
                       )}
                     </div>
@@ -1352,23 +1344,23 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               TAB 4: PROFILE & PERFORMANCE TARGETS (Section 14)
           ═══════════════════════════════════════════════════════ */}
           {activeTab === "profile" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div style={{ padding: "24px", borderRadius: "16px", background: "#0B1733", border: "1px solid #263957", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ padding: "20px", borderRadius: "12px", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#f8fafc" }}>
+                  <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#f8fafc", margin: 0 }}>
                     {user.fullName || user.name || "Agent Profile"}
                   </h3>
-                  <div style={{ fontSize: "12px", color: "#9AAAC2", marginTop: "4px" }}>
-                    Employee ID: <strong style={{ color: "#315CFF" }}>{user.employeeId || "PM-CAL-0001"}</strong> • Shift: 09:00 AM – 06:00 PM IST
+                  <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>
+                    Employee ID: <strong style={{ color: "#60a5fa" }}>{user.employeeId || "PM-CAL-0001"}</strong> • Shift: 09:00 AM – 06:00 PM IST
                   </div>
                 </div>
 
                 <div style={{
-                  padding: "8px 16px",
-                  borderRadius: "20px",
-                  background: "rgba(0, 201, 149, 0.15)",
-                  color: "#00C995",
-                  fontWeight: 700,
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  background: "rgba(16, 185, 129, 0.15)",
+                  color: "#34d399",
+                  fontWeight: 600,
                   fontSize: "12px"
                 }}>
                   Target Achieved: {summary.target_achievement_pct}%
@@ -1376,19 +1368,16 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               </div>
 
               {/* Recovery Progress Bar Card */}
-              <div style={{ padding: "24px", borderRadius: "16px", background: "#0B1733", border: "1px solid #263957" }}>
+              <div style={{ padding: "20px", borderRadius: "12px", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "13px", fontWeight: 700, color: "#f8fafc" }}>Monthly Recovery Target Progress</span>
-                  <span style={{ fontSize: "13px", fontWeight: 800, color: "#00C995", fontFamily: "monospace" }}>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: "#f8fafc" }}>Monthly Recovery Target Progress</span>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: "#34d399", fontFamily: "monospace" }}>
                     ₹{Number(summary.verified_recovered_amount).toLocaleString("en-IN")} / ₹{Number(summary.target_amount).toLocaleString("en-IN")}
                   </span>
                 </div>
-                <div style={{ width: "100%", height: "8px", background: "#14223A", borderRadius: "4px", overflow: "hidden", margin: "10px 0" }}>
-                  <div style={{ width: `${Math.min(100, summary.target_achievement_pct)}%`, height: "100%", background: "linear-gradient(90deg, #315CFF, #00C995)", borderRadius: "4px" }} />
+                <div style={{ width: "100%", height: "6px", background: "rgba(255, 255, 255, 0.06)", borderRadius: "3px", overflow: "hidden", margin: "10px 0" }}>
+                  <div style={{ width: `${Math.min(100, summary.target_achievement_pct)}%`, height: "100%", background: "#2563eb", borderRadius: "3px" }} />
                 </div>
-                <span style={{ fontSize: "11px", color: "#9AAAC2" }}>
-                  Calculated strictly from supervisor-verified payments posted to the Financial Ledger.
-                </span>
               </div>
             </div>
           )}
@@ -1398,50 +1387,48 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
       {/* ── SOFTPHONE CLICK-TO-CALL MODAL ── */}
       {activeCallCase && (
         <div className="modal-overlay" onClick={() => {}}>
-          <div className="modal-container" style={{ maxWidth: "420px", textAlign: "center", background: "#08132D", border: "1px solid #315CFF" }}>
-            <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: callState === "CONNECTED" ? "rgba(0, 201, 149, 0.2)" : "rgba(49, 92, 255, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-              <PhoneCall className={`w-8 h-8 ${callState === "CONNECTED" ? "text-[#00C995]" : "text-[#315CFF]"} animate-pulse`} />
+          <div className="modal-container" style={{ maxWidth: "400px", textAlign: "center", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "12px", padding: "24px" }}>
+            <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: callState === "CONNECTED" ? "rgba(22, 163, 74, 0.15)" : "rgba(37, 99, 235, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", border: callState === "CONNECTED" ? "1px solid rgba(22, 163, 74, 0.3)" : "1px solid rgba(37, 99, 235, 0.3)" }}>
+              <PhoneCall className={`w-6 h-6 ${callState === "CONNECTED" ? "text-emerald-400" : "text-blue-400"}`} />
             </div>
 
             <span style={{
               fontSize: "10px",
-              fontWeight: 700,
-              padding: "2px 8px",
-              borderRadius: "10px",
-              background: callState === "CONNECTED" ? "#00C995" : "#315CFF",
-              color: "#050B20"
+              fontWeight: 600,
+              padding: "3px 8px",
+              borderRadius: "4px",
+              background: callState === "CONNECTED" ? "rgba(22, 163, 74, 0.15)" : "rgba(37, 99, 235, 0.15)",
+              color: callState === "CONNECTED" ? "#4ade80" : "#60a5fa",
+              border: callState === "CONNECTED" ? "1px solid rgba(22, 163, 74, 0.3)" : "1px solid rgba(37, 99, 235, 0.3)",
+              letterSpacing: "0.05em"
             }}>
-              {callState === "DIALING" ? "CONNECTING CARRIER..." : callState === "CONNECTED" ? "CALL ACTIVE (RECORDING)" : "CALL ENDED"}
+              {callState === "DIALING" ? "Connecting..." : callState === "CONNECTED" ? "Active Call" : "Ended"}
             </span>
 
-            <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#f8fafc", marginTop: "12px" }}>
+            <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", marginTop: "14px" }}>
               {activeCallCase.borrower_name || activeCallCase.customer_name}
             </h3>
-            <p style={{ fontSize: "13px", color: "#9AAAC2", fontFamily: "monospace", marginTop: "2px" }}>
+            <p style={{ fontSize: "13px", color: "#94a3b8", fontFamily: "monospace", marginTop: "4px" }}>
               {activeCallCase.phone_number || "+91 9876543210"}
             </p>
 
             {/* Live Call Duration Timer */}
-            <div style={{ fontSize: "28px", fontWeight: 800, color: "#00C995", fontFamily: "monospace", margin: "16px 0" }}>
+            <div style={{ fontSize: "26px", fontWeight: 700, color: "#4ade80", fontFamily: "monospace", margin: "16px 0" }}>
               {formatTimer(callTimer)}
             </div>
-
-            <p style={{ fontSize: "10px", color: "#64748b" }}>
-              S3 KMS WORM Encrypted • Permissible Calling Window Active
-            </p>
 
             <div style={{ marginTop: "20px" }}>
               <button
                 onClick={handleEndCall}
                 style={{
                   width: "100%",
-                  padding: "12px",
+                  padding: "10px 16px",
                   borderRadius: "8px",
-                  background: "#FF527A",
+                  background: "#dc2626",
                   border: "none",
                   color: "#ffffff",
                   fontSize: "13px",
-                  fontWeight: 800,
+                  fontWeight: 600,
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -1460,13 +1447,13 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
       {/* ── DISPOSITION & REMARKS MODAL (Section 5 & 6) ── */}
       {selectedCaseForDisposition && (
         <div className="modal-overlay" onClick={() => setSelectedCaseForDisposition(null)}>
-          <div className="modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #263957", paddingBottom: "12px", marginBottom: "16px" }}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "14px", padding: "20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "12px", marginBottom: "16px" }}>
               <div>
-                <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#f8fafc" }}>
+                <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#f8fafc", margin: 0 }}>
                   Record Call Disposition
                 </h3>
-                <span style={{ fontSize: "11px", color: "#9AAAC2" }}>
+                <span style={{ fontSize: "11px", color: "#94a3b8" }}>
                   {selectedCaseForDisposition.case_number} • {selectedCaseForDisposition.borrower_name}
                 </span>
               </div>
@@ -1475,11 +1462,11 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
 
             <form onSubmit={handleSubmitDisposition} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <div>
-                <label style={{ fontSize: "11px", color: "#9AAAC2", display: "block", marginBottom: "4px" }}>Interaction Outcome</label>
+                <label style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Interaction Outcome</label>
                 <select
                   value={dispositionOutcome}
                   onChange={(e) => setDispositionOutcome(e.target.value)}
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#08132D", border: "1px solid #263957", color: "#f8fafc", fontSize: "12px" }}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px" }}
                 >
                   <option value="Promise to Pay">Promise to Pay (PTP)</option>
                   <option value="Contacted">Contacted - Discussed Terms</option>
@@ -1493,26 +1480,26 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
 
               {/* Conditional PTP Inputs */}
               {dispositionOutcome === "Promise to Pay" && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", background: "#08132D", padding: "12px", borderRadius: "8px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", background: "#03081a", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
                   <div>
-                    <label style={{ fontSize: "11px", color: "#00C995", display: "block", marginBottom: "4px" }}>Promise Amount (₹)</label>
+                    <label style={{ fontSize: "11px", color: "#60a5fa", display: "block", marginBottom: "4px" }}>Promise Amount (₹)</label>
                     <input
                       type="number"
                       value={ptpAmount}
                       onChange={(e) => setPtpAmount(e.target.value)}
                       placeholder="10000"
                       required
-                      style={{ width: "100%", padding: "8px", borderRadius: "6px", background: "#14223A", border: "1px solid #263957", color: "#f8fafc", fontSize: "12px" }}
+                      style={{ width: "100%", padding: "8px", borderRadius: "6px", background: "rgba(255, 255, 255, 0.04)", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px" }}
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: "11px", color: "#00C995", display: "block", marginBottom: "4px" }}>Commitment Date</label>
+                    <label style={{ fontSize: "11px", color: "#60a5fa", display: "block", marginBottom: "4px" }}>Commitment Date</label>
                     <input
                       type="date"
                       value={ptpDate}
                       onChange={(e) => setPtpDate(e.target.value)}
                       required
-                      style={{ width: "100%", padding: "8px", borderRadius: "6px", background: "#14223A", border: "1px solid #263957", color: "#f8fafc", fontSize: "12px" }}
+                      style={{ width: "100%", padding: "8px", borderRadius: "6px", background: "rgba(255, 255, 255, 0.04)", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px" }}
                     />
                   </div>
                 </div>
@@ -1521,26 +1508,26 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               {/* Conditional Callback Inputs */}
               {dispositionOutcome === "Callback Requested" && (
                 <div>
-                  <label style={{ fontSize: "11px", color: "#FFB800", display: "block", marginBottom: "4px" }}>Scheduled Callback Time</label>
+                  <label style={{ fontSize: "11px", color: "#fbbf24", display: "block", marginBottom: "4px" }}>Scheduled Callback Time</label>
                   <input
                     type="time"
                     value={callbackTime}
                     onChange={(e) => setCallbackTime(e.target.value)}
                     required
-                    style={{ width: "100%", padding: "8px", borderRadius: "6px", background: "#08132D", border: "1px solid #263957", color: "#f8fafc", fontSize: "12px" }}
+                    style={{ width: "100%", padding: "8px", borderRadius: "6px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px" }}
                   />
                 </div>
               )}
 
               <div>
-                <label style={{ fontSize: "11px", color: "#9AAAC2", display: "block", marginBottom: "4px" }}>Interaction Remarks</label>
+                <label style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Interaction Remarks</label>
                 <textarea
                   rows={3}
                   value={dispositionRemarks}
                   onChange={(e) => setDispositionRemarks(e.target.value)}
                   placeholder="Record customer statements, repayment timeline, or grievances..."
                   required
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#08132D", border: "1px solid #263957", color: "#f8fafc", fontSize: "12px", resize: "none" }}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px", resize: "none" }}
                 />
               </div>
 
@@ -1548,17 +1535,17 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                 type="submit"
                 disabled={dispositionLoading}
                 style={{
-                  padding: "12px",
+                  padding: "11px",
                   borderRadius: "8px",
-                  background: "#00C995",
+                  background: "#1d4ed8",
                   border: "none",
-                  color: "#050B20",
-                  fontWeight: 800,
+                  color: "#ffffff",
+                  fontWeight: 600,
                   fontSize: "13px",
                   cursor: dispositionLoading ? "not-allowed" : "pointer"
                 }}
               >
-                {dispositionLoading ? "Saving..." : "Save Disposition & Update CRM"}
+                {dispositionLoading ? "Saving..." : "Save Disposition"}
               </button>
             </form>
           </div>
@@ -1568,13 +1555,13 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
       {/* ── RECORD PAYMENT CLAIM MODAL (Invariant 5) ── */}
       {selectedCaseForPayment && (
         <div className="modal-overlay" onClick={() => setSelectedCaseForPayment(null)}>
-          <div className="modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "460px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #263957", paddingBottom: "12px", marginBottom: "16px" }}>
+          <div className="modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "460px", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "14px", padding: "20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "12px", marginBottom: "16px" }}>
               <div>
-                <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#f8fafc" }}>
+                <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#f8fafc", margin: 0 }}>
                   Log Borrower Payment Collection
                 </h3>
-                <span style={{ fontSize: "11px", color: "#9AAAC2" }}>
+                <span style={{ fontSize: "11px", color: "#94a3b8" }}>
                   {selectedCaseForPayment.case_number} • {selectedCaseForPayment.borrower_name}
                 </span>
               </div>
@@ -1583,24 +1570,24 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
 
             <form onSubmit={handleSubmitPayment} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <div>
-                <label style={{ fontSize: "11px", color: "#9AAAC2", display: "block", marginBottom: "4px" }}>Collected Amount (₹)</label>
+                <label style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Collected Amount (₹)</label>
                 <input
                   type="number"
                   value={payAmount}
                   onChange={(e) => setPayAmount(e.target.value)}
                   placeholder="e.g. 15000"
                   required
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#08132D", border: "1px solid #263957", color: "#f8fafc", fontSize: "12px" }}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px" }}
                 />
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                 <div>
-                  <label style={{ fontSize: "11px", color: "#9AAAC2", display: "block", marginBottom: "4px" }}>Payment Mode</label>
+                  <label style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Payment Mode</label>
                   <select
                     value={payMode}
                     onChange={(e) => setPayMode(e.target.value)}
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#08132D", border: "1px solid #263957", color: "#f8fafc", fontSize: "12px" }}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px" }}
                   >
                     <option value="UPI">UPI (GPay / PhonePe / Paytm)</option>
                     <option value="IMPS">IMPS Instant Transfer</option>
@@ -1609,43 +1596,43 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: "11px", color: "#9AAAC2", display: "block", marginBottom: "4px" }}>Bank UTR / Ref Number</label>
+                  <label style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Bank UTR / Ref Number</label>
                   <input
                     type="text"
                     value={payUtr}
                     onChange={(e) => setPayUtr(e.target.value)}
                     placeholder="e.g. UPI-4102948291"
                     required
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#08132D", border: "1px solid #263957", color: "#f8fafc", fontSize: "12px" }}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px" }}
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ fontSize: "11px", color: "#9AAAC2", display: "block", marginBottom: "4px" }}>Notes / Handover Details</label>
+                <label style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Notes / Handover Details</label>
                 <input
                   type="text"
                   value={payNotes}
                   onChange={(e) => setPayNotes(e.target.value)}
                   placeholder="Receipt number, branch code, or confirmation details..."
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#08132D", border: "1px solid #263957", color: "#f8fafc", fontSize: "12px" }}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px" }}
                 />
               </div>
 
-              <div style={{ padding: "10px", borderRadius: "8px", background: "rgba(255, 184, 0, 0.1)", border: "1px solid rgba(255, 184, 0, 0.2)", fontSize: "11px", color: "#FFB800" }}>
-                Notice: Claim is submitted as <strong>Pending Verification</strong>. Balance reduces and targets post upon supervisor audit desk approval.
+              <div style={{ padding: "10px", borderRadius: "8px", background: "rgba(59, 130, 246, 0.08)", border: "1px solid rgba(59, 130, 246, 0.2)", fontSize: "11px", color: "#93c5fd" }}>
+                Notice: Claim is submitted as Pending Verification. Balance reduces upon supervisor approval.
               </div>
 
               <button
                 type="submit"
                 disabled={payLoading}
                 style={{
-                  padding: "12px",
+                  padding: "11px",
                   borderRadius: "8px",
-                  background: "#FFB800",
+                  background: "#1d4ed8",
                   border: "none",
-                  color: "#050B20",
-                  fontWeight: 800,
+                  color: "#ffffff",
+                  fontWeight: 600,
                   fontSize: "13px",
                   cursor: payLoading ? "not-allowed" : "pointer"
                 }}
@@ -1659,22 +1646,22 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
       {/* ── FIELD VISIT OUTCOME & SPOT RECEIPT MODAL (Section 10) ── */}
       {selectedVisitForOutcome && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(1, 6, 28, 0.8)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
-          <div style={{ background: "#0B1733", border: "1px solid #263957", borderRadius: "16px", padding: "24px", maxWidth: "480px", width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
+          <div style={{ background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "14px", padding: "20px", maxWidth: "480px", width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
               <div>
-                <h3 style={{ fontSize: "16px", fontWeight: 800, color: "#f8fafc" }}>Record Field Visit Outcome</h3>
-                <span style={{ fontSize: "11px", color: "#9AAAC2" }}>Borrower: {selectedVisitForOutcome.borrower_name} ({selectedVisitForOutcome.account_number})</span>
+                <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#f8fafc", margin: 0 }}>Record Field Visit Outcome</h3>
+                <span style={{ fontSize: "11px", color: "#94a3b8" }}>Borrower: {selectedVisitForOutcome.borrower_name} ({selectedVisitForOutcome.account_number})</span>
               </div>
-              <button onClick={() => setSelectedVisitForOutcome(null)} style={{ background: "none", border: "none", color: "#9AAAC2", fontSize: "18px", cursor: "pointer" }}>✕</button>
+              <button onClick={() => setSelectedVisitForOutcome(null)} style={{ background: "none", border: "none", color: "#94a3b8", fontSize: "18px", cursor: "pointer" }}>✕</button>
             </div>
 
             <form onSubmit={handleFieldOutcomeSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div>
-                <label style={{ fontSize: "11px", color: "#9AAAC2", display: "block", marginBottom: "4px" }}>Visit Outcome / Ground Verification *</label>
+                <label style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Visit Outcome / Ground Verification *</label>
                 <select
                   value={visitOutcomeForm.outcome}
                   onChange={(e) => setVisitOutcomeForm({ ...visitOutcomeForm, outcome: e.target.value })}
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#08132D", border: "1px solid #263957", color: "#f8fafc", fontSize: "12px" }}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px" }}
                 >
                   <option value="Customer Met & Paid">Customer Met &amp; Paid on Spot</option>
                   <option value="Customer Met & Promised">Customer Met &amp; Signed PTP Agreement</option>
@@ -1687,22 +1674,22 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                 <div>
-                  <label style={{ fontSize: "11px", color: "#9AAAC2", display: "block", marginBottom: "4px" }}>Amount Collected (₹)</label>
+                  <label style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Amount Collected (₹)</label>
                   <input
                     type="number"
                     value={visitOutcomeForm.collected_amount}
                     onChange={(e) => setVisitOutcomeForm({ ...visitOutcomeForm, collected_amount: e.target.value })}
                     placeholder="e.g. 15000"
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#08132D", border: "1px solid #263957", color: "#00C995", fontSize: "13px", fontWeight: 700 }}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#34d399", fontSize: "13px", fontWeight: 600 }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ fontSize: "11px", color: "#9AAAC2", display: "block", marginBottom: "4px" }}>Payment Mode</label>
+                  <label style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Payment Mode</label>
                   <select
                     value={visitOutcomeForm.payment_mode}
                     onChange={(e) => setVisitOutcomeForm({ ...visitOutcomeForm, payment_mode: e.target.value })}
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#08132D", border: "1px solid #263957", color: "#f8fafc", fontSize: "12px" }}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px" }}
                   >
                     <option value="UPI_QR">Dynamic UPI QR</option>
                     <option value="CASH">Cash Currency Notes</option>
@@ -1712,17 +1699,17 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               </div>
 
               <div>
-                <label style={{ fontSize: "11px", color: "#9AAAC2", display: "block", marginBottom: "4px" }}>On-Site Inspection Notes / Observations</label>
+                <label style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>On-Site Inspection Notes / Observations</label>
                 <textarea
                   rows={3}
                   value={visitOutcomeForm.notes}
                   onChange={(e) => setVisitOutcomeForm({ ...visitOutcomeForm, notes: e.target.value })}
                   placeholder="Record vehicle details, property condition, family remarks, or spot receipt details..."
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#08132D", border: "1px solid #263957", color: "#f8fafc", fontSize: "12px", resize: "none" }}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px", resize: "none" }}
                 />
               </div>
 
-              <div style={{ padding: "10px", borderRadius: "8px", background: "rgba(0, 201, 149, 0.1)", border: "1px solid rgba(0, 201, 149, 0.2)", fontSize: "11px", color: "#00C995" }}>
+              <div style={{ padding: "10px", borderRadius: "8px", background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", fontSize: "11px", color: "#34d399" }}>
                 ✓ GPS Geolocation &amp; timestamp will be cryptographically locked to this visit record.
               </div>
 
@@ -1730,12 +1717,12 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                 type="submit"
                 disabled={fieldLoading}
                 style={{
-                  padding: "12px",
+                  padding: "11px",
                   borderRadius: "8px",
-                  background: "#00C995",
+                  background: "#16a34a",
                   border: "none",
-                  color: "#050B20",
-                  fontWeight: 800,
+                  color: "#ffffff",
+                  fontWeight: 600,
                   fontSize: "13px",
                   cursor: fieldLoading ? "not-allowed" : "pointer"
                 }}
@@ -1750,40 +1737,40 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
       {/* ── AGENT READINESS VERIFICATION MODAL (Section 6) ── */}
       {showReadinessModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(1, 6, 28, 0.8)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
-          <div style={{ background: "#0B1733", border: "1px solid #263957", borderRadius: "16px", padding: "28px", maxWidth: "440px", width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
+          <div style={{ background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.1)", borderRadius: "14px", padding: "24px", maxWidth: "440px", width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
             <div style={{ textAlign: "center", marginBottom: "20px" }}>
-              <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "rgba(0, 201, 149, 0.15)", color: "#00C995", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
-                <ShieldCheck size={28} />
+              <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "rgba(59, 130, 246, 0.15)", color: "#60a5fa", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                <ShieldCheck size={24} />
               </div>
-              <h3 style={{ fontSize: "18px", fontWeight: 800, color: "#f8fafc" }}>Agent Readiness Verification</h3>
-              <p style={{ fontSize: "12px", color: "#9AAAC2", marginTop: "4px" }}>
-                Section 6: Server checks attendance, microphone permissions, and shift eligibility before enabling automated dialer routing.
+              <h3 style={{ fontSize: "16px", fontWeight: 600, color: "#f8fafc", margin: 0 }}>Agent Readiness Verification</h3>
+              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>
+                Server checks attendance, microphone permissions, and shift eligibility before enabling automated dialer routing.
               </p>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: "8px", background: "#08132D", border: "1px solid #14223A" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 12px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
                 <span style={{ fontSize: "12px", color: "#cbd5e1" }}>1. Shift Schedule &amp; Biometric Attendance</span>
-                <span style={{ fontSize: "11px", color: "#00C995", fontWeight: 700 }}>✓ Verified Active</span>
+                <span style={{ fontSize: "11px", color: "#34d399", fontWeight: 600 }}>✓ Verified Active</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: "8px", background: "#08132D", border: "1px solid #14223A" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 12px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
                 <span style={{ fontSize: "12px", color: "#cbd5e1" }}>2. Audio / Headset Microphone</span>
-                <span style={{ fontSize: "11px", color: "#00C995", fontWeight: 700 }}>✓ Ready (48kHz)</span>
+                <span style={{ fontSize: "11px", color: "#34d399", fontWeight: 600 }}>✓ Ready (48kHz)</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: "8px", background: "#08132D", border: "1px solid #14223A" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 12px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
                 <span style={{ fontSize: "12px", color: "#cbd5e1" }}>3. WebRTC Telephony Carrier Gateway</span>
-                <span style={{ fontSize: "11px", color: "#00C995", fontWeight: 700 }}>✓ Connected</span>
+                <span style={{ fontSize: "11px", color: "#34d399", fontWeight: 600 }}>✓ Connected</span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderRadius: "8px", background: "#08132D", border: "1px solid #14223A" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 12px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
                 <span style={{ fontSize: "12px", color: "#cbd5e1" }}>4. RBI Permissible Hours (08:00 - 19:00 IST)</span>
-                <span style={{ fontSize: "11px", color: "#00C995", fontWeight: 700 }}>✓ Compliant</span>
+                <span style={{ fontSize: "11px", color: "#34d399", fontWeight: 600 }}>✓ Compliant</span>
               </div>
             </div>
 
             <div style={{ display: "flex", gap: "10px" }}>
               <button
                 onClick={() => setShowReadinessModal(false)}
-                style={{ flex: 1, padding: "11px", borderRadius: "8px", background: "#14223A", border: "1px solid #263957", color: "#9AAAC2", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}
+                style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#cbd5e1", fontWeight: 600, fontSize: "12px", cursor: "pointer" }}
               >
                 Cancel
               </button>
@@ -1792,7 +1779,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                   setShowReadinessModal(false);
                   await handlePresenceChange("ONLINE");
                 }}
-                style={{ flex: 1, padding: "11px", borderRadius: "8px", background: "#00C995", border: "none", color: "#050B20", fontWeight: 800, fontSize: "12px", cursor: "pointer" }}
+                style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "#1d4ed8", border: "none", color: "#ffffff", fontWeight: 600, fontSize: "12px", cursor: "pointer" }}
               >
                 Confirm &amp; Go Online
               </button>
@@ -1800,62 +1787,6 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
           </div>
         </div>
       )}
-
-      {/* ── FLOATING CIRCULAR OPTION (BOTTOM RIGHT) ── */}
-      <button
-        type="button"
-        onClick={() => {
-          setWebPhoneOpen(!webPhoneOpen);
-          if (webPhoneMinimized) setWebPhoneMinimized(false);
-        }}
-        title={webPhoneOpen ? "Minimize WebPhone" : "Open WebPhone Dialer"}
-        style={{
-          position: "fixed",
-          bottom: "24px",
-          right: "24px",
-          width: "56px",
-          height: "56px",
-          borderRadius: "9999px",
-          backgroundColor: callState === "CONNECTED" ? "#ef4444" : "#10B981",
-          border: "2px solid rgba(255, 255, 255, 0.2)",
-          color: "#ffffff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          boxShadow: callState === "CONNECTED"
-            ? "0 0 20px rgba(239, 68, 68, 0.8), 0 8px 24px rgba(0, 0, 0, 0.4)"
-            : "0 8px 24px rgba(16, 185, 129, 0.45), 0 4px 12px rgba(0, 0, 0, 0.3)",
-          zIndex: 9999,
-          transition: "all 0.2s ease"
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "scale(1.06)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "scale(1)";
-        }}
-      >
-        {callState === "CONNECTED" ? (
-          <PhoneCall style={{ width: "24px", height: "24px" }} className="animate-pulse" />
-        ) : (
-          <Phone style={{ width: "24px", height: "24px" }} />
-        )}
-
-        {/* Online Indicator Badge */}
-        <span
-          style={{
-            position: "absolute",
-            top: "2px",
-            right: "2px",
-            width: "14px",
-            height: "14px",
-            borderRadius: "9999px",
-            backgroundColor: callState === "CONNECTED" ? "#ef4444" : "#22c55e",
-            border: "2px solid #041030"
-          }}
-        />
-      </button>
 
       {/* ── FLOATING WEBPHONE DIALER PANEL (MATCHES REFERENCE media_1794236906364_2d86cd87.jpg) ── */}
       {webPhoneOpen && (
@@ -1865,10 +1796,10 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
             bottom: "90px",
             right: "24px",
             width: "300px",
-            backgroundColor: "#071126",
-            border: "1px solid rgba(59, 130, 246, 0.3)",
-            borderRadius: "16px",
-            boxShadow: "0 24px 48px rgba(0, 0, 0, 0.75)",
+            backgroundColor: "#08132e",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
+            borderRadius: "12px",
+            boxShadow: "0 16px 36px rgba(0, 0, 0, 0.5)",
             zIndex: 9999,
             overflow: "hidden",
             display: "flex",
@@ -1879,7 +1810,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
           <div
             style={{
               padding: "12px 16px",
-              backgroundColor: "rgba(255, 255, 255, 0.04)",
+              backgroundColor: "rgba(255, 255, 255, 0.02)",
               borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
               display: "flex",
               alignItems: "center",
@@ -1888,19 +1819,19 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
           >
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff" }}>WebPhone</span>
+                <span style={{ fontSize: "13px", fontWeight: 600, color: "#ffffff" }}>WebPhone</span>
                 <span style={{ fontSize: "11px", color: "#94a3b8", fontFamily: "monospace" }}>1012</span>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
                 <span
                   style={{
-                    width: "7px",
-                    height: "7px",
+                    width: "6px",
+                    height: "6px",
                     borderRadius: "9999px",
                     backgroundColor: callState === "CONNECTED" ? "#ef4444" : "#10b981"
                   }}
                 />
-                <span style={{ fontSize: "11px", fontWeight: 600, color: callState === "CONNECTED" ? "#ef4444" : "#10b981" }}>
+                <span style={{ fontSize: "11px", fontWeight: 500, color: callState === "CONNECTED" ? "#ef4444" : "#10b981" }}>
                   {callState === "CONNECTED" ? "In Call" : callState === "DIALING" ? "Dialing..." : "Ready"}
                 </span>
               </div>
@@ -1946,8 +1877,8 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               <div
                 style={{
                   padding: "10px 14px",
-                  backgroundColor: "rgba(0, 0, 0, 0.35)",
-                  borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+                  backgroundColor: "#03081a",
+                  borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
                   display: "flex",
                   alignItems: "center",
                   gap: "10px"
@@ -1964,8 +1895,8 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                     backgroundColor: "transparent",
                     border: "none",
                     color: "#ffffff",
-                    fontSize: "15px",
-                    fontWeight: 700,
+                    fontSize: "14px",
+                    fontWeight: 600,
                     fontFamily: "monospace",
                     outline: "none"
                   }}
@@ -1994,18 +1925,18 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               {callState === "CONNECTED" || callState === "DIALING" ? (
                 <div
                   style={{
-                    padding: "24px 16px",
+                    padding: "20px 16px",
                     textAlign: "center",
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    gap: "12px"
+                    gap: "10px"
                   }}
                 >
                   <div
                     style={{
-                      width: "60px",
-                      height: "60px",
+                      width: "52px",
+                      height: "52px",
                       borderRadius: "9999px",
                       backgroundColor: callState === "CONNECTED" ? "rgba(16, 185, 129, 0.15)" : "rgba(37, 99, 235, 0.15)",
                       border: callState === "CONNECTED" ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid rgba(37, 99, 235, 0.3)",
@@ -2016,8 +1947,8 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                   >
                     <PhoneCall
                       style={{
-                        width: "28px",
-                        height: "28px",
+                        width: "24px",
+                        height: "24px",
                         color: callState === "CONNECTED" ? "#10b981" : "#60a5fa"
                       }}
                       className="animate-pulse"
@@ -2025,7 +1956,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                   </div>
 
                   <div>
-                    <h4 style={{ fontSize: "15px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                    <h4 style={{ fontSize: "14px", fontWeight: 600, color: "#ffffff", margin: 0 }}>
                       {activeCallCase?.borrower_name || activeCallCase?.customer_name || "Borrower Call"}
                     </h4>
                     <span style={{ fontSize: "12px", color: "#94a3b8", fontFamily: "monospace" }}>
@@ -2034,16 +1965,16 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                   </div>
 
                   {/* Timer */}
-                  <div style={{ fontSize: "24px", fontWeight: 800, color: "#10b981", fontFamily: "monospace" }}>
+                  <div style={{ fontSize: "22px", fontWeight: 700, color: "#10b981", fontFamily: "monospace" }}>
                     {formatTimer(callTimer)}
                   </div>
 
                   <span
                     style={{
                       fontSize: "10px",
-                      fontWeight: 700,
+                      fontWeight: 600,
                       padding: "2px 8px",
-                      borderRadius: "9999px",
+                      borderRadius: "4px",
                       backgroundColor: "rgba(239, 68, 68, 0.15)",
                       color: "#f87171",
                       border: "1px solid rgba(239, 68, 68, 0.3)"
@@ -2057,8 +1988,8 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                   style={{
                     display: "grid",
                     gridTemplateColumns: "repeat(3, 1fr)",
-                    gap: "8px",
-                    padding: "14px"
+                    gap: "6px",
+                    padding: "12px"
                   }}
                 >
                   {[
@@ -2080,9 +2011,9 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                       type="button"
                       onClick={() => handleDialPadClick(key.num)}
                       style={{
-                        height: "46px",
-                        borderRadius: "10px",
-                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                        height: "44px",
+                        borderRadius: "8px",
+                        backgroundColor: "rgba(255, 255, 255, 0.04)",
                         border: "1px solid rgba(255, 255, 255, 0.08)",
                         display: "flex",
                         flexDirection: "column",
@@ -2092,15 +2023,15 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                         transition: "all 0.1s ease"
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.12)";
+                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.08)";
                         e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.4)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.04)";
                         e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)";
                       }}
                     >
-                      <span style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", lineHeight: 1 }}>
+                      <span style={{ fontSize: "15px", fontWeight: 600, color: "#ffffff", lineHeight: 1 }}>
                         {key.num}
                       </span>
                       {key.sub && (
@@ -2114,27 +2045,25 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               )}
 
               {/* Call / End Call Button */}
-              <div style={{ padding: "0 14px 14px 14px" }}>
+              <div style={{ padding: "0 12px 12px 12px" }}>
                 {callState === "CONNECTED" || callState === "DIALING" ? (
                   <button
                     type="button"
                     onClick={handleEndCall}
                     style={{
                       width: "100%",
-                      padding: "12px",
-                      borderRadius: "10px",
-                      backgroundColor: "#ef4444",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      backgroundColor: "#dc2626",
                       color: "#ffffff",
-                      fontSize: "14px",
-                      fontWeight: 800,
+                      fontSize: "13px",
+                      fontWeight: 600,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       gap: "8px",
                       border: "none",
-                      cursor: "pointer",
-                      boxShadow: "0 4px 12px rgba(239, 68, 68, 0.35)",
-                      transition: "all 0.15s ease"
+                      cursor: "pointer"
                     }}
                   >
                     <PhoneOff style={{ width: "16px", height: "16px" }} />
@@ -2146,20 +2075,18 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                     onClick={handleWebPhoneCall}
                     style={{
                       width: "100%",
-                      padding: "12px",
-                      borderRadius: "10px",
-                      backgroundColor: "#10b981",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      backgroundColor: "#16a34a",
                       color: "#ffffff",
-                      fontSize: "14px",
-                      fontWeight: 800,
+                      fontSize: "13px",
+                      fontWeight: 600,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       gap: "8px",
                       border: "none",
-                      cursor: "pointer",
-                      boxShadow: "0 4px 12px rgba(16, 185, 129, 0.35)",
-                      transition: "all 0.15s ease"
+                      cursor: "pointer"
                     }}
                   >
                     <Phone style={{ width: "16px", height: "16px" }} />
