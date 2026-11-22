@@ -283,7 +283,7 @@ export const createSeedData = async () => {
       } else if (i % 3 === 1) {
         assignedEmp = "usr_caller_2";
       } else {
-        assignedEmp = "emp-1";
+        assignedEmp = "usr_caller_1";
       }
     }
 

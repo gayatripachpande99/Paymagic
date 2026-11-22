@@ -183,10 +183,10 @@ export default function AdminPortalShell({
               }}
             >
               {[
-                { id: "portfolio", label: "A. Portfolio Performance", icon: Layers },
-                { id: "call_monitoring", label: "B. Call Agent Monitoring", icon: PhoneCall },
-                { id: "crm", label: "C. CRM", icon: UserCheck },
-                { id: "field_monitoring", label: "D. Field Agent Monitoring", icon: Compass }
+                { id: "portfolio", label: "Portfolio Performance", icon: Layers },
+                { id: "call_monitoring", label: "Call Agent Monitoring", icon: PhoneCall },
+                { id: "crm", label: "CRM", icon: UserCheck },
+                { id: "field_monitoring", label: "Field Agent Monitoring", icon: Compass }
               ].map((item) => {
                 const isActive = homeSidebarTab === item.id;
                 const Icon = item.icon;
