@@ -35,7 +35,7 @@ import ThemeToggle from "./ThemeToggle";
 import AgentPresenceDialerWidget from "./common/AgentPresenceDialerWidget";
 
 export const EMPLOYEE_TAB_ROUTES = {
-  queue: "/employee/queue",
+  queue: "/employee/dashboard",
   tasks: "/employee/tasks",
   calls: "/employee/calls",
   field: "/employee/field",
@@ -53,6 +53,7 @@ export const EMPLOYEE_TAB_TITLES = {
 function getInitialEmployeeTab() {
   if (typeof window === "undefined") return "queue";
   const path = window.location.pathname;
+  if (path === "/employee/dashboard" || path === "/employee/queue" || path === "/employee") return "queue";
   const match = Object.entries(EMPLOYEE_TAB_ROUTES).find(([, route]) => path === route || path.startsWith(route));
   return match ? match[0] : "queue";
 }
@@ -73,9 +74,9 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
     setActiveTab(tabId);
     setErrorMsg("");
     setSuccessMsg("");
-    const route = EMPLOYEE_TAB_ROUTES[tabId] || "/employee/queue";
+    const route = EMPLOYEE_TAB_ROUTES[tabId] || "/employee/dashboard";
     window.history.pushState(null, "", route);
-    document.title = EMPLOYEE_TAB_TITLES[tabId] || "PayMagic Employee Operations";
+    document.title = EMPLOYEE_TAB_TITLES[tabId] || "PayMagic | My Working Queue";
   };
 
   useEffect(() => {
@@ -669,11 +670,11 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
         <main className="portal-main-area" style={{ flex: 1, padding: "24px", overflowY: "auto", background: isLight ? "#F8FAFC" : "transparent" }}>
           {/* Active Allocator & Campaign Context Strip */}
           <div style={{
-            padding: "14px 18px",
+            padding: "12px 18px",
             borderRadius: "12px",
             background: "#08132e",
             border: "1px solid rgba(255, 255, 255, 0.08)",
-            marginBottom: "20px",
+            marginBottom: "16px",
             display: "flex",
             flexWrap: "wrap",
             justifyContent: "space-between",
@@ -686,27 +687,27 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                 <select
                   value={selectedAllocator}
                   onChange={(e) => setSelectedAllocator(e.target.value)}
-                  style={{ display: "block", marginTop: "4px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.12)", color: "#ffffff", fontWeight: 600, fontSize: "12px", padding: "4px 8px", borderRadius: "6px" }}
+                  style={{ display: "block", marginTop: "4px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.08)", color: "#ffffff", fontWeight: 500, fontSize: "12px", padding: "4px 8px", borderRadius: "6px", outline: "none" }}
                 >
                   <option value="BAJAJ FINSERVE">BAJAJ FINSERVE</option>
                   <option value="HDFC Bank">HDFC Bank</option>
                   <option value="SBI Cards">SBI Cards</option>
                 </select>
               </div>
-              <span style={{ color: "rgba(255, 255, 255, 0.12)" }}>|</span>
+              <div style={{ width: "1px", height: "24px", background: "rgba(255, 255, 255, 0.08)" }} />
               <div>
                 <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500, display: "block" }}>Allocation Portfolio</span>
-                <div style={{ fontSize: "12px", fontWeight: 600, color: "#f8fafc", marginTop: "4px" }}>Bajaj Personal Loan Writeoff</div>
+                <div style={{ fontSize: "12px", fontWeight: 500, color: "#f8fafc", marginTop: "4px" }}>Bajaj Personal Loan Writeoff</div>
               </div>
-              <span style={{ color: "rgba(255, 255, 255, 0.12)" }}>|</span>
+              <div style={{ width: "1px", height: "24px", background: "rgba(255, 255, 255, 0.08)" }} />
               <div>
                 <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500, display: "block" }}>Assigned Dialing Campaign</span>
-                <div style={{ fontSize: "12px", fontWeight: 600, color: "#60a5fa", marginTop: "4px" }}>URBAN BAJAJ-NOV-2026 (Predictive)</div>
+                <div style={{ fontSize: "12px", fontWeight: 500, color: "#60a5fa", marginTop: "4px" }}>URBAN BAJAJ-NOV-2026 (Predictive)</div>
               </div>
             </div>
 
-            <div style={{ fontSize: "11px", color: "#34d399", display: "flex", alignItems: "center", gap: "6px", background: "rgba(16, 185, 129, 0.1)", padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
-              <ShieldCheck style={{ width: "14px", height: "14px" }} />
+            <div style={{ fontSize: "11px", color: "#94a3b8", display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
               <span>Queue Synchronized with Server</span>
             </div>
           </div>
@@ -715,7 +716,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "16px", marginBottom: "20px" }}>
             <div style={{ padding: "16px 18px", borderRadius: "12px", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
               <span style={{ fontSize: "11px", fontWeight: 500, color: "#94a3b8" }}>Assigned Accounts</span>
-              <div style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", marginTop: "4px", fontFamily: "monospace" }}>
+              <div style={{ fontSize: "20px", fontWeight: 600, color: "#ffffff", marginTop: "4px", fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}>
                 {summary.assigned_accounts}
               </div>
               <span style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px", display: "block" }}>
@@ -725,7 +726,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
 
             <div style={{ padding: "16px 18px", borderRadius: "12px", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
               <span style={{ fontSize: "11px", fontWeight: 500, color: "#94a3b8" }}>Pending Follow-ups</span>
-              <div style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", marginTop: "4px", fontFamily: "monospace" }}>
+              <div style={{ fontSize: "20px", fontWeight: 600, color: "#ffffff", marginTop: "4px", fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}>
                 {summary.pending_followups}
               </div>
               <span style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px", display: "block" }}>
@@ -735,7 +736,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
 
             <div style={{ padding: "16px 18px", borderRadius: "12px", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
               <span style={{ fontSize: "11px", fontWeight: 500, color: "#94a3b8" }}>Calls Dialed Today</span>
-              <div style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", marginTop: "4px", fontFamily: "monospace" }}>
+              <div style={{ fontSize: "20px", fontWeight: 600, color: "#ffffff", marginTop: "4px", fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}>
                 {summary.calls_dialed_today}
               </div>
               <span style={{ fontSize: "11px", color: "#34d399", marginTop: "4px", display: "block" }}>
@@ -745,7 +746,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
 
             <div style={{ padding: "16px 18px", borderRadius: "12px", background: "#08132e", border: "1px solid rgba(255, 255, 255, 0.08)" }}>
               <span style={{ fontSize: "11px", fontWeight: 500, color: "#94a3b8" }}>Verified Collections</span>
-              <div style={{ fontSize: "20px", fontWeight: 700, color: "#34d399", marginTop: "4px", fontFamily: "monospace" }}>
+              <div style={{ fontSize: "20px", fontWeight: 600, color: "#ffffff", marginTop: "4px", fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }}>
                 ₹{Number(summary.verified_recovered_amount).toLocaleString("en-IN")}
               </div>
               <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500, marginTop: "4px", display: "block" }}>
@@ -761,17 +762,17 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               {/* Queue Filter Toolbar */}
               <div style={{
-                padding: "14px 16px",
+                padding: "12px 16px",
                 borderRadius: "12px",
                 background: "#08132e",
                 border: "1px solid rgba(255, 255, 255, 0.08)",
                 display: "flex",
                 flexWrap: "wrap",
-                gap: "12px",
+                gap: "10px",
                 justifyContent: "space-between",
                 alignItems: "center"
               }}>
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
                   <div style={{ position: "relative" }}>
                     <input
                       type="text"
@@ -780,23 +781,24 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                       onKeyDown={(e) => e.key === "Enter" && loadCases(1)}
                       placeholder="Search account or borrower"
                       style={{
-                        padding: "8px 12px 8px 32px",
+                        height: "36px",
+                        padding: "0 12px 0 34px",
                         borderRadius: "8px",
                         background: "#03081a",
-                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        border: "1px solid rgba(255, 255, 255, 0.08)",
                         color: "#f8fafc",
                         fontSize: "12px",
                         outline: "none",
                         width: "240px"
                       }}
                     />
-                    <Search className="w-3.5 h-3.5 text-slate-400" style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)" }} />
+                    <Search className="w-3.5 h-3.5 text-slate-400" style={{ position: "absolute", left: "11px", top: "50%", transform: "translateY(-50%)" }} />
                   </div>
 
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    style={{ padding: "8px 12px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px" }}
+                    style={{ height: "36px", padding: "0 12px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.08)", color: "#cbd5e1", fontSize: "12px", outline: "none" }}
                   >
                     <option value="ALL">All Statuses</option>
                     <option value="New">New / Untouched</option>
@@ -811,7 +813,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                   <select
                     value={priorityFilter}
                     onChange={(e) => setPriorityFilter(e.target.value)}
-                    style={{ padding: "8px 12px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f8fafc", fontSize: "12px" }}
+                    style={{ height: "36px", padding: "0 12px", borderRadius: "8px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.08)", color: "#cbd5e1", fontSize: "12px", outline: "none" }}
                   >
                     <option value="ALL">All Priorities</option>
                     <option value="CRITICAL">Critical</option>
@@ -822,10 +824,14 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
 
                   <button
                     onClick={() => loadCases(1)}
-                    style={{ padding: "8px 14px", borderRadius: "8px", background: "#1d4ed8", border: "none", color: "#ffffff", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}
+                    style={{ height: "36px", padding: "0 16px", borderRadius: "8px", background: "#1d4ed8", border: "none", color: "#ffffff", fontSize: "12px", fontWeight: 600, cursor: "pointer" }}
                   >
                     Filter Queue
                   </button>
+                </div>
+
+                <div style={{ fontSize: "11px", color: "#94a3b8", fontFamily: "monospace" }}>
+                  {casesPagination.total} Total Accounts
                 </div>
               </div>
 
@@ -834,56 +840,56 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", textAlign: "left" }}>
                   <thead>
                     <tr style={{ background: "rgba(255, 255, 255, 0.02)", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", color: "#94a3b8" }}>
-                      <th style={{ padding: "12px 14px" }}>Case #</th>
-                      <th style={{ padding: "12px 14px" }}>Borrower Name</th>
-                      <th style={{ padding: "12px 14px" }}>Phone</th>
-                      <th style={{ padding: "12px 14px" }}>Outstanding</th>
-                      <th style={{ padding: "12px 14px" }}>DPD</th>
-                      <th style={{ padding: "12px 14px" }}>Status</th>
-                      <th style={{ padding: "12px 14px" }}>Priority</th>
-                      <th style={{ padding: "12px 14px", textAlign: "center" }}>Operations</th>
+                      <th style={{ padding: "12px 16px", fontWeight: 500, fontSize: "11px", letterSpacing: "0.02em" }}>Case #</th>
+                      <th style={{ padding: "12px 16px", fontWeight: 500, fontSize: "11px", letterSpacing: "0.02em" }}>Borrower Name</th>
+                      <th style={{ padding: "12px 16px", fontWeight: 500, fontSize: "11px", letterSpacing: "0.02em" }}>Phone</th>
+                      <th style={{ padding: "12px 16px", fontWeight: 500, fontSize: "11px", letterSpacing: "0.02em", textAlign: "right" }}>Outstanding</th>
+                      <th style={{ padding: "12px 16px", fontWeight: 500, fontSize: "11px", letterSpacing: "0.02em" }}>DPD</th>
+                      <th style={{ padding: "12px 16px", fontWeight: 500, fontSize: "11px", letterSpacing: "0.02em" }}>Status</th>
+                      <th style={{ padding: "12px 16px", fontWeight: 500, fontSize: "11px", letterSpacing: "0.02em" }}>Priority</th>
+                      <th style={{ padding: "12px 16px", fontWeight: 500, fontSize: "11px", letterSpacing: "0.02em", textAlign: "center" }}>Operations</th>
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
-                      <tr><td colSpan="8" style={{ padding: "30px", textAlign: "center", color: "#94a3b8" }}>Loading your working accounts...</td></tr>
+                      <tr><td colSpan="8" style={{ padding: "36px", textAlign: "center", color: "#94a3b8" }}>Loading your working accounts...</td></tr>
                     ) : casesList.length === 0 ? (
-                      <tr><td colSpan="8" style={{ padding: "30px", textAlign: "center", color: "#94a3b8" }}>No assigned accounts in this queue.</td></tr>
+                      <tr><td colSpan="8" style={{ padding: "36px", textAlign: "center", color: "#94a3b8" }}>No assigned accounts in this queue.</td></tr>
                     ) : (
                       casesList.map((c) => (
                         <tr key={c.id} style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.04)", color: "#f8fafc" }}>
-                          <td style={{ padding: "12px 14px", fontFamily: "monospace", color: "#60a5fa", fontWeight: 600 }}>{c.case_number}</td>
-                          <td style={{ padding: "12px 14px", fontWeight: 600 }}>{c.borrower_name || c.customer_name}</td>
-                          <td style={{ padding: "12px 14px", color: "#94a3b8", fontFamily: "monospace" }}>{c.phone_number || "+91 98******10"}</td>
-                          <td style={{ padding: "12px 14px", fontFamily: "monospace", color: "#ffffff", fontWeight: 600 }}>
+                          <td style={{ padding: "12px 16px", fontFamily: "monospace", color: "#60a5fa", fontWeight: 500 }}>{c.case_number}</td>
+                          <td style={{ padding: "12px 16px", fontWeight: 500, color: "#ffffff" }}>{c.borrower_name || c.customer_name}</td>
+                          <td style={{ padding: "12px 16px", color: "#94a3b8", fontFamily: "monospace" }}>{c.phone_number || "+91 98******10"}</td>
+                          <td style={{ padding: "12px 16px", fontFamily: "monospace", color: "#ffffff", fontWeight: 600, textAlign: "right" }}>
                             ₹{Number(c.outstanding_amount).toLocaleString("en-IN")}
                           </td>
-                          <td style={{ padding: "12px 14px" }}>
+                          <td style={{ padding: "12px 16px" }}>
                             <span style={{
                               padding: "2px 6px",
                               borderRadius: "4px",
                               fontSize: "11px",
-                              fontWeight: 600,
-                              background: c.dpd >= 90 ? "rgba(244, 63, 94, 0.15)" : "rgba(255, 255, 255, 0.06)",
-                              color: c.dpd >= 90 ? "#fb7185" : "#cbd5e1"
+                              fontWeight: 500,
+                              background: c.dpd >= 90 ? "rgba(244, 63, 94, 0.12)" : c.dpd >= 30 ? "rgba(245, 158, 11, 0.12)" : "rgba(255, 255, 255, 0.05)",
+                              color: c.dpd >= 90 ? "#fb7185" : c.dpd >= 30 ? "#fbbf24" : "#cbd5e1"
                             }}>
                               {c.dpd || 45} DPD
                             </span>
                           </td>
-                          <td style={{ padding: "12px 14px" }}>
+                          <td style={{ padding: "12px 16px" }}>
                             <span style={{
                               padding: "2px 8px",
-                              borderRadius: "6px",
+                              borderRadius: "4px",
                               fontSize: "11px",
-                              fontWeight: 600,
-                              background: c.status === "Fully Paid" ? "rgba(16, 185, 129, 0.15)" : "rgba(59, 130, 246, 0.12)",
+                              fontWeight: 500,
+                              background: c.status === "Fully Paid" ? "rgba(16, 185, 129, 0.12)" : "rgba(59, 130, 246, 0.1)",
                               color: c.status === "Fully Paid" ? "#34d399" : "#60a5fa"
                             }}>
                               {c.status}
                             </span>
                           </td>
-                          <td style={{ padding: "12px 14px", fontSize: "11px", fontWeight: 500, color: "#94a3b8" }}>{c.priority}</td>
-                          <td style={{ padding: "12px 14px", textAlign: "center" }}>
+                          <td style={{ padding: "12px 16px", fontSize: "11px", fontWeight: 500, color: "#94a3b8" }}>{c.priority}</td>
+                          <td style={{ padding: "12px 16px", textAlign: "center" }}>
                             <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
                               {/* Softphone Click to Call */}
                               <button
@@ -895,7 +901,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                                   border: "none",
                                   color: "#ffffff",
                                   fontSize: "11px",
-                                  fontWeight: 600,
+                                  fontWeight: 500,
                                   cursor: "pointer",
                                   display: "inline-flex",
                                   alignItems: "center",
@@ -915,8 +921,8 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                                 style={{
                                   padding: "5px 10px",
                                   borderRadius: "6px",
-                                  background: "rgba(255, 255, 255, 0.05)",
-                                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                                  background: "rgba(255, 255, 255, 0.04)",
+                                  border: "1px solid rgba(255, 255, 255, 0.08)",
                                   color: "#cbd5e1",
                                   fontSize: "11px",
                                   fontWeight: 500,
@@ -939,8 +945,8 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                                 style={{
                                   padding: "5px 10px",
                                   borderRadius: "6px",
-                                  background: "rgba(255, 255, 255, 0.05)",
-                                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                                  background: "rgba(255, 255, 255, 0.04)",
+                                  border: "1px solid rgba(255, 255, 255, 0.08)",
                                   color: "#cbd5e1",
                                   fontSize: "11px",
                                   fontWeight: 500,
@@ -963,7 +969,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
 
                 {/* Queue Pagination Bar */}
                 <div style={{
-                  padding: "12px 18px",
+                  padding: "12px 16px",
                   background: "rgba(255, 255, 255, 0.02)",
                   borderTop: "1px solid rgba(255, 255, 255, 0.08)",
                   display: "flex",
@@ -973,17 +979,17 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                   color: "#94a3b8"
                 }}>
                   <div>
-                    Showing {((casesPagination.page - 1) * casesPagination.limit) + 1} to {Math.min(casesPagination.page * casesPagination.limit, casesPagination.total)} of {casesPagination.total} assigned accounts
+                    Showing <span style={{ fontFamily: "monospace", color: "#f8fafc" }}>{((casesPagination.page - 1) * casesPagination.limit) + 1}</span> to <span style={{ fontFamily: "monospace", color: "#f8fafc" }}>{Math.min(casesPagination.page * casesPagination.limit, casesPagination.total)}</span> of <span style={{ fontFamily: "monospace", color: "#f8fafc" }}>{casesPagination.total}</span> assigned accounts
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <button
                       onClick={() => loadCases(casesPagination.page - 1)}
                       disabled={casesPagination.page <= 1}
                       style={{
-                        padding: "6px 10px",
+                        padding: "5px 10px",
                         borderRadius: "6px",
-                        background: "rgba(255, 255, 255, 0.05)",
-                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        background: "rgba(255, 255, 255, 0.04)",
+                        border: "1px solid rgba(255, 255, 255, 0.08)",
                         color: casesPagination.page <= 1 ? "#475569" : "#f8fafc",
                         cursor: casesPagination.page <= 1 ? "not-allowed" : "pointer",
                         display: "flex",
@@ -994,17 +1000,17 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
                       <ChevronLeft className="w-3.5 h-3.5" />
                       <span>Prev</span>
                     </button>
-                    <span style={{ padding: "0 6px", fontWeight: 600, color: "#60a5fa" }}>
+                    <span style={{ padding: "0 6px", fontWeight: 500, color: "#60a5fa", fontFamily: "monospace" }}>
                       Page {casesPagination.page} of {casesPagination.totalPages}
                     </span>
                     <button
                       onClick={() => loadCases(casesPagination.page + 1)}
                       disabled={casesPagination.page >= casesPagination.totalPages}
                       style={{
-                        padding: "6px 10px",
+                        padding: "5px 10px",
                         borderRadius: "6px",
-                        background: "rgba(255, 255, 255, 0.05)",
-                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        background: "rgba(255, 255, 255, 0.04)",
+                        border: "1px solid rgba(255, 255, 255, 0.08)",
                         color: casesPagination.page >= casesPagination.totalPages ? "#475569" : "#f8fafc",
                         cursor: casesPagination.page >= casesPagination.totalPages ? "not-allowed" : "pointer",
                         display: "flex",
