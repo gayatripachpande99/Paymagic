@@ -113,27 +113,9 @@ export default function AdminNavbar({
                 }}
               />
             </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ fontWeight: 700, fontSize: "18px", lineHeight: 1.2, color: "#ffffff", display: "flex", alignItems: "center", gap: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <span style={{ fontWeight: 700, fontSize: "18px", lineHeight: 1, color: "#ffffff", letterSpacing: "-0.01em" }}>
                 PayMagic
-                <span
-                  style={{
-                    fontSize: "10px",
-                    textTransform: "uppercase",
-                    fontWeight: 700,
-                    letterSpacing: "0.05em",
-                    padding: "2px 6px",
-                    borderRadius: "4px",
-                    backgroundColor: "rgba(59, 130, 246, 0.2)",
-                    color: "#22d3ee",
-                    border: "1px solid rgba(59, 130, 246, 0.3)"
-                  }}
-                >
-                  Recovery
-                </span>
-              </span>
-              <span style={{ fontSize: "11px", color: "#94a3b8", lineHeight: 1 }}>
-                Enterprise Portfolio Desk
               </span>
             </div>
           </div>
