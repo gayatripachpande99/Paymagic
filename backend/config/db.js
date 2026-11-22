@@ -10,6 +10,30 @@ const { Pool } = pg;
 let pool = null;
 let isPgActive = false;
 
+const getSslConfig = (connString) => {
+  if (process.env.PGSSL === "true" || process.env.PGSSL === "require") {
+    return { rejectUnauthorized: false };
+  }
+  if (process.env.PGSSL === "false" || process.env.PGSSL === "disable") {
+    return false;
+  }
+  if (connString) {
+    if (connString.includes("sslmode=disable") || connString.includes("localhost") || connString.includes("127.0.0.1")) {
+      return false;
+    }
+    if (
+      connString.includes("neon.tech") ||
+      connString.includes("supabase") ||
+      connString.includes("render.com") ||
+      connString.includes("amazonaws.com") ||
+      connString.includes("sslmode=require")
+    ) {
+      return { rejectUnauthorized: false };
+    }
+  }
+  return false;
+};
+
 // Relational memory store used when external PostgreSQL is not configured or in dev fallback
 export const memoryStore = {
   roles: [],
@@ -54,55 +78,60 @@ export const memoryStore = {
 export const initializeDatabase = async () => {
   const isProduction = process.env.NODE_ENV === "production";
   const dbUrl = process.env.DATABASE_URL;
+  const hasPgConfig = Boolean(dbUrl || process.env.PGHOST);
+
+  const poolConfig = dbUrl
+    ? {
+        connectionString: dbUrl,
+        ssl: getSslConfig(dbUrl),
+        connectionTimeoutMillis: 5000
+      }
+    : {
+        host: process.env.PGHOST || "localhost",
+        port: Number(process.env.PGPORT) || 5432,
+        user: process.env.PGUSER || "postgres",
+        password: process.env.PGPASSWORD || "postgres",
+        database: process.env.PGDATABASE || "paymagic",
+        ssl: getSslConfig(),
+        connectionTimeoutMillis: 5000
+      };
 
   // 1. Strict Production Enforcement: PostgreSQL is the SOLE source of truth
   if (isProduction) {
-    if (!dbUrl) {
-      console.error("FATAL: DATABASE_URL is mandatory in production environment. Aborting startup.");
-      throw new Error("FATAL: DATABASE_URL must be configured in production environment.");
+    if (!hasPgConfig) {
+      console.error("FATAL: PostgreSQL configuration (DATABASE_URL or PGHOST) is mandatory in production environment. Aborting startup.");
+      throw new Error("FATAL: PostgreSQL configuration must be set in production environment.");
     }
 
     try {
-      pool = new Pool({
-        connectionString: dbUrl,
-        ssl: { rejectUnauthorized: false },
-        connectionTimeoutMillis: 10000
-      });
+      pool = new Pool(poolConfig);
       const client = await pool.connect();
       await client.query("SELECT 1");
       client.release();
       isPgActive = true;
       console.log("Connected to PostgreSQL Database engine in PRODUCTION. Running migrations...");
       await runMigrations(pool);
-      return;
     } catch (err) {
       console.error("FATAL: Production PostgreSQL connection failed:", err.message);
       isPgActive = false;
       throw new Error(`Production database failure: Cannot connect to PostgreSQL: ${err.message}`);
     }
-  }
-
-  // 2. Non-Production Environments (development / test)
-  if (dbUrl) {
+  } else if (hasPgConfig) {
+    // 2. Non-Production Environments (development / test)
     try {
-      pool = new Pool({
-        connectionString: dbUrl,
-        ssl: { rejectUnauthorized: false },
-        connectionTimeoutMillis: 5000
-      });
+      pool = new Pool(poolConfig);
       const client = await pool.connect();
       await client.query("SELECT 1");
       client.release();
       isPgActive = true;
-      console.log("Connected to PostgreSQL Database engine. Running migrations...");
+      console.log("Connected to PostgreSQL Database engine. Running automated schema migrations...");
       await runMigrations(pool);
-      return;
     } catch (err) {
-      console.warn("PostgreSQL connection failed in non-production, operating with in-memory relational engine:", err.message);
+      console.warn("Notice: PostgreSQL server not currently reachable (" + err.message + "). Operating with high-integrity relational fallback store.");
       isPgActive = false;
     }
   } else {
-    console.warn("Notice: DATABASE_URL not configured. Operating with high-integrity in-memory relational engine (Dev/Test mode).");
+    console.warn("Notice: PostgreSQL not configured. Operating with high-integrity relational fallback engine (Dev/Test mode).");
     isPgActive = false;
   }
 
@@ -260,6 +289,21 @@ export const updateCaseStatusWithHistory = async ({
     };
 
     memoryStore.case_status_history.unshift(historyEntry);
+
+    // If PostgreSQL transaction is active, persist directly to PostgreSQL
+    if (!trx.isMemory && trx.query) {
+      await trx.query(
+        `UPDATE loan_cases 
+         SET status = $1, outstanding_amount = $2, updated_at = $3 
+         WHERE id = $4`,
+        [targetCase.status, targetCase.outstanding_amount, targetCase.updated_at, caseId]
+      );
+      await trx.query(
+        `INSERT INTO case_status_history (id, case_id, employee_id, previous_status, new_status, source, remarks, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [historyEntry.id, historyEntry.case_id, historyEntry.employee_id, historyEntry.previous_status, historyEntry.new_status, historyEntry.source, historyEntry.remarks, historyEntry.created_at]
+      );
+    }
 
     // 4. Update in-memory index
     indexService.updateCaseStatus(targetCase, previousStatus, newStatus);

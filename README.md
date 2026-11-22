@@ -35,9 +35,10 @@ The repository is organized into two core decoupled applications:
    - Header with **Only ONE Login Button** opening a modal supporting Email or Employee ID, Password, and 1-click Quick Demo logins.
    - Dynamic **Light and Dark Theme Switcher** with persistent state across all screens.
 
-2. **Single Relational Database — Single Source of Truth**:
-   - Admin Panel, Supervisor Workspace, and Employee Portal read and write to the same relational schema.
-   - Zero duplicated databases; all state transitions update instantly in real time.
+2. **PostgreSQL Relational Engine — Single Source of Truth Everywhere**:
+   - Admin Command, Allocation Desk, Telephony CRM, Supervisor Workspace, and Ground Field Operations all interface with the same PostgreSQL relational schema.
+   - Zero fragmented databases. Standard PostgreSQL foreign keys, ACID transactions, and advisory locks guarantee data integrity across all 6 core migrations (`001` through `006`).
+   - Automated migration runner (`npm run migrate`) and PostgreSQL seeder (`npm run seed:pg`).
 
 3. **Decoupled Campaign Membership & Unbroken Lineage**:
    - Lineage model: `Organization -> Allocator -> Allocation -> Campaign -> Agent/Group -> Accounts`.

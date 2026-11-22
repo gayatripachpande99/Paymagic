@@ -8,18 +8,54 @@ const { Pool } = pg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const getSslConfig = (connString) => {
+  if (process.env.PGSSL === "true" || process.env.PGSSL === "require") {
+    return { rejectUnauthorized: false };
+  }
+  if (process.env.PGSSL === "false" || process.env.PGSSL === "disable") {
+    return false;
+  }
+  if (connString) {
+    if (connString.includes("sslmode=disable") || connString.includes("localhost") || connString.includes("127.0.0.1")) {
+      return false;
+    }
+    if (
+      connString.includes("neon.tech") ||
+      connString.includes("supabase") ||
+      connString.includes("render.com") ||
+      connString.includes("amazonaws.com") ||
+      connString.includes("sslmode=require")
+    ) {
+      return { rejectUnauthorized: false };
+    }
+  }
+  return false;
+};
+
 export const runMigrations = async (customPool = null) => {
   const dbUrl = process.env.DATABASE_URL;
-  if (!customPool && !dbUrl) {
-    console.log("[Migrations] No DATABASE_URL configured. Skipping PostgreSQL migration execution.");
+  if (!customPool && !dbUrl && !process.env.PGHOST) {
+    console.log("[Migrations] No PostgreSQL configuration found. Skipping PostgreSQL migration execution.");
     return { executed: 0, skipped: 0, status: "SKIPPED_NO_DB" };
   }
 
-  const pool = customPool || new Pool({
-    connectionString: dbUrl,
-    ssl: { rejectUnauthorized: false },
-    connectionTimeoutMillis: 10000
-  });
+  const pool = customPool || new Pool(
+    dbUrl
+      ? {
+          connectionString: dbUrl,
+          ssl: getSslConfig(dbUrl),
+          connectionTimeoutMillis: 10000
+        }
+      : {
+          host: process.env.PGHOST || "localhost",
+          port: Number(process.env.PGPORT) || 5432,
+          user: process.env.PGUSER || "postgres",
+          password: process.env.PGPASSWORD || "postgres",
+          database: process.env.PGDATABASE || "paymagic",
+          ssl: getSslConfig(),
+          connectionTimeoutMillis: 10000
+        }
+  );
 
   const client = await pool.connect();
   const ADVISORY_LOCK_ID = 982348234;
