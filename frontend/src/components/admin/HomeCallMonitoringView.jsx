@@ -29,7 +29,9 @@ export default function HomeCallMonitoringView() {
       supervisor: "Priya Talekar",
       status: "Logout",
       duration: "04:56:45",
-      statusColor: "bg-amber-500/10 text-amber-500 border-amber-500/20"
+      statusBg: "rgba(245, 158, 11, 0.12)",
+      statusColor: "#fbbf24",
+      statusBorder: "rgba(245, 158, 11, 0.3)"
     },
     {
       agent: "Akshaya Ganji",
@@ -38,7 +40,9 @@ export default function HomeCallMonitoringView() {
       supervisor: "Priya Talekar",
       status: "Offline",
       duration: "00:00:00",
-      statusColor: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
+      statusBg: "rgba(148, 163, 184, 0.12)",
+      statusColor: "#94a3b8",
+      statusBorder: "rgba(148, 163, 184, 0.25)"
     },
     {
       agent: "Bhushan Gaikwad",
@@ -47,7 +51,9 @@ export default function HomeCallMonitoringView() {
       supervisor: "Priya Talekar",
       status: "Offline",
       duration: "00:00:00",
-      statusColor: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
+      statusBg: "rgba(148, 163, 184, 0.12)",
+      statusColor: "#94a3b8",
+      statusBorder: "rgba(148, 163, 184, 0.25)"
     },
     {
       agent: "Priya Talekar",
@@ -56,7 +62,9 @@ export default function HomeCallMonitoringView() {
       supervisor: "Priya Talekar",
       status: "Offline",
       duration: "00:00:00",
-      statusColor: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20"
+      statusBg: "rgba(148, 163, 184, 0.12)",
+      statusColor: "#94a3b8",
+      statusBorder: "rgba(148, 163, 184, 0.25)"
     }
   ];
 
@@ -108,33 +116,89 @@ export default function HomeCallMonitoringView() {
   );
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       
       {/* Top Header & Sub-Tab Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-card border border-border shadow-sm">
-        <div>
-          <h2 className="text-xl font-bold text-foreground">All Agents Performance</h2>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "16px",
+          padding: "18px 24px",
+          borderRadius: "16px",
+          backgroundColor: "#051336",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          boxShadow: "0 4px 16px rgba(0, 0, 0, 0.25)"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "10px",
+              backgroundColor: "rgba(29, 78, 216, 0.15)",
+              border: "1px solid rgba(59, 130, 246, 0.3)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#60a5fa"
+            }}
+          >
+            <Activity style={{ width: "18px", height: "18px" }} />
+          </div>
+          <div>
+            <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", margin: 0, letterSpacing: "-0.01em" }}>
+              All Agents Performance
+            </h2>
+          </div>
         </div>
 
         {/* 1. Live Monitoring | 2. Agent Performance */}
-        <div className="flex items-center gap-1.5 p-1 bg-muted rounded-xl self-start sm:self-auto">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            padding: "4px",
+            backgroundColor: "#020921",
+            borderRadius: "12px",
+            border: "1px solid rgba(255, 255, 255, 0.06)"
+          }}
+        >
           <button
             onClick={() => setActiveTab("live")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              activeTab === "live"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            style={{
+              padding: "7px 16px",
+              borderRadius: "8px",
+              fontSize: "12px",
+              fontWeight: activeTab === "live" ? 700 : 500,
+              backgroundColor: activeTab === "live" ? "#1d4ed8" : "transparent",
+              color: activeTab === "live" ? "#ffffff" : "#94a3b8",
+              border: "none",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+              boxShadow: activeTab === "live" ? "0 2px 6px rgba(29, 78, 216, 0.35)" : "none"
+            }}
           >
             1. Live Monitoring
           </button>
           <button
             onClick={() => setActiveTab("performance")}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              activeTab === "performance"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            style={{
+              padding: "7px 16px",
+              borderRadius: "8px",
+              fontSize: "12px",
+              fontWeight: activeTab === "performance" ? 700 : 500,
+              backgroundColor: activeTab === "performance" ? "#1d4ed8" : "transparent",
+              color: activeTab === "performance" ? "#ffffff" : "#94a3b8",
+              border: "none",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+              boxShadow: activeTab === "performance" ? "0 2px 6px rgba(29, 78, 216, 0.35)" : "none"
+            }}
           >
             2. Agent Performance
           </button>
@@ -143,85 +207,229 @@ export default function HomeCallMonitoringView() {
 
       {/* ── 1. LIVE MONITORING TAB ── */}
       {activeTab === "live" && (
-        <div className="space-y-6 animate-in fade-in duration-150">
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           
           {/* KPI Cards: All Agents (4), Live Agents (0 / 0.0%), Dormant (1), Offline (3) */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl bg-card border border-border">
-              <span className="text-xs font-semibold text-muted-foreground">All Agents</span>
-              <div className="text-2xl font-black text-foreground mt-1">4</div>
-              <div className="text-[11px] text-muted-foreground mt-1">Total provisioned</div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "16px"
+            }}
+          >
+            {/* All Agents */}
+            <div
+              style={{
+                padding: "16px 20px",
+                borderRadius: "14px",
+                backgroundColor: "#051336",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>All Agents</span>
+                <Users style={{ width: "16px", height: "16px", color: "#60a5fa" }} />
+              </div>
+              <div style={{ fontSize: "28px", fontWeight: 800, color: "#ffffff", lineHeight: 1.2 }}>4</div>
+              <div style={{ fontSize: "11px", fontWeight: 500, color: "#64748b" }}>Total provisioned</div>
             </div>
 
-            <div className="p-4 rounded-xl bg-card border border-border">
-              <span className="text-xs font-semibold text-muted-foreground">Live Agents</span>
-              <div className="text-2xl font-black text-emerald-500 mt-1">0</div>
-              <div className="text-[11px] text-emerald-500 mt-1">0.0% Available on dialer</div>
+            {/* Live Agents */}
+            <div
+              style={{
+                padding: "16px 20px",
+                borderRadius: "14px",
+                backgroundColor: "#051336",
+                border: "1px solid rgba(16, 185, 129, 0.2)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>Live Agents</span>
+                <PhoneCall style={{ width: "16px", height: "16px", color: "#34d399" }} />
+              </div>
+              <div style={{ fontSize: "28px", fontWeight: 800, color: "#34d399", lineHeight: 1.2 }}>0</div>
+              <div style={{ fontSize: "11px", fontWeight: 600, color: "#34d399" }}>0.0% Available on dialer</div>
             </div>
 
-            <div className="p-4 rounded-xl bg-card border border-border">
-              <span className="text-xs font-semibold text-muted-foreground">Dormant</span>
-              <div className="text-2xl font-black text-amber-500 mt-1">1</div>
-              <div className="text-[11px] text-muted-foreground mt-1">In aux / break</div>
+            {/* Dormant */}
+            <div
+              style={{
+                padding: "16px 20px",
+                borderRadius: "14px",
+                backgroundColor: "#051336",
+                border: "1px solid rgba(245, 158, 11, 0.2)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>Dormant</span>
+                <Clock style={{ width: "16px", height: "16px", color: "#fbbf24" }} />
+              </div>
+              <div style={{ fontSize: "28px", fontWeight: 800, color: "#fbbf24", lineHeight: 1.2 }}>1</div>
+              <div style={{ fontSize: "11px", fontWeight: 500, color: "#64748b" }}>In aux / break</div>
             </div>
 
-            <div className="p-4 rounded-xl bg-card border border-border">
-              <span className="text-xs font-semibold text-muted-foreground">Offline</span>
-              <div className="text-2xl font-black text-rose-500 mt-1">3</div>
-              <div className="text-[11px] text-muted-foreground mt-1">Logged off / inactive</div>
+            {/* Offline */}
+            <div
+              style={{
+                padding: "16px 20px",
+                borderRadius: "14px",
+                backgroundColor: "#051336",
+                border: "1px solid rgba(244, 63, 94, 0.2)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>Offline</span>
+                <PhoneOff style={{ width: "16px", height: "16px", color: "#fb7185" }} />
+              </div>
+              <div style={{ fontSize: "28px", fontWeight: 800, color: "#fb7185", lineHeight: 1.2 }}>3</div>
+              <div style={{ fontSize: "11px", fontWeight: 500, color: "#64748b" }}>Logged off / inactive</div>
             </div>
           </div>
 
           {/* Agents List Card & Table */}
-          <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div
+            style={{
+              padding: "20px 24px",
+              borderRadius: "16px",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px"
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "12px"
+              }}
+            >
               <div>
-                <h3 className="text-sm font-bold text-foreground">
-                  Agents List <span className="text-muted-foreground font-normal">({filteredLive.length} of 4 agents)</span>
+                <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                  Agents List{" "}
+                  <span style={{ color: "#94a3b8", fontWeight: 500, fontSize: "12px" }}>
+                    ({filteredLive.length} of 4 agents)
+                  </span>
                 </h3>
               </div>
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <div style={{ position: "relative", minWidth: "260px" }}>
+                <Search
+                  style={{
+                    width: "14px",
+                    height: "14px",
+                    position: "absolute",
+                    left: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: "#64748b"
+                  }}
+                />
                 <input
                   type="text"
                   value={searchLive}
                   onChange={(e) => setSearchLive(e.target.value)}
                   placeholder="Search agents, campaigns, status..."
-                  className="pl-9 pr-3 py-1.5 rounded-lg bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 w-64"
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px 8px 34px",
+                    borderRadius: "10px",
+                    backgroundColor: "#020921",
+                    border: "1px solid rgba(255, 255, 255, 0.12)",
+                    fontSize: "12px",
+                    color: "#ffffff",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
                 />
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead className="bg-muted text-muted-foreground font-semibold">
-                  <tr>
-                    <th className="p-3">Agent</th>
-                    <th className="p-3">Allocation File Name</th>
-                    <th className="p-3">Campaign Name</th>
-                    <th className="p-3">Supervisor</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3">Duration</th>
+            <div
+              style={{
+                overflowX: "auto",
+                borderRadius: "12px",
+                border: "1px solid rgba(255, 255, 255, 0.06)"
+              }}
+            >
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "12px", whiteSpace: "nowrap" }}>
+                <thead>
+                  <tr style={{ backgroundColor: "#020921", borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                    <th style={{ padding: "12px 16px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Agent</th>
+                    <th style={{ padding: "12px 16px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Allocation File Name</th>
+                    <th style={{ padding: "12px 16px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Campaign Name</th>
+                    <th style={{ padding: "12px 16px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Supervisor</th>
+                    <th style={{ padding: "12px 16px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Status</th>
+                    <th style={{ padding: "12px 16px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Duration</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody>
                   {filteredLive.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-muted/40 transition-colors">
-                      <td className="p-3 font-semibold text-foreground flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-blue-600/20 text-blue-500 font-bold text-[10px] flex items-center justify-center">
-                          {row.agent.substring(0, 2).toUpperCase()}
+                    <tr
+                      key={idx}
+                      style={{
+                        borderBottom: "1px solid rgba(255, 255, 255, 0.04)",
+                        transition: "background-color 0.15s ease"
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.02)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                    >
+                      <td style={{ padding: "14px 16px", fontWeight: 600, color: "#ffffff" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div
+                            style={{
+                              width: "28px",
+                              height: "28px",
+                              borderRadius: "50%",
+                              backgroundColor: "rgba(37, 99, 235, 0.15)",
+                              border: "1px solid rgba(37, 99, 235, 0.3)",
+                              color: "#60a5fa",
+                              fontWeight: 700,
+                              fontSize: "11px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center"
+                            }}
+                          >
+                            {row.agent.substring(0, 2).toUpperCase()}
+                          </div>
+                          <span>{row.agent}</span>
                         </div>
-                        <span>{row.agent}</span>
                       </td>
-                      <td className="p-3 text-muted-foreground font-mono">{row.allocationFile}</td>
-                      <td className="p-3 text-foreground font-medium">{row.campaign}</td>
-                      <td className="p-3 text-muted-foreground">{row.supervisor}</td>
-                      <td className="p-3">
-                        <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${row.statusColor}`}>
+                      <td style={{ padding: "14px 16px", color: "#64748b", fontFamily: "monospace" }}>{row.allocationFile}</td>
+                      <td style={{ padding: "14px 16px", color: "#cbd5e1", fontWeight: 500 }}>{row.campaign}</td>
+                      <td style={{ padding: "14px 16px", color: "#94a3b8" }}>{row.supervisor}</td>
+                      <td style={{ padding: "14px 16px" }}>
+                        <span
+                          style={{
+                            padding: "3px 10px",
+                            borderRadius: "6px",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            backgroundColor: row.statusBg,
+                            color: row.statusColor,
+                            border: `1px solid ${row.statusBorder}`
+                          }}
+                        >
                           {row.status}
                         </span>
                       </td>
-                      <td className="p-3 font-mono text-muted-foreground">{row.duration}</td>
+                      <td style={{ padding: "14px 16px", fontFamily: "monospace", color: "#94a3b8" }}>{row.duration}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -234,119 +442,293 @@ export default function HomeCallMonitoringView() {
 
       {/* ── 2. AGENT PERFORMANCE TAB ── */}
       {activeTab === "performance" && (
-        <div className="space-y-6 animate-in fade-in duration-150">
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           
           {/* Filters & KPI Cards */}
-          <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 text-xs">
-                <span className="font-semibold text-muted-foreground">Start Date:</span>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="px-2.5 py-1.5 rounded-lg bg-muted border border-border text-xs text-foreground focus:outline-none"
-                />
+          <div
+            style={{
+              padding: "20px 24px",
+              borderRadius: "16px",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px"
+            }}
+          >
+            {/* Date Pickers */}
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>Start Date:</span>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "8px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      fontSize: "12px",
+                      color: "#ffffff",
+                      outline: "none"
+                    }}
+                  />
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-xs">
-                <span className="font-semibold text-muted-foreground">End Date:</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="px-2.5 py-1.5 rounded-lg bg-muted border border-border text-xs text-foreground focus:outline-none"
-                />
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>End Date:</span>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "8px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      fontSize: "12px",
+                      color: "#ffffff",
+                      outline: "none"
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
             {/* Performance KPI Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-2">
-              <div className="p-3 rounded-xl bg-muted/40 border border-border">
-                <span className="text-[11px] text-muted-foreground">Total Agents</span>
-                <div className="text-xl font-bold text-foreground mt-0.5">4</div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                gap: "12px",
+                paddingTop: "4px"
+              }}
+            >
+              <div
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(255, 255, 255, 0.06)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px"
+                }}
+              >
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8" }}>Total Agents</span>
+                <div style={{ fontSize: "22px", fontWeight: 800, color: "#ffffff" }}>4</div>
               </div>
-              <div className="p-3 rounded-xl bg-muted/40 border border-border">
-                <span className="text-[11px] text-muted-foreground">Total Accounts</span>
-                <div className="text-xl font-bold text-foreground mt-0.5">826</div>
+
+              <div
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(255, 255, 255, 0.06)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px"
+                }}
+              >
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8" }}>Total Accounts</span>
+                <div style={{ fontSize: "22px", fontWeight: 800, color: "#ffffff" }}>826</div>
               </div>
-              <div className="p-3 rounded-xl bg-muted/40 border border-border">
-                <span className="text-[11px] text-muted-foreground">Untouched Accounts</span>
-                <div className="text-xl font-bold text-amber-500 mt-0.5">381</div>
+
+              <div
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(245, 158, 11, 0.2)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px"
+                }}
+              >
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8" }}>Untouched Accounts</span>
+                <div style={{ fontSize: "22px", fontWeight: 800, color: "#fbbf24" }}>381</div>
               </div>
-              <div className="p-3 rounded-xl bg-muted/40 border border-border">
-                <span className="text-[11px] text-muted-foreground">Total Calls</span>
-                <div className="text-xl font-bold text-foreground mt-0.5">1119</div>
+
+              <div
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(255, 255, 255, 0.06)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px"
+                }}
+              >
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8" }}>Total Calls</span>
+                <div style={{ fontSize: "22px", fontWeight: 800, color: "#ffffff" }}>1119</div>
               </div>
-              <div className="p-3 rounded-xl bg-muted/40 border border-border">
-                <span className="text-[11px] text-muted-foreground">Connected Calls</span>
-                <div className="text-xl font-bold text-emerald-500 mt-0.5">98</div>
-                <div className="text-[10px] text-emerald-500 font-semibold">8.76%</div>
+
+              <div
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(16, 185, 129, 0.2)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px"
+                }}
+              >
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8" }}>Connected Calls</span>
+                <div style={{ fontSize: "22px", fontWeight: 800, color: "#34d399" }}>98</div>
+                <div style={{ fontSize: "10px", fontWeight: 700, color: "#34d399" }}>8.76%</div>
               </div>
-              <div className="p-3 rounded-xl bg-muted/40 border border-border">
-                <span className="text-[11px] text-muted-foreground">Non Connected</span>
-                <div className="text-xl font-bold text-rose-500 mt-0.5">1021</div>
-                <div className="text-[10px] text-rose-500 font-semibold">91.24%</div>
+
+              <div
+                style={{
+                  padding: "14px 16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(244, 63, 94, 0.2)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "2px"
+                }}
+              >
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8" }}>Non Connected</span>
+                <div style={{ fontSize: "22px", fontWeight: 800, color: "#fb7185" }}>1021</div>
+                <div style={{ fontSize: "10px", fontWeight: 700, color: "#fb7185" }}>91.24%</div>
               </div>
             </div>
           </div>
 
           {/* Performance Details Table */}
-          <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div
+            style={{
+              padding: "20px 24px",
+              borderRadius: "16px",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              boxShadow: "0 4px 16px rgba(0, 0, 0, 0.2)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px"
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "12px"
+              }}
+            >
               <div>
-                <h3 className="text-sm font-bold text-foreground">Performance Details</h3>
+                <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                  Performance Details
+                </h3>
               </div>
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <div style={{ position: "relative", minWidth: "240px" }}>
+                <Search
+                  style={{
+                    width: "14px",
+                    height: "14px",
+                    position: "absolute",
+                    left: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    color: "#64748b"
+                  }}
+                />
                 <input
                   type="text"
                   value={searchPerf}
                   onChange={(e) => setSearchPerf(e.target.value)}
                   placeholder="Search by agent name..."
-                  className="pl-9 pr-3 py-1.5 rounded-lg bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 w-56"
+                  style={{
+                    width: "100%",
+                    padding: "8px 12px 8px 34px",
+                    borderRadius: "10px",
+                    backgroundColor: "#020921",
+                    border: "1px solid rgba(255, 255, 255, 0.12)",
+                    fontSize: "12px",
+                    color: "#ffffff",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
                 />
               </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead className="bg-muted text-muted-foreground font-semibold">
-                  <tr>
-                    <th className="p-3">Agent</th>
-                    <th className="p-3">Team Leader</th>
-                    <th className="p-3">Total Calls</th>
-                    <th className="p-3">Connected Calls</th>
-                    <th className="p-3">Not Connected Calls</th>
-                    <th className="p-3">Login Time</th>
-                    <th className="p-3">Logout Time</th>
-                    <th className="p-3">Total Login Hours</th>
-                    <th className="p-3">Ideal Duration</th>
-                    <th className="p-3">Call Duration</th>
-                    <th className="p-3">Total Break</th>
-                    <th className="p-3">Non Productive Aux</th>
-                    <th className="p-3">Email</th>
-                    <th className="p-3">Rating</th>
+            <div
+              style={{
+                overflowX: "auto",
+                borderRadius: "12px",
+                border: "1px solid rgba(255, 255, 255, 0.06)"
+              }}
+            >
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "12px", whiteSpace: "nowrap" }}>
+                <thead>
+                  <tr style={{ backgroundColor: "#020921", borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                    <th style={{ padding: "12px 14px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Agent</th>
+                    <th style={{ padding: "12px 14px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Team Leader</th>
+                    <th style={{ padding: "12px 14px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Calls</th>
+                    <th style={{ padding: "12px 14px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Connected Calls</th>
+                    <th style={{ padding: "12px 14px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Not Connected Calls</th>
+                    <th style={{ padding: "12px 14px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Login Time</th>
+                    <th style={{ padding: "12px 14px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Logout Time</th>
+                    <th style={{ padding: "12px 14px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Login Hours</th>
+                    <th style={{ padding: "12px 14px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Ideal Duration</th>
+                    <th style={{ padding: "12px 14px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Call Duration</th>
+                    <th style={{ padding: "12px 14px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Break</th>
+                    <th style={{ padding: "12px 14px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Non Productive Aux</th>
+                    <th style={{ padding: "12px 14px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Email</th>
+                    <th style={{ padding: "12px 14px", color: "#94a3b8", fontWeight: 700, fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Rating</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody>
                   {filteredPerf.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-muted/40 transition-colors">
-                      <td className="p-3 font-semibold text-foreground">{row.agent}</td>
-                      <td className="p-3 text-muted-foreground">{row.teamLeader}</td>
-                      <td className="p-3 font-bold text-foreground">{row.totalCalls}</td>
-                      <td className="p-3 text-emerald-500 font-bold">{row.connectedCalls}</td>
-                      <td className="p-3 text-rose-500 font-bold">{row.notConnectedCalls}</td>
-                      <td className="p-3 text-muted-foreground font-mono">{row.loginTime}</td>
-                      <td className="p-3 text-muted-foreground font-mono">{row.logoutTime}</td>
-                      <td className="p-3 font-mono font-semibold text-foreground">{row.totalLoginHours}</td>
-                      <td className="p-3 font-mono text-muted-foreground">{row.idealDuration}</td>
-                      <td className="p-3 font-mono text-blue-500 font-semibold">{row.callDuration}</td>
-                      <td className="p-3 font-mono text-muted-foreground">{row.totalBreak}</td>
-                      <td className="p-3 font-mono text-muted-foreground">{row.nonProductiveAux}</td>
-                      <td className="p-3 text-muted-foreground font-mono">{row.email}</td>
-                      <td className="p-3 font-bold text-amber-500 flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                        <span>{row.rating}</span>
+                    <tr
+                      key={idx}
+                      style={{
+                        borderBottom: "1px solid rgba(255, 255, 255, 0.04)",
+                        transition: "background-color 0.15s ease"
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.02)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                    >
+                      <td style={{ padding: "14px 14px", fontWeight: 700, color: "#ffffff" }}>{row.agent}</td>
+                      <td style={{ padding: "14px 14px", color: "#94a3b8" }}>{row.teamLeader}</td>
+                      <td style={{ padding: "14px 14px", fontWeight: 700, color: "#ffffff" }}>{row.totalCalls}</td>
+                      <td style={{ padding: "14px 14px", fontWeight: 700, color: "#34d399" }}>{row.connectedCalls}</td>
+                      <td style={{ padding: "14px 14px", fontWeight: 700, color: "#fb7185" }}>{row.notConnectedCalls}</td>
+                      <td style={{ padding: "14px 14px", color: "#94a3b8", fontFamily: "monospace" }}>{row.loginTime}</td>
+                      <td style={{ padding: "14px 14px", color: "#94a3b8", fontFamily: "monospace" }}>{row.logoutTime}</td>
+                      <td style={{ padding: "14px 14px", fontFamily: "monospace", fontWeight: 600, color: "#ffffff" }}>{row.totalLoginHours}</td>
+                      <td style={{ padding: "14px 14px", fontFamily: "monospace", color: "#64748b" }}>{row.idealDuration}</td>
+                      <td style={{ padding: "14px 14px", fontFamily: "monospace", fontWeight: 600, color: "#60a5fa" }}>{row.callDuration}</td>
+                      <td style={{ padding: "14px 14px", fontFamily: "monospace", color: "#94a3b8" }}>{row.totalBreak}</td>
+                      <td style={{ padding: "14px 14px", fontFamily: "monospace", color: "#64748b" }}>{row.nonProductiveAux}</td>
+                      <td style={{ padding: "14px 14px", color: "#94a3b8", fontFamily: "monospace" }}>{row.email}</td>
+                      <td style={{ padding: "14px 14px" }}>
+                        <div
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            padding: "3px 8px",
+                            borderRadius: "6px",
+                            backgroundColor: "rgba(245, 158, 11, 0.12)",
+                            border: "1px solid rgba(245, 158, 11, 0.25)",
+                            color: "#fbbf24",
+                            fontWeight: 700,
+                            fontSize: "11px"
+                          }}
+                        >
+                          <Star style={{ width: "12px", height: "12px", fill: "#fbbf24", color: "#fbbf24" }} />
+                          <span>{row.rating}</span>
+                        </div>
                       </td>
                     </tr>
                   ))}
