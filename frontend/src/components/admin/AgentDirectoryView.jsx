@@ -22,8 +22,132 @@ import {
   UserMinus,
   Edit,
   Eye,
-  Unlock
+  Unlock,
+  Upload,
+  FileUp,
+  FileText
 } from "lucide-react";
+
+// Products specified by user
+const PRODUCT_OPTIONS = [
+  "Agri Loan",
+  "Auto Loan",
+  "Business Loan",
+  "CASA",
+  "Commercial Business",
+  "Commercial Vehicle",
+  "Credit Card",
+  "Gold Loan",
+  "Home Loan",
+  "Mortgage",
+  "Personal Loan",
+  "Tractor",
+  "Two Wheeler",
+  "Consumer Durable"
+];
+
+// Buckets specified by user
+const BUCKET_OPTIONS = [
+  "Post Due",
+  "Pre Due",
+  "Bucket 1",
+  "Bucket 2",
+  "Bucket 3",
+  "Bucket 4",
+  "Bucket 5",
+  "Bucket 6",
+  "Sup",
+  "NPA",
+  "NILPOS",
+  "PDM",
+  "Live",
+  "Recovery",
+  "ODBC",
+  "Writeoff"
+];
+
+const INITIAL_AGENTS = [
+  {
+    name: "Manisha Shete",
+    supervisor: "Priya Talekar",
+    yucollectId: "YC7428",
+    agency: "PayMagic PVT LTD",
+    agencyEmployeeId: "PM2610MS0004",
+    contact: "9359060141",
+    channel: "CALL",
+    product: "Consumer Durable",
+    bucket: "Writeoff",
+    dra: "No",
+    area: "Pune",
+    basePincode: "400063",
+    residencePincode: "400063",
+    currentAddress: "Pune",
+    permanentAddress: "Pune",
+    experience: "Freshar",
+    campaign: "RURAL-BAJAJ-Nov-2026-FINAL-DATA, URBAN BAJAJ-NOV-2026, no Use",
+    acr: "200 - 300"
+  },
+  {
+    name: "Bhushan Gaikwad",
+    supervisor: "Priya Talekar",
+    yucollectId: "YC7426",
+    agency: "PayMagic PVT LTD",
+    agencyEmployeeId: "PM2609BG0002",
+    contact: "7767896125",
+    channel: "CALL",
+    product: "Consumer Durable",
+    bucket: "Writeoff",
+    dra: "No",
+    area: "Pune",
+    basePincode: "400063",
+    residencePincode: "400063",
+    currentAddress: "Pune",
+    permanentAddress: "Pune",
+    experience: ">2 years",
+    campaign: "RURAL-BAJAJ-Nov-2026-FINAL-DATA, URBAN BAJAJ-NOV-2026, no Use",
+    acr: "200 - 300"
+  },
+  {
+    name: "Akshaya Ganji",
+    supervisor: "Priya Talekar",
+    yucollectId: "YC7427",
+    agency: "PayMagic PVT LTD",
+    agencyEmployeeId: "PM2610AG0003",
+    contact: "8080003116",
+    channel: "CALL",
+    product: "Consumer Durable",
+    bucket: "Writeoff",
+    dra: "No",
+    area: "Pune",
+    basePincode: "400063",
+    residencePincode: "400063",
+    currentAddress: "Pune",
+    permanentAddress: "Pune",
+    experience: "1-2 years",
+    campaign: "RURAL-BAJAJ-Nov-2026-FINAL-DATA, URBAN BAJAJ-NOV-2026, no Use",
+    acr: "200 - 300"
+  },
+  {
+    name: "Priya Talekar",
+    supervisor: "Priya Talekar",
+    yucollectId: "YC7425",
+    agency: "PayMagic PVT LTD",
+    agencyEmployeeId: "PM2610PT0005",
+    contact: "7038155166",
+    channel: "CALL",
+    product: "Consumer Durable",
+    bucket: "Writeoff",
+    dra: "No",
+    area: "Pune",
+    basePincode: "400063",
+    residencePincode: "400063",
+    currentAddress: "Pune",
+    permanentAddress: "Pune",
+    experience: "1-2 years",
+    campaign: "RURAL-BAJAJ-Nov-2026-FINAL-DATA, URBAN BAJAJ-NOV-2026, no Use",
+    acr: "200 - 300"
+  }
+];
 
 export default function AgentDirectoryView() {
   // 4 Sub-fields under Agent:
@@ -34,11 +158,65 @@ export default function AgentDirectoryView() {
   const [agentSubTab, setAgentSubTab] = useState("agent_list");
 
   // ── 1. AGENT LIST SUB-TAB STATE ──
-  const [agentListFilter, setAgentListFilter] = useState("all"); // 'all' | 'field' | 'call'
+  const [agentsList, setAgentsList] = useState(INITIAL_AGENTS);
+  const [agentListFilter, setAgentListFilter] = useState("all"); // 'all' | 'call' | 'field'
   const [searchAgentList, setSearchAgentList] = useState("");
   const [actionMenuOpen, setActionMenuOpen] = useState(null);
   const [activeActionModal, setActiveActionModal] = useState(null); // 'view_profile' | 'edit_profile' | 'offboard' | 'unblock'
   const [selectedAgentForModal, setSelectedAgentForModal] = useState(null);
+
+  // ── AGENT ONBOARDING FORM MODAL STATE ──
+  const [showAddAgentModal, setShowAddAgentModal] = useState(false);
+  const [onboardingTab, setOnboardingTab] = useState("profile"); // 'profile' | 'kyc' | 'skills' | 'contract'
+  const [onboardingErrors, setOnboardingErrors] = useState({});
+  const [onboardingSuccessToast, setOnboardingSuccessToast] = useState("");
+
+  const initialOnboardingFormData = {
+    // Profile
+    name: "",
+    allocatorName: "",
+    email: "",
+    phone: "",
+    employeeId: "",
+    supervisor: "",
+    product: "",
+    bucket: "",
+    role: "",
+    channel: "call",
+    acr: "",
+    city: "",
+    area: "",
+    basePincode: "",
+    currentAddress: "",
+    permanentAddress: "",
+    residencePincode: "",
+
+    // KYC Details (uploaded file names)
+    aadhaarCard: "",
+    panCard: "",
+    draCertificate: "",
+    pccPvcCertificate: "",
+    higherEducationMarksheet: "",
+    passportPhoto: "",
+    cancelCheque: "",
+    experienceLetter: "",
+
+    // Skills
+    language: "",
+    collectionExperience: "",
+    draStatus: "",
+
+    // Agent Contract
+    activeStatus: "",
+    workingDays: "",
+    startDate: "",
+    endDate: "",
+    shiftStartTime: "",
+    shiftEndTime: "",
+    cashThreshold: ""
+  };
+
+  const [agentFormData, setAgentFormData] = useState(initialOnboardingFormData);
 
   // ── 2. AGENT GROUP SUB-TAB STATE ──
   const [groupSubTab, setGroupSubTab] = useState("groups"); // 'groups' | 'ungrouped'
@@ -52,90 +230,6 @@ export default function AgentDirectoryView() {
   // ── 4. INCENTIVES SUB-TAB STATE ──
   const [searchIncentive, setSearchIncentive] = useState("");
   const [showNewProgramModal, setShowNewProgramModal] = useState(false);
-
-  // 4 Exact Agent records specified by user
-  const agentsList = [
-    {
-      name: "Manisha Shete",
-      supervisor: "Priya Talekar",
-      yucollectId: "YC7428",
-      agency: "PayMagic PVT LTD",
-      agencyEmployeeId: "PM2610MS0004",
-      contact: "9359060141",
-      channel: "CALL",
-      product: "Consumer Durable",
-      bucket: "Writeoff",
-      dra: "No",
-      area: "Pune",
-      basePincode: "400063",
-      residencePincode: "400063",
-      currentAddress: "Pune",
-      permanentAddress: "Pune",
-      experience: "Freshar",
-      campaign: "RURAL-BAJAJ-Nov-2026-FINAL-DATA, URBAN BAJAJ-NOV-2026, no Use",
-      acr: "200 - 300"
-    },
-    {
-      name: "Bhushan Gaikwad",
-      supervisor: "Priya Talekar",
-      yucollectId: "YC7426",
-      agency: "PayMagic PVT LTD",
-      agencyEmployeeId: "PM2609BG0002",
-      contact: "7767896125",
-      channel: "CALL",
-      product: "Consumer Durable",
-      bucket: "Writeoff",
-      dra: "No",
-      area: "Pune",
-      basePincode: "400063",
-      residencePincode: "400063",
-      currentAddress: "Pune",
-      permanentAddress: "Pune",
-      experience: ">2 years",
-      campaign: "RURAL-BAJAJ-Nov-2026-FINAL-DATA, URBAN BAJAJ-NOV-2026, no Use",
-      acr: "200 - 300"
-    },
-    {
-      name: "Akshaya Ganji",
-      supervisor: "Priya Talekar",
-      yucollectId: "YC7427",
-      agency: "PayMagic PVT LTD",
-      agencyEmployeeId: "PM2610AG0003",
-      contact: "8080003116",
-      channel: "CALL",
-      product: "Consumer Durable",
-      bucket: "Writeoff",
-      dra: "No",
-      area: "Pune",
-      basePincode: "400063",
-      residencePincode: "400063",
-      currentAddress: "Pune",
-      permanentAddress: "Pune",
-      experience: "1-2 years",
-      campaign: "RURAL-BAJAJ-Nov-2026-FINAL-DATA, URBAN BAJAJ-NOV-2026, no Use",
-      acr: "200 - 300"
-    },
-    {
-      name: "Priya Talekar",
-      supervisor: "Priya Talekar",
-      yucollectId: "YC7425",
-      agency: "PayMagic PVT LTD",
-      agencyEmployeeId: "PM2610PT0005",
-      contact: "7038155166",
-      channel: "CALL",
-      product: "Consumer Durable",
-      bucket: "Writeoff",
-      dra: "No",
-      area: "Pune",
-      basePincode: "400063",
-      residencePincode: "400063",
-      currentAddress: "Pune",
-      permanentAddress: "Pune",
-      experience: "1-2 years",
-      campaign: "RURAL-BAJAJ-Nov-2026-FINAL-DATA, URBAN BAJAJ-NOV-2026, no Use",
-      acr: "200 - 300"
-    }
-  ];
 
   // 8 Exact Campaign records specified by user
   const campaignsList = [
@@ -334,10 +428,37 @@ export default function AgentDirectoryView() {
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
             }}
           >
-            <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
               <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
                 Agents list
               </h3>
+              <button
+                onClick={() => {
+                  setOnboardingErrors({});
+                  setOnboardingTab("profile");
+                  setShowAddAgentModal(true);
+                }}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "10px",
+                  backgroundColor: "#1d4ed8",
+                  color: "#ffffff",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 6px rgba(29, 78, 216, 0.4)",
+                  transition: "all 0.15s ease"
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#2563eb"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#1d4ed8"; }}
+              >
+                <Plus style={{ width: "15px", height: "15px" }} />
+                <span>+ Add Agent</span>
+              </button>
             </div>
 
             {/* 4 KPIs */}
@@ -358,7 +479,7 @@ export default function AgentDirectoryView() {
                 }}
               >
                 <span style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", display: "block" }}>Total Agents</span>
-                <div style={{ fontSize: "24px", fontWeight: 800, color: "#ffffff", marginTop: "2px" }}>4</div>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "#ffffff", marginTop: "2px" }}>{agentsList.length}</div>
               </div>
               <div
                 style={{
@@ -396,72 +517,70 @@ export default function AgentDirectoryView() {
             </div>
           </div>
 
-          {/* Controls: 3 Buttons (All, Field, Call) + Create Agent Group + Search */}
+          {/* Controls: 3 Buttons without button styling (All Agent, Call Agent, Field Agent) + Search */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
               gap: "12px",
-              flexWrap: "wrap"
+              flexWrap: "wrap",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+              paddingBottom: "4px"
             }}
           >
-            
-            {/* 3 Buttons */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+            {/* 3 Buttons in one line: first is all agent, second is call agent, third is field agent. Only text, selected button bottom side line */}
+            <div style={{ display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap" }}>
               <button
                 onClick={() => setAgentListFilter("all")}
                 style={{
-                  padding: "6px 14px",
-                  borderRadius: "9999px",
-                  fontSize: "12px",
+                  padding: "8px 4px",
+                  fontSize: "13px",
                   fontWeight: agentListFilter === "all" ? 700 : 500,
-                  backgroundColor: agentListFilter === "all" ? "#1d4ed8" : "#0a1535",
-                  color: agentListFilter === "all" ? "#ffffff" : "#cbd5e1",
-                  border: agentListFilter === "all" ? "1px solid #1d4ed8" : "1px solid rgba(51, 65, 85, 0.6)",
+                  backgroundColor: "transparent",
+                  color: agentListFilter === "all" ? "#60a5fa" : "#94a3b8",
+                  border: "none",
+                  borderBottom: agentListFilter === "all" ? "2px solid #3b82f6" : "2px solid transparent",
                   cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  boxShadow: agentListFilter === "all" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none"
+                  transition: "all 0.15s ease"
                 }}
               >
-                1. All Agent
-              </button>
-              <button
-                onClick={() => setAgentListFilter("field")}
-                style={{
-                  padding: "6px 14px",
-                  borderRadius: "9999px",
-                  fontSize: "12px",
-                  fontWeight: agentListFilter === "field" ? 700 : 500,
-                  backgroundColor: agentListFilter === "field" ? "#1d4ed8" : "#0a1535",
-                  color: agentListFilter === "field" ? "#ffffff" : "#cbd5e1",
-                  border: agentListFilter === "field" ? "1px solid #1d4ed8" : "1px solid rgba(51, 65, 85, 0.6)",
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  boxShadow: agentListFilter === "field" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none"
-                }}
-              >
-                2. Field Agent
+                All Agent
               </button>
               <button
                 onClick={() => setAgentListFilter("call")}
                 style={{
-                  padding: "6px 14px",
-                  borderRadius: "9999px",
-                  fontSize: "12px",
+                  padding: "8px 4px",
+                  fontSize: "13px",
                   fontWeight: agentListFilter === "call" ? 700 : 500,
-                  backgroundColor: agentListFilter === "call" ? "#1d4ed8" : "#0a1535",
-                  color: agentListFilter === "call" ? "#ffffff" : "#cbd5e1",
-                  border: agentListFilter === "call" ? "1px solid #1d4ed8" : "1px solid rgba(51, 65, 85, 0.6)",
+                  backgroundColor: "transparent",
+                  color: agentListFilter === "call" ? "#60a5fa" : "#94a3b8",
+                  border: "none",
+                  borderBottom: agentListFilter === "call" ? "2px solid #3b82f6" : "2px solid transparent",
                   cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  boxShadow: agentListFilter === "call" ? "0 2px 4px rgba(29, 78, 216, 0.3)" : "none"
+                  transition: "all 0.15s ease"
                 }}
               >
-                3. Call Agent
+                Call Agent
+              </button>
+              <button
+                onClick={() => setAgentListFilter("field")}
+                style={{
+                  padding: "8px 4px",
+                  fontSize: "13px",
+                  fontWeight: agentListFilter === "field" ? 700 : 500,
+                  backgroundColor: "transparent",
+                  color: agentListFilter === "field" ? "#60a5fa" : "#94a3b8",
+                  border: "none",
+                  borderBottom: agentListFilter === "field" ? "2px solid #3b82f6" : "2px solid transparent",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                Field Agent
               </button>
 
-              {/* Show "Create Agent Group" button ONLY when select third button "call agent" */}
+              {/* Show "Create Agent Group" button ONLY when select "Call Agent" */}
               {agentListFilter === "call" && (
                 <button
                   onClick={() => setAgentSubTab("agent_group")}
@@ -478,7 +597,8 @@ export default function AgentDirectoryView() {
                     border: "none",
                     cursor: "pointer",
                     boxShadow: "0 2px 6px rgba(5, 150, 105, 0.3)",
-                    transition: "all 0.15s ease"
+                    transition: "all 0.15s ease",
+                    marginLeft: "8px"
                   }}
                 >
                   <FolderPlus style={{ width: "14px", height: "14px" }} />
@@ -1726,6 +1846,1144 @@ export default function AgentDirectoryView() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── AGENT ONBOARDING FORM MODAL ── */}
+      {showAddAgentModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 60,
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px"
+          }}
+          onClick={() => setShowAddAgentModal(false)}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "880px",
+              maxHeight: "92vh",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.14)",
+              borderRadius: "20px",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.85)"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                padding: "20px 24px",
+                borderBottom: "1px solid rgba(255, 255, 255, 0.08)"
+              }}
+            >
+              <div>
+                <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                  Agent onboarding form
+                </h3>
+                <span style={{ fontSize: "12px", color: "#94a3b8", display: "block", marginTop: "4px" }}>
+                  Enter agent details to onboard
+                </span>
+              </div>
+              <button
+                onClick={() => setShowAddAgentModal(false)}
+                style={{
+                  padding: "6px",
+                  borderRadius: "8px",
+                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                  border: "none",
+                  color: "#94a3b8",
+                  cursor: "pointer"
+                }}
+              >
+                <XCircle style={{ width: "20px", height: "20px" }} />
+              </button>
+            </div>
+
+            {/* 4 Tabs: Profile, KYC Details, Skills, Agent Contract */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "24px",
+                padding: "0 24px",
+                borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+                backgroundColor: "#030c24",
+                overflowX: "auto"
+              }}
+            >
+              {[
+                { id: "profile", label: "Profile" },
+                { id: "kyc", label: "KYC Details" },
+                { id: "skills", label: "Skills" },
+                { id: "contract", label: "Agent Contract" }
+              ].map((tab) => {
+                const isActive = onboardingTab === tab.id;
+                const hasError =
+                  (tab.id === "profile" && (onboardingErrors.supervisor || onboardingErrors.role)) ||
+                  (tab.id === "skills" && (onboardingErrors.collectionExperience || onboardingErrors.draStatus)) ||
+                  (tab.id === "contract" && onboardingErrors.activeStatus);
+
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setOnboardingTab(tab.id)}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      borderBottom: isActive ? "2px solid #3b82f6" : "2px solid transparent",
+                      color: isActive ? "#60a5fa" : hasError ? "#fb7185" : "#94a3b8",
+                      padding: "12px 4px",
+                      fontSize: "13px",
+                      fontWeight: isActive ? 700 : 500,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      whiteSpace: "nowrap",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    <span>{tab.label}</span>
+                    {hasError && (
+                      <span
+                        style={{
+                          width: "6px",
+                          height: "6px",
+                          borderRadius: "9999px",
+                          backgroundColor: "#fb7185"
+                        }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Modal Body (Scrollable) */}
+            <div
+              style={{
+                padding: "24px",
+                overflowY: "auto",
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                gap: "18px"
+              }}
+            >
+              {/* TAB 1: PROFILE */}
+              {onboardingTab === "profile" && (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                    gap: "16px"
+                  }}
+                >
+                  {/* Enter agent name * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      * Enter agent name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter agent name"
+                      value={agentFormData.name}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, name: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    />
+                  </div>
+
+                  {/* Allocator Name * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Allocator Name *
+                    </label>
+                    <select
+                      value={agentFormData.allocatorName}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, allocatorName: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select allocators</option>
+                      <option value="Priya Talekar">Priya Talekar</option>
+                      <option value="Rahul Deshmukh">Rahul Deshmukh</option>
+                      <option value="Admin Allocator">Admin Allocator</option>
+                      <option value="System Allocation">System Allocation</option>
+                    </select>
+                  </div>
+
+                  {/* Enter email address * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      * Enter email address
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="Enter email address"
+                      value={agentFormData.email}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, email: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    />
+                  </div>
+
+                  {/* Enter phone number * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      * Enter phone number
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="Enter phone number"
+                      value={agentFormData.phone}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, phone: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    />
+                  </div>
+
+                  {/* Enter employee ID * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      * Enter employee ID
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter employee ID"
+                      value={agentFormData.employeeId}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, employeeId: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    />
+                  </div>
+
+                  {/* Supervisor Name * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Supervisor Name *
+                    </label>
+                    <select
+                      value={agentFormData.supervisor}
+                      onChange={(e) => {
+                        setAgentFormData({ ...agentFormData, supervisor: e.target.value });
+                        if (e.target.value && onboardingErrors.supervisor) {
+                          const errs = { ...onboardingErrors };
+                          delete errs.supervisor;
+                          setOnboardingErrors(errs);
+                        }
+                      }}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: onboardingErrors.supervisor ? "1px solid #fb7185" : "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select supervisor</option>
+                      <option value="Priya Talekar">Priya Talekar</option>
+                      <option value="Rajesh Sharma">Rajesh Sharma</option>
+                      <option value="Amit Patil">Amit Patil</option>
+                      <option value="Deepak Verma">Deepak Verma</option>
+                    </select>
+                    {onboardingErrors.supervisor && (
+                      <span style={{ fontSize: "11px", color: "#fb7185", fontWeight: 600 }}>
+                        {onboardingErrors.supervisor}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Product * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Product *
+                    </label>
+                    <select
+                      value={agentFormData.product}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, product: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select products</option>
+                      {PRODUCT_OPTIONS.map((prod) => (
+                        <option key={prod} value={prod}>
+                          {prod}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Bucket * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Bucket *
+                    </label>
+                    <select
+                      value={agentFormData.bucket}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, bucket: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select buckets</option>
+                      {BUCKET_OPTIONS.map((bkt) => (
+                        <option key={bkt} value={bkt}>
+                          {bkt}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Role * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Role *
+                    </label>
+                    <select
+                      value={agentFormData.role}
+                      onChange={(e) => {
+                        setAgentFormData({ ...agentFormData, role: e.target.value });
+                        if (e.target.value && onboardingErrors.role) {
+                          const errs = { ...onboardingErrors };
+                          delete errs.role;
+                          setOnboardingErrors(errs);
+                        }
+                      }}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: onboardingErrors.role ? "1px solid #fb7185" : "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select role</option>
+                      <option value="employee">employee</option>
+                      <option value="admin">admin</option>
+                    </select>
+                    {onboardingErrors.role && (
+                      <span style={{ fontSize: "11px", color: "#fb7185", fontWeight: 600 }}>
+                        {onboardingErrors.role}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Channel * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Channel *
+                    </label>
+                    <select
+                      value={agentFormData.channel}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, channel: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select channel</option>
+                      <option value="call">call</option>
+                      <option value="field">field</option>
+                    </select>
+                  </div>
+
+                  {/* Acr */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Acr
+                    </label>
+                    <select
+                      value={agentFormData.acr}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, acr: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select acr</option>
+                      <option value="<100">&lt;100</option>
+                      <option value="100 - 200">100 - 200</option>
+                      <option value="200 - 300">200 - 300</option>
+                      <option value=">300">&gt;300</option>
+                    </select>
+                  </div>
+
+                  {/* City * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      City *
+                    </label>
+                    <select
+                      value={agentFormData.city}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, city: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select cities</option>
+                      <option value="Pune">Pune</option>
+                      <option value="Mumbai">Mumbai</option>
+                      <option value="Delhi">Delhi</option>
+                      <option value="Bengaluru">Bengaluru</option>
+                      <option value="Hyderabad">Hyderabad</option>
+                      <option value="Nagpur">Nagpur</option>
+                    </select>
+                  </div>
+
+                  {/* Area * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Area *
+                    </label>
+                    <select
+                      value={agentFormData.area}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, area: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select areas</option>
+                      <option value="Pune">Pune</option>
+                      <option value="Hinjewadi">Hinjewadi</option>
+                      <option value="Shivaji Nagar">Shivaji Nagar</option>
+                      <option value="Kothrud">Kothrud</option>
+                      <option value="Hadapsar">Hadapsar</option>
+                      <option value="Viman Nagar">Viman Nagar</option>
+                    </select>
+                  </div>
+
+                  {/* Base Pincode * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Base Pincode *
+                    </label>
+                    <select
+                      value={agentFormData.basePincode}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, basePincode: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select base pincodes</option>
+                      <option value="400063">400063</option>
+                      <option value="411001">411001</option>
+                      <option value="411014">411014</option>
+                      <option value="411038">411038</option>
+                      <option value="411057">411057</option>
+                    </select>
+                  </div>
+
+                  {/* Enter current address * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      * Enter current address
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter current address"
+                      value={agentFormData.currentAddress}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, currentAddress: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    />
+                  </div>
+
+                  {/* Enter permanent address */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Enter permanent address
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter permanent address"
+                      value={agentFormData.permanentAddress}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, permanentAddress: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    />
+                  </div>
+
+                  {/* Enter residence pincode * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      * Enter residence pincode
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter residence pincode"
+                      value={agentFormData.residencePincode}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, residencePincode: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: KYC DETAILS */}
+              {onboardingTab === "kyc" && (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                    gap: "16px"
+                  }}
+                >
+                  {[
+                    { key: "aadhaarCard", title: "Aadhaar Card" },
+                    { key: "panCard", title: "PAN Card" },
+                    { key: "draCertificate", title: "DRA Certificate" },
+                    { key: "pccPvcCertificate", title: "PCC/PVC Certificate and Applied receipt" },
+                    { key: "higherEducationMarksheet", title: "Higher Education Certificate Marksheet" },
+                    { key: "passportPhoto", title: "Passport Size Photo" },
+                    { key: "cancelCheque", title: "Cancel cheque/ Passbook" },
+                    { key: "experienceLetter", title: "Work Experience Letter" }
+                  ].map((doc) => (
+                    <div
+                      key={doc.key}
+                      style={{
+                        padding: "14px",
+                        borderRadius: "12px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.08)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "8px"
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: "12px", fontWeight: 600, color: "#ffffff" }}>
+                          {doc.title}
+                        </span>
+                        {agentFormData[doc.key] && (
+                          <CheckCircle2 style={{ width: "16px", height: "16px", color: "#34d399" }} />
+                        )}
+                      </div>
+                      <label
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "8px",
+                          padding: "12px",
+                          borderRadius: "10px",
+                          border: "1px dashed rgba(255, 255, 255, 0.2)",
+                          backgroundColor: "rgba(255, 255, 255, 0.02)",
+                          cursor: "pointer",
+                          transition: "all 0.15s ease"
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#3b82f6"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)"; }}
+                      >
+                        <Upload style={{ width: "16px", height: "16px", color: "#60a5fa" }} />
+                        <span style={{ fontSize: "11px", color: agentFormData[doc.key] ? "#34d399" : "#94a3b8" }}>
+                          {agentFormData[doc.key] || "Click to upload file"}
+                        </span>
+                        <input
+                          type="file"
+                          style={{ display: "none" }}
+                          onChange={(e) => {
+                            const file = e.target.files && e.target.files[0];
+                            if (file) {
+                              setAgentFormData({ ...agentFormData, [doc.key]: file.name });
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* TAB 3: SKILLS */}
+              {onboardingTab === "skills" && (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                    gap: "16px"
+                  }}
+                >
+                  {/* Language * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Language *
+                    </label>
+                    <select
+                      value={agentFormData.language}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, language: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select languages</option>
+                      <option value="English">English</option>
+                      <option value="Hindi">Hindi</option>
+                      <option value="Marathi">Marathi</option>
+                      <option value="Gujarati">Gujarati</option>
+                      <option value="Kannada">Kannada</option>
+                      <option value="Tamil">Tamil</option>
+                      <option value="Telugu">Telugu</option>
+                    </select>
+                  </div>
+
+                  {/* Collection Experience * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Collection Experience *
+                    </label>
+                    <select
+                      value={agentFormData.collectionExperience}
+                      onChange={(e) => {
+                        setAgentFormData({ ...agentFormData, collectionExperience: e.target.value });
+                        if (e.target.value && onboardingErrors.collectionExperience) {
+                          const errs = { ...onboardingErrors };
+                          delete errs.collectionExperience;
+                          setOnboardingErrors(errs);
+                        }
+                      }}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: onboardingErrors.collectionExperience ? "1px solid #fb7185" : "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select experience</option>
+                      <option value="Freshar">Freshar</option>
+                      <option value="1-2 years">1-2 years</option>
+                      <option value=">2 years">&gt;2 years</option>
+                      <option value="3-5 years">3-5 years</option>
+                      <option value=">5 years">&gt;5 years</option>
+                    </select>
+                    {onboardingErrors.collectionExperience && (
+                      <span style={{ fontSize: "11px", color: "#fb7185", fontWeight: 600 }}>
+                        {onboardingErrors.collectionExperience}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* DRA * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      DRA *
+                    </label>
+                    <select
+                      value={agentFormData.draStatus}
+                      onChange={(e) => {
+                        setAgentFormData({ ...agentFormData, draStatus: e.target.value });
+                        if (e.target.value && onboardingErrors.draStatus) {
+                          const errs = { ...onboardingErrors };
+                          delete errs.draStatus;
+                          setOnboardingErrors(errs);
+                        }
+                      }}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: onboardingErrors.draStatus ? "1px solid #fb7185" : "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select DRA status</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                      <option value="Applied">Applied</option>
+                      <option value="Exempted">Exempted</option>
+                    </select>
+                    {onboardingErrors.draStatus && (
+                      <span style={{ fontSize: "11px", color: "#fb7185", fontWeight: 600 }}>
+                        {onboardingErrors.draStatus}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: AGENT CONTRACT */}
+              {onboardingTab === "contract" && (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                    gap: "16px"
+                  }}
+                >
+                  {/* Active * */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Active *
+                    </label>
+                    <select
+                      value={agentFormData.activeStatus}
+                      onChange={(e) => {
+                        setAgentFormData({ ...agentFormData, activeStatus: e.target.value });
+                        if (e.target.value && onboardingErrors.activeStatus) {
+                          const errs = { ...onboardingErrors };
+                          delete errs.activeStatus;
+                          setOnboardingErrors(errs);
+                        }
+                      }}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: onboardingErrors.activeStatus ? "1px solid #fb7185" : "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select status</option>
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                      <option value="On Leave">On Leave</option>
+                      <option value="Probation">Probation</option>
+                    </select>
+                    {onboardingErrors.activeStatus && (
+                      <span style={{ fontSize: "11px", color: "#fb7185", fontWeight: 600 }}>
+                        {onboardingErrors.activeStatus}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Working Days */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Working Days
+                    </label>
+                    <select
+                      value={agentFormData.workingDays}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, workingDays: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    >
+                      <option value="">Select working days</option>
+                      <option value="Mon - Fri">Mon - Fri</option>
+                      <option value="Mon - Sat">Mon - Sat</option>
+                      <option value="All 7 Days">All 7 Days</option>
+                      <option value="Custom Shift">Custom Shift</option>
+                    </select>
+                  </div>
+
+                  {/* Start Date */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={agentFormData.startDate}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, startDate: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    />
+                  </div>
+
+                  {/* End Date */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={agentFormData.endDate}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, endDate: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    />
+                  </div>
+
+                  {/* Shift Start Time */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Shift Start Time
+                    </label>
+                    <input
+                      type="time"
+                      value={agentFormData.shiftStartTime}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, shiftStartTime: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    />
+                  </div>
+
+                  {/* Shift End Time */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Shift End Time
+                    </label>
+                    <input
+                      type="time"
+                      value={agentFormData.shiftEndTime}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, shiftEndTime: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    />
+                  </div>
+
+                  {/* Enter cash threshold */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: 600, color: "#cbd5e1" }}>
+                      Enter cash threshold
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter cash threshold (e.g. ₹50,000)"
+                      value={agentFormData.cashThreshold}
+                      onChange={(e) => setAgentFormData({ ...agentFormData, cashThreshold: e.target.value })}
+                      style={{
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        backgroundColor: "#020921",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        color: "#ffffff",
+                        fontSize: "12px",
+                        outline: "none"
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "16px 24px",
+                borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+                backgroundColor: "#030c24",
+                flexWrap: "wrap",
+                gap: "12px"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {onboardingTab !== "profile" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onboardingTab === "kyc") setOnboardingTab("profile");
+                      else if (onboardingTab === "skills") setOnboardingTab("kyc");
+                      else if (onboardingTab === "contract") setOnboardingTab("skills");
+                    }}
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: "8px",
+                      backgroundColor: "rgba(255, 255, 255, 0.06)",
+                      color: "#cbd5e1",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      border: "none",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Back
+                  </button>
+                )}
+                {onboardingTab !== "contract" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onboardingTab === "profile") setOnboardingTab("kyc");
+                      else if (onboardingTab === "kyc") setOnboardingTab("skills");
+                      else if (onboardingTab === "skills") setOnboardingTab("contract");
+                    }}
+                    style={{
+                      padding: "8px 14px",
+                      borderRadius: "8px",
+                      backgroundColor: "rgba(255, 255, 255, 0.06)",
+                      color: "#cbd5e1",
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      border: "none",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Next Tab
+                  </button>
+                )}
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowAddAgentModal(false)}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "10px",
+                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer"
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const errors = {};
+                    if (!agentFormData.supervisor) errors.supervisor = "Please select Supervisor Name!";
+                    if (!agentFormData.role) errors.role = "Please select Role!";
+                    if (!agentFormData.collectionExperience) errors.collectionExperience = "Please select Collection Experience!";
+                    if (!agentFormData.draStatus) errors.draStatus = "Please select DRA!";
+                    if (!agentFormData.activeStatus) errors.activeStatus = "Please select Active!";
+
+                    if (Object.keys(errors).length > 0) {
+                      setOnboardingErrors(errors);
+                      if (errors.supervisor || errors.role) {
+                        setOnboardingTab("profile");
+                      } else if (errors.collectionExperience || errors.draStatus) {
+                        setOnboardingTab("skills");
+                      } else if (errors.activeStatus) {
+                        setOnboardingTab("contract");
+                      }
+                      return;
+                    }
+
+                    // Onboarding Successful
+                    const newAgentRecord = {
+                      name: agentFormData.name.trim() || "New Agent",
+                      supervisor: agentFormData.supervisor || "Priya Talekar",
+                      yucollectId: `YC${Math.floor(1000 + Math.random() * 9000)}`,
+                      agency: "PayMagic PVT LTD",
+                      agencyEmployeeId: agentFormData.employeeId.trim() || `PM26${Math.floor(1000 + Math.random() * 9000)}`,
+                      contact: agentFormData.phone.trim() || "9876543210",
+                      channel: (agentFormData.channel || "call").toUpperCase(),
+                      product: agentFormData.product || "Personal Loan",
+                      bucket: agentFormData.bucket || "Bucket 1",
+                      dra: agentFormData.draStatus || "No",
+                      area: agentFormData.area || "Pune",
+                      basePincode: agentFormData.basePincode || "400063",
+                      residencePincode: agentFormData.residencePincode || "400063",
+                      currentAddress: agentFormData.currentAddress || "Pune",
+                      permanentAddress: agentFormData.permanentAddress || "Pune",
+                      experience: agentFormData.collectionExperience || "Freshar",
+                      campaign: "RURAL-BAJAJ-Nov-2026-FINAL-DATA",
+                      acr: agentFormData.acr || "200 - 300"
+                    };
+
+                    setAgentsList((prev) => [newAgentRecord, ...prev]);
+                    setOnboardingErrors({});
+                    setShowAddAgentModal(false);
+                    setAgentFormData(initialOnboardingFormData);
+                    setOnboardingSuccessToast(`Agent ${newAgentRecord.name} onboarded successfully!`);
+                    setTimeout(() => setOnboardingSuccessToast(""), 4000);
+                  }}
+                  style={{
+                    padding: "8px 20px",
+                    borderRadius: "10px",
+                    backgroundColor: "#1d4ed8",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0 2px 8px rgba(29, 78, 216, 0.4)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px"
+                  }}
+                >
+                  <Check style={{ width: "15px", height: "15px" }} />
+                  <span>Onboard Agent</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── ONBOARDING SUCCESS TOAST ── */}
+      {onboardingSuccessToast && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            zIndex: 70,
+            padding: "12px 20px",
+            borderRadius: "12px",
+            backgroundColor: "#059669",
+            color: "#ffffff",
+            fontSize: "13px",
+            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)"
+          }}
+        >
+          <CheckCircle2 style={{ width: "18px", height: "18px" }} />
+          <span>{onboardingSuccessToast}</span>
         </div>
       )}
 
