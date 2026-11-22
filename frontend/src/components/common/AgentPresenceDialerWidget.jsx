@@ -19,11 +19,11 @@ import {
 } from "lucide-react";
 
 export const BREAK_OPTIONS = [
-  { id: "lunch", name: "Lunch Break", icon: "🥪", defaultDuration: 30 },
-  { id: "tea", name: "Tea Break", icon: "☕", defaultDuration: 15 },
-  { id: "meeting", name: "Meeting", icon: "👥", defaultDuration: 30 },
-  { id: "mobile", name: "Mobile Break", icon: "📱", defaultDuration: 10 },
-  { id: "bio", name: "Bio Break", icon: "🚻", defaultDuration: 10 }
+  { id: "lunch", name: "Lunch Break", icon: "🥪" },
+  { id: "tea", name: "Tea Break", icon: "☕" },
+  { id: "meeting", name: "Meeting", icon: "👥" },
+  { id: "mobile", name: "Mobile Break", icon: "📱" },
+  { id: "bio", name: "Bio Break", icon: "🚻" }
 ];
 
 export default function AgentPresenceDialerWidget({
@@ -643,7 +643,7 @@ export default function AgentPresenceDialerWidget({
                       key={b.id}
                       onClick={() => handleStartBreak(b.name)}
                       style={{
-                        padding: "8px 12px",
+                        padding: "10px 14px",
                         borderRadius: "8px",
                         backgroundColor: "#020921",
                         border: "1px solid rgba(255, 255, 255, 0.08)",
@@ -652,20 +652,15 @@ export default function AgentPresenceDialerWidget({
                         fontWeight: 600,
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "space-between",
+                        gap: "10px",
                         cursor: "pointer",
                         transition: "all 0.15s ease"
                       }}
                       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)")}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#020921")}
                     >
-                      <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span>{b.icon}</span>
-                        <span>{b.name}</span>
-                      </span>
-                      <span style={{ fontSize: "10px", color: "#94a3b8" }}>
-                        {b.defaultDuration}m
-                      </span>
+                      <span>{b.icon}</span>
+                      <span>{b.name}</span>
                     </button>
                   ))}
                 </div>
