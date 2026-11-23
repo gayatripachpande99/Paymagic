@@ -59,6 +59,54 @@ function getInitialEmployeeTab() {
   return match ? match[0] : "queue";
 }
 
+export const ALLOCATOR_CONFIG = {
+  "BAJAJ FINSERVE": {
+    portfolios: [
+      "Bajaj Personal Loan Writeoff",
+      "Bajaj Two Wheeler Recovery",
+      "Bajaj Consumer Durable Sup",
+      "Bajaj Auto Loan Bucket 4"
+    ],
+    campaigns: [
+      "URBAN BAJAJ-NOV-2026 (Predictive)",
+      "BAJAJ DIALER HIGH DPD (Predictive)",
+      "BAJAJ RECOVERY EVENING DIALER"
+    ]
+  },
+  "HDFC Bank": {
+    portfolios: [
+      "HDFC Credit Card Delinquency",
+      "HDFC Personal Loan Recovery",
+      "HDFC Auto Loan Bucket 3"
+    ],
+    campaigns: [
+      "HDFC CC AUTO-DIAL (Preview)",
+      "HDFC URBAN RETAIL DIALER (Predictive)"
+    ]
+  },
+  "SBI Cards": {
+    portfolios: [
+      "SBI Unsecured Personal Loan",
+      "SBI Cards Pre-Due Alert",
+      "SBI Cards Recovery 90+ DPD"
+    ],
+    campaigns: [
+      "SBI CARDS SPECIAL RETRIEVAL (Predictive)",
+      "SBI CARD PRIORITY CAMPAIGN"
+    ]
+  },
+  "Punewala (Poonawalla Fincorp)": {
+    portfolios: [
+      "Poonawalla Business Loan Recovery",
+      "Poonawalla Personal Loan Sup"
+    ],
+    campaigns: [
+      "PUNEWALA PREDICTIVE OUTBOUND",
+      "PUNEWALA SME RECOVERY DIALER"
+    ]
+  }
+};
+
 export default function EmployeePortalShell({ user, onLogout, onBackToHome, theme = "dark", toggleTheme }) {
   // Initial presence is strictly OFFLINE on login
   const [presenceStatus, setPresenceStatus] = useState("OFFLINE");
@@ -93,7 +141,17 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
 
   // Scoped Entity Context (Architecture Section 3)
   const [selectedAllocator, setSelectedAllocator] = useState("BAJAJ FINSERVE");
+  const [selectedPortfolio, setSelectedPortfolio] = useState("Bajaj Personal Loan Writeoff");
   const [selectedCampaign, setSelectedCampaign] = useState("URBAN BAJAJ-NOV-2026 (Predictive)");
+
+  const handleAllocatorChange = (newAlloc) => {
+    setSelectedAllocator(newAlloc);
+    const cfg = ALLOCATOR_CONFIG[newAlloc] || ALLOCATOR_CONFIG["BAJAJ FINSERVE"];
+    if (cfg) {
+      if (cfg.portfolios && cfg.portfolios.length > 0) setSelectedPortfolio(cfg.portfolios[0]);
+      if (cfg.campaigns && cfg.campaigns.length > 0) setSelectedCampaign(cfg.campaigns[0]);
+    }
+  };
 
   // Data states
   const [dashboardData, setDashboardData] = useState(null);
@@ -683,27 +741,50 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
             gap: "14px"
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+              {/* Authorized Allocator */}
               <div>
                 <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500, display: "block" }}>Authorized Allocator</span>
                 <select
                   value={selectedAllocator}
-                  onChange={(e) => setSelectedAllocator(e.target.value)}
+                  onChange={(e) => handleAllocatorChange(e.target.value)}
                   style={{ display: "block", marginTop: "4px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.08)", color: "#ffffff", fontWeight: 500, fontSize: "12px", padding: "4px 8px", borderRadius: "6px", outline: "none" }}
                 >
-                  <option value="BAJAJ FINSERVE">BAJAJ FINSERVE</option>
-                  <option value="HDFC Bank">HDFC Bank</option>
-                  <option value="SBI Cards">SBI Cards</option>
+                  {Object.keys(ALLOCATOR_CONFIG).map((alloc) => (
+                    <option key={alloc} value={alloc}>{alloc}</option>
+                  ))}
                 </select>
               </div>
+
               <div style={{ width: "1px", height: "24px", background: "rgba(255, 255, 255, 0.08)" }} />
+
+              {/* Allocation Portfolio */}
               <div>
                 <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500, display: "block" }}>Allocation Portfolio</span>
-                <div style={{ fontSize: "12px", fontWeight: 500, color: "#f8fafc", marginTop: "4px" }}>Bajaj Personal Loan Writeoff</div>
+                <select
+                  value={selectedPortfolio}
+                  onChange={(e) => setSelectedPortfolio(e.target.value)}
+                  style={{ display: "block", marginTop: "4px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.08)", color: "#ffffff", fontWeight: 500, fontSize: "12px", padding: "4px 8px", borderRadius: "6px", outline: "none" }}
+                >
+                  {(ALLOCATOR_CONFIG[selectedAllocator]?.portfolios || []).map((port) => (
+                    <option key={port} value={port}>{port}</option>
+                  ))}
+                </select>
               </div>
+
               <div style={{ width: "1px", height: "24px", background: "rgba(255, 255, 255, 0.08)" }} />
+
+              {/* Assigned Dialing Campaign */}
               <div>
                 <span style={{ fontSize: "11px", color: "#94a3b8", fontWeight: 500, display: "block" }}>Assigned Dialing Campaign</span>
-                <div style={{ fontSize: "12px", fontWeight: 500, color: "#60a5fa", marginTop: "4px" }}>URBAN BAJAJ-NOV-2026 (Predictive)</div>
+                <select
+                  value={selectedCampaign}
+                  onChange={(e) => setSelectedCampaign(e.target.value)}
+                  style={{ display: "block", marginTop: "4px", background: "#03081a", border: "1px solid rgba(255, 255, 255, 0.08)", color: "#60a5fa", fontWeight: 500, fontSize: "12px", padding: "4px 8px", borderRadius: "6px", outline: "none" }}
+                >
+                  {(ALLOCATOR_CONFIG[selectedAllocator]?.campaigns || []).map((camp) => (
+                    <option key={camp} value={camp}>{camp}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
