@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import api from "../../services/api";
 import {
   Users,
   Search,
@@ -19,6 +20,29 @@ export default function HomeCallMonitoringView() {
   const [searchPerf, setSearchPerf] = useState("");
   const [startDate, setStartDate] = useState("2026-11-18");
   const [endDate, setEndDate] = useState("2026-11-18");
+  const [telephonyStats, setTelephonyStats] = useState(null);
+  const [backendAgents, setBackendAgents] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchTelephony = async () => {
+      try {
+        const [telRes, overRes] = await Promise.allSettled([
+          api.get("/admin/telephony"),
+          api.get("/admin/overview")
+        ]);
+        if (isMounted) {
+          if (telRes.status === "fulfilled" && telRes.value?.data) {
+            setTelephonyStats(telRes.value.data.metrics || null);
+          }
+        }
+      } catch (e) {
+        // Fallback maintained
+      }
+    };
+    fetchTelephony();
+    return () => { isMounted = false; };
+  }, []);
 
   // Live agents data
   const liveAgents = [

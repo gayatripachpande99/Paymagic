@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import api from "../../services/api";
 import {
   ArrowLeft,
   Calendar,
@@ -192,6 +193,43 @@ export default function HomePortfolioView({
   const [localSelectedAllocatorId, setLocalSelectedAllocatorId] = useState("alloc_bajaj");
   const [localPortfolios, setLocalPortfolios] = useState(INITIAL_PORTFOLIOS);
   const [localShowCreateModal, setLocalShowCreateModal] = useState(false);
+  const [backendOverview, setBackendOverview] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchBackendData = async () => {
+      try {
+        const [overviewRes, hierarchyRes] = await Promise.allSettled([
+          api.get("/admin/overview"),
+          api.get("/admin/hierarchy")
+        ]);
+
+        if (isMounted) {
+          if (overviewRes.status === "fulfilled" && overviewRes.value?.data) {
+            setBackendOverview(overviewRes.value.data);
+          }
+          if (hierarchyRes.status === "fulfilled" && hierarchyRes.value?.data) {
+            const h = hierarchyRes.value.data;
+            if (h.allocators && h.allocators.length > 0) {
+              setLocalAllocators(h.allocators.map(a => ({
+                id: a.id || `alloc_${a.code?.toLowerCase()}`,
+                name: a.name || a.allocator_name,
+                code: a.code || "ALLOC",
+                type: a.type || "NBFC",
+                company: "PayMagic PVT LTD",
+                badge: (a.name || "B").charAt(0).toUpperCase(),
+                badgeColor: "bg-blue-600"
+              })));
+            }
+          }
+        }
+      } catch (err) {
+        // Fallback maintained
+      }
+    };
+    fetchBackendData();
+    return () => { isMounted = false; };
+  }, []);
 
   const allocators = propAllocators || localAllocators;
   const setAllocators = propSetAllocators || setLocalAllocators;
@@ -219,11 +257,21 @@ export default function HomePortfolioView({
   const selectedAllocator = allocators.find((a) => a.id === selectedAllocatorId) || allocators[0];
   const filteredPortfolios = portfolios.filter((p) => p.allocatorId === selectedAllocatorId);
 
-  const handleCreateAllocator = (e) => {
+  const handleCreateAllocator = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!createForm.name.trim() || !createForm.code.trim()) {
       setCreateError("Please provide both Allocator / Bank Name and Bank Code.");
       return;
+    }
+
+    try {
+      await api.post("/admin/allocators", {
+        name: createForm.name.trim(),
+        code: createForm.code.trim().toUpperCase(),
+        type: createForm.type
+      });
+    } catch (apiErr) {
+      // Local state update still applied for optimistic UX
     }
 
     const newId = `alloc_${createForm.code.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${Date.now().toString().slice(-4)}`;

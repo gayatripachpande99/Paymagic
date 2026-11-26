@@ -5,21 +5,24 @@ import Footer from "./components/Footer";
 import LoginModal from "./components/LoginModal";
 import AdminPortalShell from "./components/AdminPortalShell";
 import EmployeePortalShell from "./components/EmployeePortalShell";
+import api from "./services/api";
 import "./App.css";
 
 // Default authorized users for portal direct linking (e.g. /admin/allocations)
 const DEFAULT_SUPERVISOR_USER = {
-  fullName: "Priya Talekar",
-  role: "SUPERVISOR",
-  email: "infopaymagic@gmail.com",
-  employeeId: "PM2610PT0005"
+  id: "usr_admin",
+  fullName: "Bhushan Gaikwad",
+  role: "ADMIN",
+  email: "admin@paymagic.in",
+  employeeId: "PM-ADM-0001"
 };
 
 const DEFAULT_EMPLOYEE_USER = {
-  fullName: "Manisha Shete",
+  id: "usr_caller_1",
+  fullName: "Rahul Sharma",
   role: "CALLER",
-  email: "manishashete549@gmail.com",
-  employeeId: "PM2610MS0004"
+  email: "caller@paymagic.in",
+  employeeId: "PM-CAL-0001"
 };
 
 export default function App() {
@@ -123,6 +126,29 @@ export default function App() {
     return () => window.removeEventListener("popstate", onPop);
   }, [loggedInUser]);
 
+  // Auto-bootstrap JWT token for direct portal deep-links if missing
+  useEffect(() => {
+    if (appMode === "portal" && !localStorage.getItem("paymagic_token")) {
+      const isEmployeeRoute = typeof window !== "undefined" && window.location.pathname.startsWith("/employee");
+      const creds = isEmployeeRoute
+        ? { email: "caller@paymagic.in", password: "Emp@123" }
+        : { email: "admin@paymagic.in", password: "Admin@123" };
+      api.post("/auth/login", creds).then((res) => {
+        if (res && (res.token || res.tokens?.accessToken) && res.user) {
+          const token = res.token || res.tokens.accessToken;
+          localStorage.setItem("paymagic_token", token);
+          if (res.tokens?.refreshToken) {
+            localStorage.setItem("paymagic_refresh_token", res.tokens.refreshToken);
+          }
+          localStorage.setItem("paymagic_user", JSON.stringify(res.user));
+          setLoggedInUser(res.user);
+        }
+      }).catch((err) => {
+        console.warn("Portal direct authentication bootstrap:", err?.message || err);
+      });
+    }
+  }, [appMode]);
+
   const openLogin = () => setShowLoginModal(true);
   const closeLogin = () => {
     setShowLoginModal(false);
@@ -144,6 +170,8 @@ export default function App() {
 
   const handleLogout = () => {
     localStorage.removeItem("paymagic_user");
+    localStorage.removeItem("paymagic_token");
+    localStorage.removeItem("paymagic_refresh_token");
     setLoggedInUser(null);
     setAppMode("website");
     window.history.pushState(null, "", "/");

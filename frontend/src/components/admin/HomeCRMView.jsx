@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import api from "../../services/api";
 import {
   Search,
   PhoneCall,
@@ -24,6 +25,40 @@ export default function HomeCRMView() {
   const [showPriorityTasksModal, setShowPriorityTasksModal] = useState(false);
   const [prioritySubTab, setPrioritySubTab] = useState("ptp"); // 'ptp' | 'call_drop' | 'missed_call'
   const [activeCallAccount, setActiveCallAccount] = useState(null);
+
+  const [filteredAccountsState, setFilteredAccountsState] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchCases = async () => {
+      try {
+        const res = await api.get(`/admin/cases?limit=50${searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ""}`);
+        if (isMounted && res.success && res.data?.cases?.length > 0) {
+          const mapped = res.data.cases.map(c => ({
+            name: c.borrower_name || c.customer_name || "Borrower",
+            accountNumber: c.case_number || "CASE-REF",
+            phone: c.phone_number || "+91 98******10",
+            product: c.product || "Personal Loan",
+            bucket: c.bucket || "Writeoff",
+            location: c.city || "Pune",
+            outstanding: `₹${Number(c.outstanding_amount).toLocaleString("en-IN")}`,
+            followUp: c.next_action_date || "-",
+            remarks: c.last_disposition_remarks || "-",
+            ccAgent: c.assigned_agent_name || "-",
+            p3Disp: "-",
+            bestDisp: c.status || "-",
+            lastDisp: c.last_disposition || "-",
+            agent: c.assigned_agent_name || "Assigned Specialist"
+          }));
+          setFilteredAccountsState(mapped);
+        }
+      } catch (err) {
+        // Fallback to initial
+      }
+    };
+    fetchCases();
+    return () => { isMounted = false; };
+  }, [searchQuery]);
 
   // 10 exact rows specified by the user
   const crmAccounts = [
@@ -343,7 +378,8 @@ export default function HomeCRMView() {
     }
   ];
 
-  const filteredAccounts = crmAccounts.filter((a) =>
+  const activeAccountList = filteredAccountsState || crmAccounts;
+  const filteredAccounts = activeAccountList.filter((a) =>
     a.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     a.accountNumber.includes(searchQuery) ||
     a.phone.includes(searchQuery)

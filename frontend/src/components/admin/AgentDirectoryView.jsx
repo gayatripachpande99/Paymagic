@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import api from "../../services/api";
 import {
   Users,
   Search,
@@ -164,6 +165,22 @@ export default function AgentDirectoryView() {
   const [actionMenuOpen, setActionMenuOpen] = useState(null);
   const [activeActionModal, setActiveActionModal] = useState(null); // 'view_profile' | 'edit_profile' | 'offboard' | 'unblock'
   const [selectedAgentForModal, setSelectedAgentForModal] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchAgents = async () => {
+      try {
+        const res = await api.get("/admin/agents");
+        if (isMounted && res.success && res.data && res.data.length > 0) {
+          setAgentsList(res.data);
+        }
+      } catch (err) {
+        // Fallback maintained
+      }
+    };
+    fetchAgents();
+    return () => { isMounted = false; };
+  }, []);
 
   // ── AGENT ONBOARDING FORM MODAL STATE ──
   const [showAddAgentModal, setShowAddAgentModal] = useState(false);
@@ -2930,6 +2947,12 @@ export default function AgentDirectoryView() {
                       campaign: "RURAL-BAJAJ-Nov-2026-FINAL-DATA",
                       acr: agentFormData.acr || "200 - 300"
                     };
+
+                    try {
+                      api.post("/admin/agents", newAgentRecord);
+                    } catch (e) {
+                      // optimistic update proceeds
+                    }
 
                     setAgentsList((prev) => [newAgentRecord, ...prev]);
                     setOnboardingErrors({});

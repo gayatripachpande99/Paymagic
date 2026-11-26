@@ -1020,3 +1020,232 @@ export const getPaymentLedger = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
+
+/**
+ * Staff Directory & Agents Management (Architecture Section 4 & 6)
+ */
+export const getAgents = async (req, res) => {
+  try {
+    if (!memoryStore.agents || memoryStore.agents.length === 0) {
+      // Initialize canonical agents from existing staff if not yet populated
+      const callers = (memoryStore.users || []).filter(u => ["CALLER", "FIELD_AGENT", "SUPERVISOR"].includes(u.role));
+      memoryStore.agents = [
+        {
+          id: "agent_001",
+          name: "Manisha Shete",
+          supervisor: "Priya Talekar",
+          yucollectId: "YC7428",
+          agency: "PayMagic PVT LTD",
+          agencyEmployeeId: "PM2610MS0004",
+          contact: "9359060141",
+          channel: "CALL",
+          product: "Consumer Durable",
+          bucket: "Writeoff",
+          dra: "No",
+          area: "Hadapsar",
+          basePincode: "411028",
+          residencePincode: "411028",
+          currentAddress: "Pune, Maharashtra",
+          permanentAddress: "Pune, Maharashtra",
+          experience: "1-3 Years",
+          campaign: "URBAN BAJAJ-NOV-2026 (Predictive)",
+          acr: "ACR-01",
+          status: "Active"
+        },
+        {
+          id: "agent_002",
+          name: "Rahul Verma",
+          supervisor: "Priya Talekar",
+          yucollectId: "YC7429",
+          agency: "PayMagic PVT LTD",
+          agencyEmployeeId: "PM2610RV0002",
+          contact: "9823456789",
+          channel: "CALL",
+          product: "Personal Loan",
+          bucket: "Bucket 4",
+          dra: "Yes",
+          area: "Kothrud",
+          basePincode: "411038",
+          residencePincode: "411038",
+          currentAddress: "Pune, Maharashtra",
+          permanentAddress: "Pune, Maharashtra",
+          experience: "3+ Years",
+          campaign: "URBAN BAJAJ-NOV-2026 (Predictive)",
+          acr: "ACR-02",
+          status: "Active"
+        },
+        {
+          id: "agent_003",
+          name: "Suresh Patil",
+          supervisor: "Priya Talekar",
+          yucollectId: "YC7430",
+          agency: "PayMagic PVT LTD",
+          agencyEmployeeId: "PM2610SP0003",
+          contact: "9876543210",
+          channel: "FIELD",
+          product: "Auto Loan",
+          bucket: "NPA",
+          dra: "Yes",
+          area: "Shivajinagar",
+          basePincode: "411005",
+          residencePincode: "411005",
+          currentAddress: "Pune, Maharashtra",
+          permanentAddress: "Pune, Maharashtra",
+          experience: "5+ Years",
+          campaign: "PAN-INDIA GROUND ROUTE CAMPAIGN",
+          acr: "ACR-03",
+          status: "Active"
+        },
+        {
+          id: "agent_004",
+          name: "Amit Shinde",
+          supervisor: "Priya Talekar",
+          yucollectId: "YC7431",
+          agency: "PayMagic PVT LTD",
+          agencyEmployeeId: "PM2610AS0004",
+          contact: "9123456780",
+          channel: "FIELD",
+          product: "Two Wheeler",
+          bucket: "Recovery",
+          dra: "No",
+          area: "Viman Nagar",
+          basePincode: "411014",
+          residencePincode: "411014",
+          currentAddress: "Pune, Maharashtra",
+          permanentAddress: "Pune, Maharashtra",
+          experience: "1-3 Years",
+          campaign: "PAN-INDIA GROUND ROUTE CAMPAIGN",
+          acr: "ACR-04",
+          status: "Active"
+        }
+      ];
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: memoryStore.agents
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const createAgent = async (req, res) => {
+  try {
+    const payload = req.body || {};
+    const agentName = payload.agentName || payload.name;
+    if (!agentName) {
+      return res.status(400).json({ success: false, message: "Agent name is required." });
+    }
+
+    const newAgent = {
+      id: "agent_" + uuidv4().slice(0, 8),
+      name: agentName,
+      supervisor: payload.supervisorName || "Priya Talekar",
+      yucollectId: payload.yucollectId || "YC" + Math.floor(1000 + Math.random() * 9000),
+      agency: payload.agency || "PayMagic PVT LTD",
+      agencyEmployeeId: payload.employeeId || payload.agencyEmployeeId || "PM" + Date.now().toString().slice(-6),
+      contact: payload.phoneNumber || payload.phone || payload.contact || "9800000000",
+      channel: (payload.channel || "CALL").toUpperCase(),
+      product: Array.isArray(payload.products) ? payload.products.join(", ") : (payload.products || payload.product || "Personal Loan"),
+      bucket: Array.isArray(payload.buckets) ? payload.buckets.join(", ") : (payload.buckets || payload.bucket || "Writeoff"),
+      dra: payload.draStatus || payload.dra || "No",
+      area: payload.area || "Pune Metro",
+      basePincode: payload.basePincode || "411001",
+      residencePincode: payload.residencePincode || "411001",
+      currentAddress: payload.currentAddress || "",
+      permanentAddress: payload.permanentAddress || "",
+      experience: payload.collectionExperience || payload.experience || "1-3 Years",
+      campaign: payload.campaign || "URBAN BAJAJ-NOV-2026 (Predictive)",
+      acr: payload.acr || "ACR-01",
+      status: payload.activeStatus || payload.status || "Active",
+      createdAt: new Date().toISOString()
+    };
+
+    memoryStore.agents = memoryStore.agents || [];
+    memoryStore.agents.unshift(newAgent);
+
+    return res.status(201).json({
+      success: true,
+      message: `Agent ${newAgent.name} successfully onboarded into platform.`,
+      data: newAgent
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const updateAgent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body || {};
+    memoryStore.agents = memoryStore.agents || [];
+    const index = memoryStore.agents.findIndex(a => a.id === id || a.agencyEmployeeId === id);
+
+    if (index === -1) {
+      return res.status(404).json({ success: false, message: "Agent not found" });
+    }
+
+    memoryStore.agents[index] = {
+      ...memoryStore.agents[index],
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: `Agent ${memoryStore.agents[index].name} status updated.`,
+      data: memoryStore.agents[index]
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * Public Enquiry Creation (from HomePage Consultation Form)
+ */
+export const createEnquiry = async (req, res) => {
+  try {
+    const { fullName, workEmail, phone, institutionName, portfolioSize, message } = req.body || {};
+    if (!fullName || !phone) {
+      return res.status(400).json({ success: false, message: "Full Name and Phone number are required." });
+    }
+
+    const enquiry = {
+      id: "enq_" + uuidv4().slice(0, 8),
+      full_name: fullName,
+      email: workEmail || "",
+      phone,
+      company: institutionName || "Financial Institution",
+      portfolio_size: portfolioSize || "Not specified",
+      message: message || "General Consultation Request",
+      status: "NEW",
+      created_at: new Date().toISOString()
+    };
+
+    memoryStore.enquiries = memoryStore.enquiries || [];
+    memoryStore.enquiries.unshift(enquiry);
+
+    // If PostgreSQL pool is active, record into enquiries table
+    if (db.isPgActive && db.isPgActive()) {
+      try {
+        await db.query(
+          `INSERT INTO enquiries (id, full_name, email, phone, company, message, status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [enquiry.id, enquiry.full_name, enquiry.email, enquiry.phone, enquiry.company, enquiry.message, enquiry.status]
+        );
+      } catch (pgErr) {
+        // Enquiries fallback captured in memoryStore
+      }
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Enquiry submitted successfully. A specialist will contact you shortly.",
+      data: enquiry
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};

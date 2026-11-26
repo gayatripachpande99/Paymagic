@@ -7,6 +7,7 @@ import { initializeDatabase } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
+import { createEnquiry } from "./controllers/adminController.js";
 import { logger } from "./utils/logger.js";
 
 const app = express();
@@ -63,6 +64,7 @@ app.use((req, res, next) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/employee", employeeRoutes);
+app.post("/api/enquiries", createEnquiry);
 
 // Health & Readiness Probes
 app.get("/api/health", (req, res) => {

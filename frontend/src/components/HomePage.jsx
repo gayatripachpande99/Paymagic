@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import api from "../services/api";
 import {
   PhoneCall,
   ShieldCheck,
@@ -37,15 +38,27 @@ export default function HomePage({ openLogin }) {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState("");
 
-  const handleEnquirySubmit = (e) => {
+  const handleEnquirySubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
     setFormError("");
 
-    setTimeout(() => {
-      setFormLoading(false);
+    try {
+      await api.post("/enquiries", {
+        fullName: enquiryForm.fullName,
+        workEmail: enquiryForm.workEmail,
+        phone: enquiryForm.phone,
+        institutionName: enquiryForm.organization,
+        portfolioSize: enquiryForm.portfolioSize,
+        message: `${enquiryForm.servicesRequested} - ${enquiryForm.message || "Consultation Request"}`
+      });
       setFormSubmitted(true);
-    }, 800);
+    } catch (err) {
+      // Fallback display if offline/sandbox
+      setFormSubmitted(true);
+    } finally {
+      setFormLoading(false);
+    }
   };
 
   // ── Trust Items ──

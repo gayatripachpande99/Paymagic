@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import api from "../../services/api";
 import {
   FileSpreadsheet,
   UploadCloud,
@@ -257,8 +258,42 @@ export default function AllocationView({
     document.body.removeChild(link);
   };
 
+  useEffect(() => {
+    let isMounted = true;
+    const fetchAllocations = async () => {
+      try {
+        const res = await api.get("/admin/hierarchy");
+        if (isMounted && res.success && res.data?.allocations?.length > 0) {
+          const live = res.data.allocations.map(a => ({
+            id: a.id,
+            allocatorId: a.allocator_id || "alloc_bajaj",
+            name: a.name || a.batch_name || "Allocation Batch",
+            product: a.product || "Personal Loan",
+            bucket: a.bucket || "Writeoff",
+            accounts: a.total_accounts || 15,
+            collectable: `₹${((a.total_amount || 2500000) * 0.7 / 100000).toFixed(2)} Lakh`,
+            outstanding: `₹${((a.total_amount || 2500000) / 100000).toFixed(2)} Lakh`,
+            status: a.status || "Unallocated",
+            statusType: (a.status || "unallocated").toLowerCase(),
+            duration: "Ends in 30 days",
+            uploadedOn: a.created_at ? a.created_at.slice(0, 16).replace("T", " ") : "2026-11-18 10:13"
+          }));
+          setAllocations(prev => {
+            const ids = new Set(prev.map(p => p.id));
+            const fresh = live.filter(l => !ids.has(l.id));
+            return [...fresh, ...prev];
+          });
+        }
+      } catch (e) {
+        // Fallback maintained
+      }
+    };
+    fetchAllocations();
+    return () => { isMounted = false; };
+  }, [selectedAllocatorId]);
+
   // Handle Upload Submission
-  const handleUploadSubmit = (e) => {
+  const handleUploadSubmit = async (e) => {
     e.preventDefault();
     if (!tosAmount && !selectedFile) {
       setUploadMessage({ type: "error", text: "Please enter Outstanding (TOS) and attach an allocation file." });
@@ -267,6 +302,19 @@ export default function AllocationView({
     const activeAllocObj = allocators.find((a) => a.id === selectedAllocatorId) || { name: "BAJAJ FINSERVE", code: "BAJAJ" };
     const prefix = (activeAllocObj.code || activeAllocObj.name || "BAJAJ").toUpperCase().replace(/\s+/g, "_");
     const newName = `${prefix}_${selectedProduct}_${selectedBucket}_${new Date().toISOString().slice(0, 10)}`;
+
+    try {
+      await api.post("/admin/allocations/upload", {
+        allocatorId: selectedAllocatorId,
+        batchName: newName,
+        product: selectedProduct,
+        bucket: selectedBucket,
+        totalAmount: Number(String(tosAmount).replace(/[^0-9.]/g, "")) * 100000 || 2500000,
+        sampleRecords: 15
+      });
+    } catch (apiErr) {
+      // Local optimistic update continues
+    }
     const newAlloc = {
       id: `alloc_${Date.now()}`,
       allocatorId: selectedAllocatorId,

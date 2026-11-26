@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import api from "../../services/api";
 import {
   FileText,
   BarChart3,
@@ -76,7 +77,36 @@ export default function MoreViews({ activeTab }) {
     }
   ];
 
-  const handleDownloadReport = (name, type) => {
+  const [backendAnalytics, setBackendAnalytics] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchAnalytics = async () => {
+      try {
+        const res = await api.get("/admin/analytics");
+        if (isMounted && res.success && res.data) {
+          setBackendAnalytics(res.data);
+        }
+      } catch (err) {
+        // Fallback maintained
+      }
+    };
+    fetchAnalytics();
+    return () => { isMounted = false; };
+  }, [activeTab]);
+
+  const handleDownloadReport = async (name, type) => {
+    try {
+      await api.post("/admin/reports/export", {
+        reportType: type || "STATUTORY",
+        format: "CSV",
+        allocatorId: "alloc_bajaj",
+        fileName: name
+      });
+    } catch (e) {
+      // Local CSV download fallback
+    }
+
     const csvContent = "data:text/csv;charset=utf-8,Allocation_Name,Product,Bucket,Channel,Status,Generated_At\n" +
       `"${name}","Personal Loan","Writeoff","Call","Completed","2026-11-21"\n`;
     const encodedUri = encodeURI(csvContent);

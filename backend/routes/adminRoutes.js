@@ -19,7 +19,10 @@ import {
   exportReport,
   getFieldRecoveryData,
   reconcileCashHandover,
-  getCommunicationsData
+  getCommunicationsData,
+  getAgents,
+  createAgent,
+  updateAgent
 } from "../controllers/adminController.js";
 import { authenticate, requireRoles } from "../middleware/authMiddleware.js";
 
@@ -33,6 +36,11 @@ router.get("/overview", getAdminOverview);
 router.get("/hierarchy", getHierarchy);
 router.get("/analytics", getAnalytics);
 router.get("/telephony", getTelephonyLogs);
+
+// Staff Directory & Agents
+router.get("/agents", getAgents);
+router.post("/agents", createAgent);
+router.patch("/agents/:id", updateAgent);
 
 // Accounts & Work Allocation
 router.get("/cases", getCases);
