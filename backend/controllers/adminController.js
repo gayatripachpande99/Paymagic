@@ -682,33 +682,64 @@ export const uploadAllocationFile = async (req, res) => {
   try {
     const {
       allocator_id,
+      allocatorId,
       portfolio_name,
-      product_type = "Personal Loan",
-      total_accounts = 25,
-      total_principal = 4500000,
+      batchName,
+      product_type,
+      product,
+      total_accounts,
+      sampleRecords,
+      total_principal,
+      totalAmount,
       bucket = "Writeoff",
       start_date,
-      end_date
-    } = req.body;
+      end_date,
+      file_name,
+      fileName
+    } = req.body || {};
 
-    const allocator = (memoryStore.allocators || []).find(a => a.id === allocator_id) || memoryStore.allocators[0];
+    const targetAllocId = allocator_id || allocatorId || "alloc_bajaj";
+    const allocator = (memoryStore.allocators || []).find(a => a.id === targetAllocId) || memoryStore.allocators?.[0] || { id: targetAllocId, name: "BAJAJ FINSERVE", code: "BAJAJ" };
+    const resolvedProduct = product_type || product || "Personal Loan";
+    const resolvedAccounts = Number(total_accounts || sampleRecords || 25);
+    const resolvedPrincipal = Number(total_principal || totalAmount || 4500000);
+    const resolvedName = portfolio_name || batchName || `${allocator.name} ${resolvedProduct} Pool ${new Date().toLocaleDateString("en-IN")}`;
+    const resolvedFile = file_name || fileName || `${resolvedName.replace(/\s+/g, "_")}.xlsx`;
 
     const allocationId = `batch_${uuidv4().substring(0, 8)}`;
+    const formattedDate = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }).replace(",", "");
+    const formattedExpiry = end_date || new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0];
+
     const newAllocation = {
       id: allocationId,
       allocator_id: allocator.id,
+      allocatorId: allocator.id,
       allocator_name: allocator.name,
-      name: portfolio_name || `${allocator.name} ${product_type} Pool ${new Date().toLocaleDateString("en-IN")}`,
+      name: resolvedName,
       portfolio_code: `PORT-${Date.now().toString().slice(-6)}`,
-      product_type,
+      product_type: resolvedProduct,
+      product: resolvedProduct,
       bucket,
-      total_accounts: Number(total_accounts),
-      total_principal: Number(total_principal),
-      total_outstanding: Number(total_principal),
+      total_accounts: resolvedAccounts,
+      case_counts: resolvedAccounts,
+      total_principal: resolvedPrincipal,
+      total_outstanding: resolvedPrincipal,
+      sum_of_outstanding: resolvedPrincipal >= 10000000 
+        ? `₹${(resolvedPrincipal / 10000000).toFixed(2)} Cr` 
+        : `₹${(resolvedPrincipal / 100000).toFixed(2)} Lakh`,
       total_recovered: 0,
       status: "ACTIVE",
+      alloc_status: "100% Allocated",
+      status_type: "100",
+      collection_pct: "0.00%",
+      payment_file_status: "Uploaded",
+      allocation_expiring_on: formattedExpiry,
+      file_name: resolvedFile,
+      uploaded_by: "Priya Talekar",
+      uploader: "PayMagic PVT LTD",
+      created_on: formattedDate,
       start_date: start_date || new Date().toISOString().split("T")[0],
-      end_date: end_date || new Date(Date.now() + 90 * 86400000).toISOString().split("T")[0],
+      end_date: formattedExpiry,
       created_at: new Date().toISOString()
     };
 
@@ -780,6 +811,141 @@ export const uploadAllocationFile = async (req, res) => {
     });
   } catch (err) {
     console.error("uploadAllocationFile error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * Get All Allocations (Filtered by optional allocatorId and status)
+ */
+export const getAllocations = async (req, res) => {
+  try {
+    const { allocatorId, status } = req.query;
+    let list = (memoryStore.allocations || []).map(a => ({
+      id: a.id,
+      allocatorId: a.allocator_id || a.allocatorId || "alloc_bajaj",
+      name: a.name || a.batch_name || "Allocation Batch",
+      product: a.product || a.product_type || "Personal Loan",
+      bucket: a.bucket || "Writeoff",
+      caseCounts: a.case_counts || a.total_accounts || a.accounts || 0,
+      accounts: a.case_counts || a.total_accounts || a.accounts || 0,
+      dnd: a.dnd !== undefined ? a.dnd : 0,
+      sumOfOutstanding: a.sum_of_outstanding || (a.total_outstanding ? `₹${(a.total_outstanding / 10000000).toFixed(2)} Cr` : "₹0.00"),
+      outstanding: a.sum_of_outstanding || (a.total_outstanding ? `₹${(a.total_outstanding / 10000000).toFixed(2)} Cr` : "₹0.00"),
+      collectable: a.collectable || (a.total_outstanding ? `₹${((a.total_outstanding * 0.7) / 10000000).toFixed(2)} Cr` : "₹0.00"),
+      createdOn: a.created_on || (a.created_at ? a.created_at.slice(0, 16).replace("T", " ") : "18-Nov-2026 16:32"),
+      uploadedOn: a.created_on || (a.created_at ? a.created_at.slice(0, 16).replace("T", " ") : "18-Nov-2026 16:32"),
+      allocStatus: a.alloc_status || a.status || "Partially allocated",
+      status: a.alloc_status || a.status || "Partially allocated",
+      collectionPct: a.collection_pct || (a.recovery_rate_pct ? `${a.recovery_rate_pct}%` : "0.00%"),
+      paymentFileStatus: a.payment_file_status || "Upload File",
+      allocationExpiringOn: a.allocation_expiring_on || (a.end_date ? a.end_date.slice(0, 10) : "2026-12-05"),
+      uploadedBy: a.uploaded_by || "Priya Talekar",
+      uploader: a.uploader || "PayMagic PVT LTD",
+      statusType: a.status_type || (a.status === "100% Allocated" ? "100" : a.status === "Closed" ? "closed" : "partially")
+    }));
+
+    if (allocatorId && allocatorId !== "all") {
+      list = list.filter(a => a.allocatorId === allocatorId);
+    }
+    if (status && status !== "all") {
+      list = list.filter(a => (a.statusType === status || a.status.toLowerCase().includes(status.toLowerCase())));
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: list
+    });
+  } catch (err) {
+    console.error("getAllocations error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * Delete Allocation
+ */
+export const deleteAllocation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const idx = (memoryStore.allocations || []).findIndex(a => a.id === id);
+    if (idx !== -1) {
+      memoryStore.allocations.splice(idx, 1);
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Allocation deleted successfully."
+    });
+  } catch (err) {
+    console.error("deleteAllocation error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * Get Upload History
+ */
+export const getAllocationHistory = async (req, res) => {
+  try {
+    const history = (memoryStore.allocations || []).map(a => ({
+      fileName: a.file_name || `${(a.name || "Allocation").replace(/\s+/g, "_")}.xlsx`,
+      uploadedBy: a.uploaded_by || "Priya Talekar",
+      records: a.case_counts || a.total_accounts || 25,
+      dateTime: a.created_on || a.created_at || a.upload_date || new Date().toISOString(),
+      status: a.status === "Closed" ? "Closed (Expired)" : "Ingested (100%)",
+      statusClass: a.status === "Closed" ? "text-muted-foreground" : "text-emerald-500"
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data: history
+    });
+  } catch (err) {
+    console.error("getAllocationHistory error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * Add Accounts to Allocation Batch
+ */
+export const addAccountsToAllocation = async (req, res) => {
+  try {
+    const { allocationId, count = 10, totalAmount = 500000 } = req.body;
+    const alloc = (memoryStore.allocations || []).find(a => a.id === allocationId);
+    if (!alloc) {
+      return res.status(404).json({ success: false, message: "Allocation not found." });
+    }
+    alloc.total_accounts = (alloc.total_accounts || 0) + Number(count);
+    alloc.case_counts = (alloc.case_counts || 0) + Number(count);
+    alloc.total_outstanding = (alloc.total_outstanding || 0) + Number(totalAmount);
+    return res.status(200).json({
+      success: true,
+      message: `Added ${count} accounts to allocation '${alloc.name}'.`,
+      data: alloc
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
+ * Unsubscribe Accounts from Allocation
+ */
+export const unsubscribeAccountsFromAllocation = async (req, res) => {
+  try {
+    const { allocationId, reason = "Customer Request / DND" } = req.body;
+    const alloc = (memoryStore.allocations || []).find(a => a.id === allocationId);
+    if (!alloc) {
+      return res.status(404).json({ success: false, message: "Allocation not found." });
+    }
+    alloc.dnd = (alloc.dnd || 0) + 1;
+    return res.status(200).json({
+      success: true,
+      message: `Unsubscribed accounts successfully. Reason: ${reason}.`,
+      data: alloc
+    });
+  } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }
 };

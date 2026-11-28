@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import api from "../../services/api";
 import {
   FileSpreadsheet,
@@ -131,155 +131,10 @@ export default function AllocationView({
     "Writeoff"
   ];
 
-  // Initial allocations list scoped by institutional allocator
-  const [allocations, setAllocations] = useState([
-    // ── 1. BAJAJ FINSERVE ALLOCATIONS (4 EXACT ALLOCATIONS) ──
-    {
-      id: "bajaj_nov_18",
-      allocatorId: "alloc_bajaj",
-      name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-18_16:32",
-      product: "Personal Loan",
-      bucket: "Writeoff",
-      caseCounts: 117,
-      dnd: 0,
-      sumOfOutstanding: "₹2.81 Cr",
-      createdOn: "18-Nov-2026 16:32",
-      allocStatus: "Partially allocated",
-      collectionPct: "0.00%",
-      paymentFileStatus: "Upload File",
-      allocationExpiringOn: "2026-12-05",
-      uploadedBy: "Priya Talekar",
-      uploader: "PayMagic PVT LTD",
-      statusType: "partially"
-    },
-    {
-      id: "bajaj_nov_13",
-      allocatorId: "alloc_bajaj",
-      name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-13_10:13",
-      product: "Personal Loan",
-      bucket: "Writeoff",
-      caseCounts: 117,
-      dnd: 0,
-      sumOfOutstanding: "₹2.81 Cr",
-      createdOn: "13-Nov-2026 10:13",
-      allocStatus: "100% Allocated",
-      collectionPct: "0.00%",
-      paymentFileStatus: "Uploaded",
-      allocationExpiringOn: "2026-12-01",
-      uploadedBy: "Priya Talekar",
-      uploader: "PayMagic PVT LTD",
-      statusType: "100"
-    },
-    {
-      id: "bajaj_nov_04_13",
-      allocatorId: "alloc_bajaj",
-      name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-04_13:45",
-      product: "Personal Loan",
-      bucket: "Writeoff",
-      caseCounts: 293,
-      dnd: 0,
-      sumOfOutstanding: "₹3.85 Cr",
-      createdOn: "04-Nov-2026 13:45",
-      allocStatus: "100% Allocated",
-      collectionPct: "0.00%",
-      paymentFileStatus: "Uploaded",
-      allocationExpiringOn: "2026-11-22",
-      uploadedBy: "Priya Talekar",
-      uploader: "PayMagic PVT LTD",
-      statusType: "100"
-    },
-    {
-      id: "bajaj_nov_04_11",
-      allocatorId: "alloc_bajaj",
-      name: "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-04_11:31",
-      product: "Personal Loan",
-      bucket: "Writeoff",
-      caseCounts: 4,
-      dnd: 0,
-      sumOfOutstanding: "₹14.20 Lakh",
-      createdOn: "04-Nov-2026 11:31",
-      allocStatus: "Closed",
-      collectionPct: "0.00%",
-      paymentFileStatus: "Expired",
-      allocationExpiringOn: "2026-11-18",
-      uploadedBy: "Priya Talekar",
-      uploader: "PayMagic PVT LTD",
-      statusType: "closed"
-    },
-    // ── 2. PUNEWALA ALLOCATIONS (ISOLATED TO PUNEWALA) ──
-    {
-      id: "punewala_nov_16",
-      allocatorId: "alloc_punewala",
-      name: "PUNEWALA_Personal Loan_Writeoff_2026-11-16_14:20",
-      product: "Personal Loan",
-      bucket: "Writeoff",
-      caseCounts: 85,
-      dnd: 0,
-      sumOfOutstanding: "₹1.55 Cr",
-      createdOn: "16-Nov-2026 14:20",
-      allocStatus: "100% Allocated",
-      collectionPct: "0.00%",
-      paymentFileStatus: "Uploaded",
-      allocationExpiringOn: "2026-12-08",
-      uploadedBy: "Priya Talekar",
-      uploader: "PayMagic PVT LTD",
-      statusType: "100"
-    },
-    {
-      id: "punewala_nov_10",
-      allocatorId: "alloc_punewala",
-      name: "PUNEWALA_Business Loan_Writeoff_2026-11-10_11:15",
-      product: "Business Loan",
-      bucket: "Writeoff",
-      caseCounts: 64,
-      dnd: 0,
-      sumOfOutstanding: "₹1.10 Cr",
-      createdOn: "10-Nov-2026 11:15",
-      allocStatus: "Partially allocated",
-      collectionPct: "0.00%",
-      paymentFileStatus: "Upload File",
-      allocationExpiringOn: "2026-11-24",
-      uploadedBy: "Priya Talekar",
-      uploader: "PayMagic PVT LTD",
-      statusType: "partially"
-    }
-  ]);
-
-  // Upload History Logs
-  const [historyLogs, setHistoryLogs] = useState([
-    {
-      fileName: "BAJAJ_FINSERVE_PL_Writeoff_18Nov.xlsx",
-      uploadedBy: "Priya Talekar",
-      records: 117,
-      dateTime: "2026-11-18 16:32:00",
-      status: "Ingested (100%)",
-      statusClass: "text-emerald-500"
-    },
-    {
-      fileName: "BAJAJ_FINSERVE_PL_13Nov_Batch.xlsx",
-      uploadedBy: "Priya Talekar",
-      records: 117,
-      dateTime: "2026-11-13 10:13:00",
-      status: "Ingested (100%)",
-      statusClass: "text-emerald-500"
-    },
-    {
-      fileName: "URBAN_BAJAJ_NOV_04_WRITE_OFF.csv",
-      uploadedBy: "Priya Talekar",
-      records: 293,
-      dateTime: "2026-11-04 13:45:00",
-      status: "Ingested (100%)",
-      statusClass: "text-emerald-500"
-    },
-    {
-      fileName: "BAJAJ_SAMPLE_4ACCOUNTS.csv",
-      uploadedBy: "Priya Talekar",
-      records: 4,
-      dateTime: "2026-11-04 11:31:00",
-      status: "Closed (Expired)",
-      statusClass: "text-muted-foreground"
-    }
-  ]);
+  // Live allocations list and upload history logs from database (zero static mock arrays)
+  const [allocations, setAllocations] = useState([]);
+  const [historyLogs, setHistoryLogs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Download Sample Allocation File
   const handleDownloadSample = () => {
@@ -298,41 +153,32 @@ export default function AllocationView({
     document.body.removeChild(link);
   };
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchAllocations = async () => {
-      try {
-        const res = await api.get("/admin/hierarchy");
-        if (isMounted && res.success && res.data?.allocations?.length > 0) {
-          const live = res.data.allocations.map(a => ({
-            id: a.id,
-            allocatorId: a.allocator_id || "alloc_bajaj",
-            name: a.name || a.batch_name || "Allocation Batch",
-            product: a.product || "Personal Loan",
-            bucket: a.bucket || "Writeoff",
-            accounts: a.total_accounts || 15,
-            collectable: `₹${((a.total_amount || 2500000) * 0.7 / 100000).toFixed(2)} Lakh`,
-            outstanding: `₹${((a.total_amount || 2500000) / 100000).toFixed(2)} Lakh`,
-            status: a.status || "Unallocated",
-            statusType: (a.status || "unallocated").toLowerCase(),
-            duration: "Ends in 30 days",
-            uploadedOn: a.created_at ? a.created_at.slice(0, 16).replace("T", " ") : "2026-11-18 10:13"
-          }));
-          setAllocations(prev => {
-            const ids = new Set(prev.map(p => p.id));
-            const fresh = live.filter(l => !ids.has(l.id));
-            return [...fresh, ...prev];
-          });
-        }
-      } catch (e) {
-        // Fallback maintained
+  // Live Database Fetch for Scoped Allocations & Ingestion History
+  const fetchAllocationsFromDb = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [allocRes, histRes] = await Promise.allSettled([
+        api.get(`/admin/allocations?allocatorId=${selectedAllocatorId}`),
+        api.get("/admin/allocations/history")
+      ]);
+      if (allocRes.status === "fulfilled" && allocRes.value?.data) {
+        setAllocations(allocRes.value.data);
       }
-    };
-    fetchAllocations();
-    return () => { isMounted = false; };
+      if (histRes.status === "fulfilled" && histRes.value?.data) {
+        setHistoryLogs(histRes.value.data);
+      }
+    } catch (err) {
+      console.error("fetchAllocationsFromDb error:", err);
+    } finally {
+      setIsLoading(false);
+    }
   }, [selectedAllocatorId]);
 
-  // Handle Upload Submission
+  useEffect(() => {
+    fetchAllocationsFromDb();
+  }, [fetchAllocationsFromDb]);
+
+  // Handle Upload Submission - Live Database Ingestion
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
     if (!tosAmount && !selectedFile) {
@@ -346,46 +192,30 @@ export default function AllocationView({
     try {
       await api.post("/admin/allocations/upload", {
         allocatorId: selectedAllocatorId,
+        allocator_id: selectedAllocatorId,
         batchName: newName,
+        portfolio_name: newName,
+        fileName: selectedFile ? selectedFile.name : `${newName}.csv`,
         product: selectedProduct,
+        product_type: selectedProduct,
         bucket: selectedBucket,
         totalAmount: Number(String(tosAmount).replace(/[^0-9.]/g, "")) * 100000 || 2500000,
-        sampleRecords: 15
+        total_principal: Number(String(tosAmount).replace(/[^0-9.]/g, "")) * 100000 || 2500000,
+        sampleRecords: 15,
+        total_accounts: 15,
+        start_date: startDate,
+        end_date: endDate
       });
+
+      await fetchAllocationsFromDb();
+      setUploadMessage({ type: "success", text: "Allocation file uploaded and queued for channel assignment!" });
+      setTimeout(() => {
+        setUploadMessage(null);
+        setCurrentView("list");
+      }, 1200);
     } catch (apiErr) {
-      // Local optimistic update continues
+      setUploadMessage({ type: "error", text: apiErr?.message || "Failed to upload allocation file." });
     }
-    const newAlloc = {
-      id: `alloc_${Date.now()}`,
-      allocatorId: selectedAllocatorId,
-      name: newName,
-      product: selectedProduct,
-      bucket: selectedBucket,
-      accounts: 15,
-      collectable: "₹18.50 Lakh",
-      outstanding: tosAmount || "₹25.00 Lakh",
-      status: "Unallocated",
-      statusType: "unallocated",
-      duration: "Ends in 30 days",
-      uploadedOn: new Date().toISOString().slice(0, 16).replace("T", " ")
-    };
-    setAllocations([newAlloc, ...allocations]);
-    setHistoryLogs([
-      {
-        fileName: selectedFile ? selectedFile.name : `${newName}.csv`,
-        uploadedBy: "Priya Talekar",
-        records: 15,
-        dateTime: new Date().toISOString().slice(0, 19).replace("T", " "),
-        status: "Ingested (100%)",
-        statusClass: "text-emerald-500"
-      },
-      ...historyLogs
-    ]);
-    setUploadMessage({ type: "success", text: "Allocation file uploaded and queued for channel assignment!" });
-    setTimeout(() => {
-      setUploadMessage(null);
-      setCurrentView("list");
-    }, 1500);
   };
 
   // Filter allocations scoped to selected allocator
@@ -441,9 +271,6 @@ export default function AllocationView({
           <h1 style={{ fontSize: "24px", fontWeight: 700, color: "#ffffff", letterSpacing: "-0.02em", margin: 0 }}>
             Allocation list
           </h1>
-          <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", marginBottom: 0, maxWidth: "680px" }}>
-            The Allocation Summary gives you a complete view of all allocations, allocation history. You may also add and view new allocations here.
-          </p>
         </div>
 
         {/* Action Buttons: Upload New File | Upload History | View Allocation List */}
@@ -745,6 +572,14 @@ export default function AllocationView({
                     </td>
                   </tr>
                 ))}
+
+                {filteredAllocations.length === 0 && (
+                  <tr>
+                    <td colSpan={13} style={{ padding: "48px 16px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>
+                      {isLoading ? "Fetching real-time allocations from database..." : "No allocation batches found."}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -931,9 +766,6 @@ export default function AllocationView({
               <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
                 Upload New File
               </h2>
-              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", marginBottom: 0 }}>
-                Upload a new allocation file here to begin planning and assignment to channels
-              </p>
             </div>
             <button
               type="button"
@@ -1370,6 +1202,14 @@ export default function AllocationView({
                       </td>
                     </tr>
                   ))}
+
+                  {historyLogs.length === 0 && (
+                    <tr>
+                      <td colSpan={5} style={{ padding: "48px 16px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>
+                        {isLoading ? "Fetching upload logs from database..." : "No upload history logs recorded."}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1414,9 +1254,9 @@ export default function AllocationView({
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
                 <h4 style={{ fontWeight: 700, fontSize: "16px", color: "#ffffff", margin: 0 }}>Unsubscribe Accounts</h4>
-                <p style={{ fontSize: "12px", color: "#94a3b8", maxWidth: "320px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "4px 0 0 0" }}>
+                <div style={{ fontSize: "12px", color: "#94a3b8", maxWidth: "320px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "4px 0 0 0" }}>
                   {targetAllocation.name}
-                </p>
+                </div>
               </div>
               <button
                 onClick={() => setShowUnsubscribeModal(false)}
@@ -1425,10 +1265,6 @@ export default function AllocationView({
                 <X style={{ width: "16px", height: "16px" }} />
               </button>
             </div>
-
-            <p style={{ fontSize: "12px", color: "#cbd5e1", lineHeight: 1.5, margin: 0 }}>
-              Upload account list to instantly pause recovery contacts and mark institutional resolution.
-            </p>
 
             <div
               style={{
@@ -1464,7 +1300,18 @@ export default function AllocationView({
                 Cancel
               </button>
               <button
-                onClick={() => setShowUnsubscribeModal(false)}
+                onClick={async () => {
+                  try {
+                    await api.post("/admin/allocations/unsubscribe", {
+                      allocationId: targetAllocation.id,
+                      reason: "Customer Request / DND Unsubscribe"
+                    });
+                    await fetchAllocationsFromDb();
+                  } catch (err) {
+                    console.error("Unsubscribe error:", err);
+                  }
+                  setShowUnsubscribeModal(false);
+                }}
                 style={{
                   padding: "8px 16px",
                   borderRadius: "12px",
@@ -1516,9 +1363,9 @@ export default function AllocationView({
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
                 <h4 style={{ fontWeight: 700, fontSize: "16px", color: "#ffffff", margin: 0 }}>Upload New Allocation File</h4>
-                <p style={{ fontSize: "12px", color: "#94a3b8", maxWidth: "320px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "4px 0 0 0" }}>
+                <div style={{ fontSize: "12px", color: "#94a3b8", maxWidth: "320px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", margin: "4px 0 0 0" }}>
                   {targetAllocation.name}
-                </p>
+                </div>
               </div>
               <button
                 onClick={() => setShowAddAccountsModal(false)}
@@ -1527,10 +1374,6 @@ export default function AllocationView({
                 <X style={{ width: "16px", height: "16px" }} />
               </button>
             </div>
-
-            <p style={{ fontSize: "12px", color: "#cbd5e1", lineHeight: 1.5, margin: 0 }}>
-              Append new debtor cases into this existing institutional portfolio bucket.
-            </p>
 
             <div
               style={{
@@ -1564,7 +1407,19 @@ export default function AllocationView({
                 Cancel
               </button>
               <button
-                onClick={() => setShowAddAccountsModal(false)}
+                onClick={async () => {
+                  try {
+                    await api.post("/admin/allocations/add-accounts", {
+                      allocationId: targetAllocation.id,
+                      count: 10,
+                      totalAmount: 500000
+                    });
+                    await fetchAllocationsFromDb();
+                  } catch (err) {
+                    console.error("Add accounts error:", err);
+                  }
+                  setShowAddAccountsModal(false);
+                }}
                 style={{
                   padding: "8px 16px",
                   borderRadius: "12px",
@@ -1618,9 +1473,9 @@ export default function AllocationView({
               <span>Confirm Portfolio Deletion</span>
             </div>
 
-            <p style={{ fontSize: "12px", color: "#cbd5e1", lineHeight: 1.5, margin: 0 }}>
-              Are you sure you want to delete <strong style={{ color: "#ffffff" }}>{targetAllocation.name}</strong>? This will unlink active dials and ground tasks permanently.
-            </p>
+            <div style={{ fontSize: "12px", color: "#cbd5e1", lineHeight: 1.5, margin: 0 }}>
+              Are you sure you want to delete <strong style={{ color: "#ffffff" }}>{targetAllocation.name}</strong>?
+            </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", paddingTop: "8px" }}>
               <button
@@ -1639,8 +1494,13 @@ export default function AllocationView({
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  setAllocations(allocations.filter((a) => a.id !== targetAllocation.id));
+                onClick={async () => {
+                  try {
+                    await api.delete(`/admin/allocations/${targetAllocation.id}`);
+                    await fetchAllocationsFromDb();
+                  } catch (err) {
+                    console.error("Delete allocation error:", err);
+                  }
                   setShowDeleteModal(false);
                 }}
                 style={{

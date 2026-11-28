@@ -22,7 +22,12 @@ import {
   getCommunicationsData,
   getAgents,
   createAgent,
-  updateAgent
+  updateAgent,
+  getAllocations,
+  deleteAllocation,
+  getAllocationHistory,
+  addAccountsToAllocation,
+  unsubscribeAccountsFromAllocation
 } from "../controllers/adminController.js";
 import { authenticate, requireRoles } from "../middleware/authMiddleware.js";
 
@@ -48,6 +53,11 @@ router.get("/cases/:caseId", getCaseDetails);
 router.post("/allocate", allocateAccounts);
 
 // Entity Hierarchy Creation & Ingestion
+router.get("/allocations", getAllocations);
+router.get("/allocations/history", getAllocationHistory);
+router.delete("/allocations/:id", deleteAllocation);
+router.post("/allocations/add-accounts", addAccountsToAllocation);
+router.post("/allocations/unsubscribe", unsubscribeAccountsFromAllocation);
 router.post("/allocators", createAllocator);
 router.post("/allocations/upload", uploadAllocationFile);
 router.post("/campaigns", createCampaign);
