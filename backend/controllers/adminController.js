@@ -734,13 +734,16 @@ export const uploadAllocationFile = async (req, res) => {
       start_date,
       end_date,
       file_name,
-      fileName
+      fileName,
+      accountsList,
+      records
     } = req.body || {};
 
     const targetAllocId = allocator_id || allocatorId || "alloc_bajaj";
     const allocator = (memoryStore.allocators || []).find(a => a.id === targetAllocId) || memoryStore.allocators?.[0] || { id: targetAllocId, name: "BAJAJ FINSERVE", code: "BAJAJ" };
     const resolvedProduct = product_type || product || "Personal Loan";
-    const resolvedAccounts = Number(total_accounts || sampleRecords || 25);
+    const incomingAccounts = Array.isArray(accountsList) ? accountsList : (Array.isArray(records) ? records : []);
+    const resolvedAccounts = incomingAccounts.length > 0 ? incomingAccounts.length : Number(total_accounts || sampleRecords || 25);
     const resolvedPrincipal = Number(total_principal || totalAmount || 4500000);
     const resolvedName = portfolio_name || batchName || `${allocator.name} ${resolvedProduct} Pool ${new Date().toLocaleDateString("en-IN")}`;
     const resolvedFile = file_name || fileName || `${resolvedName.replace(/\s+/g, "_")}.xlsx`;
@@ -785,48 +788,58 @@ export const uploadAllocationFile = async (req, res) => {
     if (!memoryStore.allocations) memoryStore.allocations = [];
     memoryStore.allocations.unshift(newAllocation);
 
-    // Create accounts for this allocation batch
+    // Create loan cases for this allocation
     const sampleBorrowers = [
       "Virender Sehwag", "Rohit Verma", "Kavita Krishnan", "Anil Kumble", "Deepak Chahar",
       "Suresh Raina", "Shikhar Dhawan", "Smriti Mandhana", "Harmanpreet Kaur", "Jasprit Bumrah"
     ];
 
-    const count = Math.min(Number(total_accounts), 25);
-    const avgPrincipal = Math.round(Number(total_principal) / count);
+    const count = incomingAccounts.length > 0 ? incomingAccounts.length : Math.min(resolvedAccounts, 50);
+    const avgPrincipal = Math.round(resolvedPrincipal / Math.max(count, 1));
 
-    for (let i = 1; i <= count; i++) {
-      const caseNum = `CASE-${Date.now().toString().slice(-4)}-${String(i).padStart(3, "0")}`;
-      const borrowerName = sampleBorrowers[i % sampleBorrowers.length];
+    for (let i = 0; i < count; i++) {
+      const row = incomingAccounts[i] || {};
+      const caseNum = `CASE-${Date.now().toString().slice(-4)}-${String(i + 1).padStart(3, "0")}`;
+      
+      const borrowerName = row["Customer Name"] || row["Borrower Name"] || row.customer_name || row.borrower_name || sampleBorrowers[i % sampleBorrowers.length];
+      const loanNo = row["Loan Number"] || row["Account Number"] || row.loan_account_no || `LON-${allocator.code || "PM"}-${Date.now().toString().slice(-5)}${i + 1}`;
+      const rawPhone = String(row["Mobile \nNumber"] || row["Mobile Number"] || row["Phone Number"] || row.phone_number || `98${Math.floor(10000000 + Math.random() * 90000000)}`);
+      const phone = rawPhone.startsWith("+91") ? rawPhone : `+91 ${rawPhone}`;
+      const rowPrincipal = Number(String(row["Total \nOutstanding \nAmount"] || row["Principal \nOutstanding"] || row["Outstanding Amount"] || row.principal_amount || avgPrincipal).replace(/[^0-9.]/g, "")) || avgPrincipal;
+      const address = row["Residence \nAddress"] || row.address || "";
+      const city = row["Location"] || row.city || "Mumbai";
+
       const caseId = `case_up_${uuidv4().substring(0, 8)}`;
-      const principal = avgPrincipal + (i * 2500);
 
       const newCase = {
         id: caseId,
         case_number: caseNum,
-        loan_account_no: `LON-${allocator.code}-${Date.now().toString().slice(-5)}${i}`,
+        loan_account_no: loanNo,
         borrower_name: borrowerName,
         customer_name: borrowerName,
-        phone_number: `+91 98${Math.floor(10000000 + Math.random() * 90000000)}`,
+        phone_number: phone,
         allocator_id: allocator.id,
         allocator_name: allocator.name,
         allocation_id: allocationId,
         allocation_name: newAllocation.name,
-        principal_amount: principal,
-        outstanding_amount: principal,
+        principal_amount: rowPrincipal,
+        outstanding_amount: rowPrincipal,
         dpd: Math.floor(35 + Math.random() * 120),
         status: "New",
-        priority: i % 3 === 0 ? "CRITICAL" : i % 2 === 0 ? "HIGH" : "MEDIUM",
+        priority: (i + 1) % 3 === 0 ? "CRITICAL" : (i + 1) % 2 === 0 ? "HIGH" : "MEDIUM",
         assigned_to_id: null,
         assigned_to_name: "Unassigned",
         call_attempts: 0,
-        city: "Mumbai",
+        address,
+        city,
         state: "Maharashtra",
         created_at: new Date().toISOString()
       };
 
+      if (!memoryStore.loan_cases) memoryStore.loan_cases = [];
       memoryStore.loan_cases.unshift(newCase);
 
-      // Audit log entry
+      if (!memoryStore.case_status_history) memoryStore.case_status_history = [];
       memoryStore.case_status_history.unshift({
         id: `csh_${uuidv4()}`,
         case_id: caseId,
@@ -839,9 +852,8 @@ export const uploadAllocationFile = async (req, res) => {
       });
     }
 
-    // Update allocator stats
     allocator.active_cases_count = (allocator.active_cases_count || 0) + count;
-    allocator.total_portfolio_amount = (allocator.total_portfolio_amount || 0) + Number(total_principal);
+    allocator.total_portfolio_amount = (allocator.total_portfolio_amount || 0) + resolvedPrincipal;
 
     return res.status(201).json({
       success: true,

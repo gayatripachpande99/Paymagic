@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import * as XLSX from "xlsx";
 import api from "../../services/api";
 import {
   FileSpreadsheet,
@@ -87,6 +88,10 @@ export default function AllocationView({
   const [selectedProduct, setSelectedProduct] = useState("Personal Loan");
   const [selectedBucket, setSelectedBucket] = useState("Writeoff");
   const [tosAmount, setTosAmount] = useState("");
+  const [rawTosNumber, setRawTosNumber] = useState(0);
+  const [detectedAccounts, setDetectedAccounts] = useState(0);
+  const [parsedRows, setParsedRows] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
   const [startDate, setStartDate] = useState("2026-11-18");
   const [endDate, setEndDate] = useState("2026-12-06");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -136,6 +141,72 @@ export default function AllocationView({
   const [historyLogs, setHistoryLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Process and parse attached spreadsheet (.xlsx, .xls, .xlsb, .csv)
+  const processFile = async (file) => {
+    if (!file) return;
+    setSelectedFile(file);
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const rows = XLSX.utils.sheet_to_json(worksheet);
+
+      if (rows && rows.length > 0) {
+        setParsedRows(rows);
+        setDetectedAccounts(rows.length);
+
+        // Calculate sum of total outstanding across columns
+        let sumTOS = 0;
+        rows.forEach((r) => {
+          const keys = Object.keys(r);
+          const tosKey = keys.find((k) => /total.?outstanding|outstanding|principal|balance|amount|tos/i.test(k));
+          if (tosKey && r[tosKey] !== undefined && r[tosKey] !== null) {
+            const val = Number(String(r[tosKey]).replace(/[^0-9.]/g, ""));
+            if (!isNaN(val)) sumTOS += val;
+          }
+        });
+
+        if (sumTOS > 0) {
+          const formattedTOS =
+            sumTOS >= 10000000
+              ? `₹${(sumTOS / 10000000).toFixed(2)} Cr`
+              : `₹${(sumTOS / 100000).toFixed(2)} Lakh`;
+          setTosAmount(formattedTOS);
+          setRawTosNumber(sumTOS);
+          setUploadMessage({
+            type: "success",
+            text: `${file.name} attached (${rows.length} accounts, ${formattedTOS} total outstanding detected)`
+          });
+        } else {
+          setDetectedAccounts(rows.length);
+          const defaultSum = rows.length * 50000;
+          setRawTosNumber(defaultSum);
+          setTosAmount(`₹${(defaultSum / 100000).toFixed(2)} Lakh`);
+          setUploadMessage({
+            type: "success",
+            text: `${file.name} attached (${rows.length} accounts detected)`
+          });
+        }
+
+        // Try to match product if present in file columns
+        const sampleRow = rows[0];
+        const rowKeys = Object.keys(sampleRow);
+        const prodKey = rowKeys.find((k) => /product|loan.?type/i.test(k));
+        if (prodKey && sampleRow[prodKey]) {
+          const val = String(sampleRow[prodKey]).toLowerCase();
+          const match = PRODUCTS.find((p) => p.toLowerCase().includes(val) || val.includes(p.toLowerCase()));
+          if (match) setSelectedProduct(match);
+        }
+      } else {
+        setUploadMessage({ type: "success", text: `${file.name} attached.` });
+      }
+    } catch (err) {
+      console.warn("Could not parse binary sheet client-side:", err);
+      setUploadMessage({ type: "success", text: `${file.name} attached.` });
+    }
+  };
+
   // Download Sample Allocation File
   const handleDownloadSample = () => {
     const csvContent =
@@ -157,8 +228,9 @@ export default function AllocationView({
   const fetchAllocationsFromDb = useCallback(async () => {
     setIsLoading(true);
     try {
+      const allocParam = selectedAllocatorId && selectedAllocatorId !== "all" ? `?allocatorId=${selectedAllocatorId}` : "";
       const [allocRes, histRes] = await Promise.allSettled([
-        api.get(`/admin/allocations?allocatorId=${selectedAllocatorId}`),
+        api.get(`/admin/allocations${allocParam}`),
         api.get("/admin/allocations/history")
       ]);
       if (allocRes.status === "fulfilled" && allocRes.value?.data) {
@@ -181,28 +253,53 @@ export default function AllocationView({
   // Handle Upload Submission - Live Database Ingestion
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
-    if (!tosAmount && !selectedFile) {
-      setUploadMessage({ type: "error", text: "Please enter Outstanding (TOS) and attach an allocation file." });
+    if (!tosAmount && !selectedFile && detectedAccounts === 0) {
+      setUploadMessage({ type: "error", text: "Please enter Outstanding (TOS) or attach an allocation file." });
       return;
     }
-    const activeAllocObj = allocators.find((a) => a.id === selectedAllocatorId) || { name: "BAJAJ FINSERVE", code: "BAJAJ" };
-    const prefix = (activeAllocObj.code || activeAllocObj.name || "BAJAJ").toUpperCase().replace(/\s+/g, "_");
-    const newName = `${prefix}_${selectedProduct}_${selectedBucket}_${new Date().toISOString().slice(0, 10)}`;
+
+    const activeAllocId = (selectedAllocatorId && selectedAllocatorId !== "all")
+      ? selectedAllocatorId
+      : (allocators[0]?.id || "alloc_bajaj");
+    const activeAllocObj = allocators.find((a) => a.id === activeAllocId) || { name: "BAJAJ FINSERVE", code: "BAJAJ", id: activeAllocId };
+    const prefix = (activeAllocObj.code || activeAllocObj.name || "ALLOC").toUpperCase().replace(/\s+/g, "_");
+
+    const cleanBaseName = selectedFile?.name
+      ? selectedFile.name.replace(/\.[^/.]+$/, "").replace(/\s+/g, "_")
+      : `${selectedProduct}_${selectedBucket}_${new Date().toISOString().slice(0, 10)}`;
+    const newName = cleanBaseName.startsWith(prefix) ? cleanBaseName : `${prefix}_${cleanBaseName}`;
+
+    let numericPrincipal = rawTosNumber;
+    if (!numericPrincipal && tosAmount) {
+      const cleanNum = Number(String(tosAmount).replace(/[^0-9.]/g, ""));
+      if (/cr/i.test(tosAmount)) {
+        numericPrincipal = cleanNum * 10000000;
+      } else if (/lakh|lac/i.test(tosAmount)) {
+        numericPrincipal = cleanNum * 100000;
+      } else {
+        numericPrincipal = cleanNum || 2500000;
+      }
+    }
+    if (!numericPrincipal) numericPrincipal = 2500000;
+
+    const totalAccountsToSend = detectedAccounts || (parsedRows?.length) || 25;
 
     try {
       await api.post("/admin/allocations/upload", {
-        allocatorId: selectedAllocatorId,
-        allocator_id: selectedAllocatorId,
+        allocatorId: activeAllocId,
+        allocator_id: activeAllocId,
         batchName: newName,
         portfolio_name: newName,
-        fileName: selectedFile ? selectedFile.name : `${newName}.csv`,
+        fileName: selectedFile ? selectedFile.name : `${newName}.xlsx`,
+        file_name: selectedFile ? selectedFile.name : `${newName}.xlsx`,
         product: selectedProduct,
         product_type: selectedProduct,
         bucket: selectedBucket,
-        totalAmount: Number(String(tosAmount).replace(/[^0-9.]/g, "")) * 100000 || 2500000,
-        total_principal: Number(String(tosAmount).replace(/[^0-9.]/g, "")) * 100000 || 2500000,
-        sampleRecords: 15,
-        total_accounts: 15,
+        totalAmount: numericPrincipal,
+        total_principal: numericPrincipal,
+        sampleRecords: totalAccountsToSend,
+        total_accounts: totalAccountsToSend,
+        accountsList: parsedRows || [],
         start_date: startDate,
         end_date: endDate
       });
@@ -219,9 +316,9 @@ export default function AllocationView({
   };
 
   // Filter allocations scoped to selected allocator
-  const scopedAllocations = allocations.filter(
-    (item) => !item.allocatorId || item.allocatorId === selectedAllocatorId
-  );
+  const scopedAllocations = (!selectedAllocatorId || selectedAllocatorId === "all")
+    ? allocations
+    : allocations.filter((item) => !item.allocatorId || item.allocatorId === selectedAllocatorId);
 
   const filteredAllocations = scopedAllocations.filter((item) => {
     const matchesFilter =
@@ -807,13 +904,31 @@ export default function AllocationView({
             {/* Drag & Drop File Zone */}
             <div
               onClick={() => fileInputRef.current && fileInputRef.current.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(false);
+                if (e.dataTransfer?.files?.[0]) {
+                  processFile(e.dataTransfer.files[0]);
+                }
+              }}
               style={{
-                border: "2px dashed rgba(255, 255, 255, 0.15)",
+                border: isDragging ? "2px dashed #3b82f6" : "2px dashed rgba(255, 255, 255, 0.15)",
                 borderRadius: "16px",
                 padding: "32px",
                 textAlign: "center",
                 cursor: "pointer",
-                backgroundColor: "rgba(255, 255, 255, 0.02)",
+                backgroundColor: isDragging ? "rgba(59, 130, 246, 0.08)" : "rgba(255, 255, 255, 0.02)",
                 transition: "all 0.15s ease"
               }}
             >
@@ -821,16 +936,21 @@ export default function AllocationView({
                 ref={fileInputRef}
                 type="file"
                 accept=".xls,.xlsx,.xlsb,.csv"
-                onChange={(e) => setSelectedFile(e.target.files[0])}
+                onChange={(e) => {
+                  if (e.target.files?.[0]) processFile(e.target.files[0]);
+                }}
                 style={{ display: "none" }}
               />
               <UploadCloud style={{ width: "48px", height: "48px", margin: "0 auto 8px auto", color: "#60a5fa" }} />
               <div style={{ fontWeight: 700, fontSize: "14px", color: "#ffffff" }}>
                 {selectedFile ? selectedFile.name : "Drag & drop files or Browse"}
               </div>
-              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>
-                Supported formats: <strong style={{ color: "#e2e8f0" }}>.xls, .xlsx, .xlsb, .csv</strong>
-              </p>
+              {detectedAccounts > 0 && (
+                <div style={{ marginTop: "6px", display: "inline-flex", alignItems: "center", gap: "6px", padding: "3px 10px", borderRadius: "9999px", backgroundColor: "rgba(16, 185, 129, 0.15)", color: "#34d399", fontSize: "11px", fontWeight: 700, border: "1px solid rgba(16, 185, 129, 0.3)" }}>
+                  <CheckCircle2 style={{ width: "12px", height: "12px" }} />
+                  <span>{detectedAccounts} Accounts Detected</span>
+                </div>
+              )}
             </div>
 
             {/* Inputs Grid: Product, Bucket, Outstanding (TOS), Duration */}
@@ -902,7 +1022,10 @@ export default function AllocationView({
                   type="text"
                   placeholder="TOS (e.g. ₹4.74 Cr)"
                   value={tosAmount}
-                  onChange={(e) => setTosAmount(e.target.value)}
+                  onChange={(e) => {
+                    setTosAmount(e.target.value);
+                    setRawTosNumber(0);
+                  }}
                   style={{
                     width: "100%",
                     padding: "10px 12px",
@@ -913,7 +1036,6 @@ export default function AllocationView({
                     color: "#ffffff",
                     outline: "none"
                   }}
-                  required
                 />
               </div>
 
@@ -993,9 +1115,6 @@ export default function AllocationView({
                   <Download style={{ width: "14px", height: "14px" }} />
                   <span>Download Sample Allocation File</span>
                 </button>
-                <span style={{ fontSize: "11px", color: "#94a3b8", display: "block", marginTop: "2px" }}>
-                  Use this template for correctly formatted, smooth processing.
-                </span>
               </div>
 
               <button
@@ -1089,6 +1208,17 @@ export default function AllocationView({
 
             <div
               onClick={() => fileInputRef.current && fileInputRef.current.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.dataTransfer?.files?.[0]) {
+                  processFile(e.dataTransfer.files[0]);
+                }
+              }}
               style={{
                 border: "2px dashed rgba(255, 255, 255, 0.15)",
                 borderRadius: "16px",
@@ -1101,11 +1231,8 @@ export default function AllocationView({
             >
               <UploadCloud style={{ width: "48px", height: "48px", margin: "0 auto 8px auto", color: "#60a5fa" }} />
               <div style={{ fontWeight: 700, fontSize: "14px", color: "#ffffff" }}>
-                Drag &amp; drop files or Browse
+                {selectedFile ? selectedFile.name : "Drag & drop files or Browse"}
               </div>
-              <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px", marginBottom: 0 }}>
-                Supported formats: <strong style={{ color: "#e2e8f0" }}>.xls, .xlsx, .xlsb, .csv</strong>
-              </p>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", paddingTop: "8px" }}>
