@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import api from "../services/api";
 import AdminNavbar from "./admin/AdminNavbar";
 import HomePortfolioView, { INITIAL_ALLOCATORS, INITIAL_PORTFOLIOS } from "./admin/HomePortfolioView";
 import HomeCallMonitoringView from "./admin/HomeCallMonitoringView";
@@ -18,7 +19,10 @@ import {
   TrendingUp,
   Activity,
   Headphones,
-  ShieldAlert
+  ShieldAlert,
+  Landmark,
+  X,
+  Plus
 } from "lucide-react";
 
 // Determine topNav based on active URL
@@ -106,11 +110,144 @@ export default function AdminPortalShell({
     }
   };
 
-  // Institutional Allocator State (Single selection with strict isolation)
-  const [allocators, setAllocators] = useState(INITIAL_ALLOCATORS);
-  const [selectedAllocatorId, setSelectedAllocatorId] = useState("alloc_bajaj");
+  // Institutional Allocator State (Single selection with database persistence and localStorage sync)
+  const [allocators, setAllocators] = useState(() => {
+    try {
+      const saved = localStorage.getItem("paymagic_allocators");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return INITIAL_ALLOCATORS;
+  });
+
+  const [selectedAllocatorId, setSelectedAllocatorId] = useState(() => {
+    try {
+      const saved = localStorage.getItem("paymagic_selected_allocator_id");
+      if (saved) return saved;
+    } catch (e) {}
+    return "alloc_bajaj";
+  });
+
   const [portfolios, setPortfolios] = useState(INITIAL_PORTFOLIOS);
   const [showCreateAllocatorModal, setShowCreateAllocatorModal] = useState(false);
+
+  // Sync selectedAllocatorId to localStorage
+  useEffect(() => {
+    if (selectedAllocatorId) {
+      localStorage.setItem("paymagic_selected_allocator_id", selectedAllocatorId);
+    }
+  }, [selectedAllocatorId]);
+
+  // Fetch live allocators from backend database on load/reload
+  useEffect(() => {
+    let isMounted = true;
+    const fetchAllocatorsFromDb = async () => {
+      try {
+        const res = await api.get("/admin/allocators");
+        if (isMounted && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const live = res.data.map(a => ({
+            id: a.id,
+            name: a.name,
+            code: a.code,
+            type: a.client_type || a.type || "NBFC",
+            company: a.company || "PayMagic PVT LTD",
+            badge: (a.name || "A").charAt(0).toUpperCase(),
+            badgeColor: a.badgeColor || (a.id === "alloc_punewala" ? "bg-amber-600" : a.id === "alloc_hdfc" ? "bg-indigo-600" : "bg-blue-600")
+          }));
+          setAllocators(live);
+          localStorage.setItem("paymagic_allocators", JSON.stringify(live));
+        }
+      } catch (err) {
+        console.error("fetchAllocatorsFromDb error:", err);
+      }
+    };
+    fetchAllocatorsFromDb();
+    return () => { isMounted = false; };
+  }, []);
+
+  // Global Create Allocator Form State
+  const [createForm, setCreateForm] = useState({
+    name: "",
+    code: "",
+    type: "NBFC",
+    initialAllocation: ""
+  });
+  const [createError, setCreateError] = useState("");
+  const [isCreatingAllocator, setIsCreatingAllocator] = useState(false);
+
+  const handleCreateAllocator = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!createForm.name.trim() || !createForm.code.trim()) {
+      setCreateError("Please provide both Allocator / Bank Name and Bank Code.");
+      return;
+    }
+
+    setIsCreatingAllocator(true);
+    setCreateError("");
+    try {
+      const res = await api.post("/admin/allocators", {
+        name: createForm.name.trim(),
+        code: createForm.code.trim().toUpperCase(),
+        type: createForm.type
+      });
+
+      const serverAlloc = res.data || res;
+      const cleanCode = createForm.code.trim().toUpperCase();
+      const newId = serverAlloc.id || `alloc_${cleanCode.toLowerCase().replace(/[^a-z0-9]/g, "_")}`;
+      const newBadge = createForm.name.trim().charAt(0).toUpperCase();
+
+      const newAlloc = {
+        id: newId,
+        name: createForm.name.trim(),
+        code: cleanCode,
+        type: createForm.type,
+        company: "PayMagic PVT LTD",
+        badge: newBadge,
+        badgeColor: "bg-emerald-600"
+      };
+
+      const updatedAllocators = [newAlloc, ...allocators.filter(a => a.id !== newId)];
+      setAllocators(updatedAllocators);
+      setSelectedAllocatorId(newId);
+      localStorage.setItem("paymagic_allocators", JSON.stringify(updatedAllocators));
+      localStorage.setItem("paymagic_selected_allocator_id", newId);
+
+      // If initial allocation was given
+      if (createForm.initialAllocation.trim()) {
+        const newPortfolio = {
+          id: `port_${Date.now()}`,
+          allocatorId: newId,
+          allocatorName: newAlloc.name,
+          name: createForm.initialAllocation.trim(),
+          company: "PayMagic PVT LTD",
+          badge: newBadge,
+          badgeColor: "bg-emerald-600",
+          channel: "Call",
+          statusText: "Ends in 30 days",
+          isExpired: false,
+          accounts: 25,
+          collectedPct: "0.00%",
+          outstanding: "₹50.00 Lakh",
+          collectedAmount: "₹0 / ₹50.00 Lakh",
+          collectable: "₹32.50 Lakh",
+          product: "Personal Loan",
+          bucket: "Writeoff",
+          date: new Date().toISOString().slice(0, 10)
+        };
+        setPortfolios(prev => [newPortfolio, ...prev]);
+      }
+
+      setShowCreateAllocatorModal(false);
+      setCreateForm({ name: "", code: "", type: "NBFC", initialAllocation: "" });
+      setCreateError("");
+    } catch (apiErr) {
+      setCreateError(apiErr?.message || "Failed to create allocator in database.");
+    } finally {
+      setIsCreatingAllocator(false);
+    }
+  };
 
   // Active working allocation name
   const activeAllocationName = "BAJAJ FINSERVE_Personal Loan_Writeoff_2026-11-18_16:32";
@@ -336,6 +473,232 @@ export default function AdminPortalShell({
         setIsOpen={setIsDialerWidgetOpen}
         onPresenceChange={updatePresenceStatus}
       />
+
+      {/* ── GLOBAL CREATE ALLOCATOR MODAL (AVAILABLE ACROSS ALL PAGES) ── */}
+      {showCreateAllocatorModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 99999,
+            backgroundColor: "rgba(0, 0, 0, 0.75)",
+            backdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px"
+          }}
+          onClick={() => setShowCreateAllocatorModal(false)}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "460px",
+              backgroundColor: "#051336",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              borderRadius: "16px",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.8)"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "10px",
+                    backgroundColor: "rgba(37, 99, 235, 0.2)",
+                    color: "#60a5fa",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >
+                  <Landmark style={{ width: "18px", height: "18px" }} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                    Create New Allocator
+                  </h3>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCreateAllocatorModal(false)}
+                style={{
+                  padding: "4px",
+                  borderRadius: "6px",
+                  backgroundColor: "transparent",
+                  border: "none",
+                  color: "#94a3b8",
+                  cursor: "pointer"
+                }}
+              >
+                <X style={{ width: "18px", height: "18px" }} />
+              </button>
+            </div>
+
+            {createError && (
+              <div
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                  backgroundColor: "rgba(244, 63, 94, 0.15)",
+                  border: "1px solid rgba(244, 63, 94, 0.3)",
+                  color: "#fb7185",
+                  fontSize: "11px"
+                }}
+              >
+                {createError}
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleCreateAllocator} style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "12px" }}>
+              <div>
+                <label style={{ display: "block", color: "#cbd5e1", fontWeight: 600, marginBottom: "4px" }}>
+                  Allocator / Bank Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Unity Small Finance Bank, Tata Capital"
+                  value={createForm.name}
+                  onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: "10px",
+                    backgroundColor: "#020921",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <div>
+                  <label style={{ display: "block", color: "#cbd5e1", fontWeight: 600, marginBottom: "4px" }}>
+                    Bank Code *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. UNITY"
+                    value={createForm.code}
+                    onChange={(e) => setCreateForm({ ...createForm, code: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box",
+                      textTransform: "uppercase"
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", color: "#cbd5e1", fontWeight: 600, marginBottom: "4px" }}>
+                    Client Type
+                  </label>
+                  <select
+                    value={createForm.type}
+                    onChange={(e) => setCreateForm({ ...createForm, type: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  >
+                    <option value="NBFC">NBFC</option>
+                    <option value="SCHEDULED_COMMERCIAL_BANK">Scheduled Bank</option>
+                    <option value="FINTECH">Fintech Lender</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: "block", color: "#cbd5e1", fontWeight: 600, marginBottom: "4px" }}>
+                  Initial Portfolio Name (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. UNITY_Personal Loan_Writeoff_2026-11-28"
+                  value={createForm.initialAllocation}
+                  onChange={(e) => setCreateForm({ ...createForm, initialAllocation: e.target.value })}
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: "10px",
+                    backgroundColor: "#020921",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    color: "#ffffff",
+                    fontSize: "12px",
+                    outline: "none",
+                    boxSizing: "border-box"
+                  }}
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", paddingTop: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateAllocatorModal(false)}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "10px",
+                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    color: "#ffffff",
+                    fontWeight: 700,
+                    fontSize: "12px",
+                    border: "none",
+                    cursor: "pointer"
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingAllocator}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "10px",
+                    backgroundColor: "#1d4ed8",
+                    color: "#ffffff",
+                    fontWeight: 700,
+                    fontSize: "12px",
+                    border: "none",
+                    cursor: isCreatingAllocator ? "not-allowed" : "pointer",
+                    boxShadow: "0 2px 4px rgba(29, 78, 216, 0.4)"
+                  }}
+                >
+                  {isCreatingAllocator ? "Creating..." : "Save Allocator"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

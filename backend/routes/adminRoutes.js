@@ -4,6 +4,7 @@ import {
   getHierarchy,
   getCases,
   getCaseDetails,
+  getAllocators,
   createAllocator,
   createCampaign,
   uploadAllocationFile,
@@ -60,6 +61,7 @@ router.delete("/allocations/:id", deleteAllocation);
 router.post("/allocations/add-accounts", addAccountsToAllocation);
 router.post("/allocations/unsubscribe", unsubscribeAccountsFromAllocation);
 router.post("/allocations/assign", assignAllocationToAllocator);
+router.get("/allocators", getAllocators);
 router.post("/allocators", createAllocator);
 router.post("/allocations/upload", uploadAllocationFile);
 router.post("/campaigns", createCampaign);

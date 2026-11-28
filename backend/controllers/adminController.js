@@ -206,22 +206,56 @@ export const getCases = async (req, res) => {
   }
 };
 
+export const getAllocators = async (req, res) => {
+  try {
+    const list = (memoryStore.allocators || []).map(a => ({
+      id: a.id,
+      name: a.name,
+      code: a.code,
+      client_type: a.client_type || a.type || "NBFC",
+      type: a.client_type || a.type || "NBFC",
+      company: a.company || "PayMagic PVT LTD",
+      badge: (a.name || "A").charAt(0).toUpperCase(),
+      badgeColor: a.id === "alloc_punewala" ? "bg-amber-600" : a.id === "alloc_hdfc" ? "bg-indigo-600" : "bg-blue-600",
+      active_cases_count: a.active_cases_count || 0,
+      total_portfolio_amount: a.total_portfolio_amount || 0,
+      created_at: a.created_at || new Date().toISOString()
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data: list
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 export const createAllocator = async (req, res) => {
   try {
-    const { name, code, client_type, contact_person, contact_email, contact_phone } = req.body;
+    const { name, code, client_type, type, contact_person, contact_email, contact_phone } = req.body;
     if (!name || !code) {
       return res.status(400).json({ success: false, message: "Allocator name and code are required." });
     }
 
+    const cleanCode = code.trim().toUpperCase();
+    const cleanId = `alloc_${cleanCode.toLowerCase().replace(/[^a-z0-9]/g, "_")}`;
+    memoryStore.allocators = memoryStore.allocators || [];
+    const existingIdx = memoryStore.allocators.findIndex(a => a.id === cleanId || a.code === cleanCode);
+
     const newAllocator = {
-      id: `alloc_${uuidv4().substring(0, 8)}`,
+      id: cleanId,
       organization_id: "org_paymagic",
       name: name.trim(),
-      code: code.trim().toUpperCase(),
-      client_type: client_type || "NBFC",
+      code: cleanCode,
+      client_type: client_type || type || "NBFC",
+      type: client_type || type || "NBFC",
       contact_person: contact_person || "Operations Manager",
       contact_email: contact_email || "",
       contact_phone: contact_phone || "",
+      company: "PayMagic PVT LTD",
+      badge: name.trim().charAt(0).toUpperCase(),
+      badgeColor: "bg-emerald-600",
       active_cases_count: 0,
       total_portfolio_amount: 0,
       total_recovered_amount: 0,
@@ -230,7 +264,12 @@ export const createAllocator = async (req, res) => {
       created_at: new Date().toISOString()
     };
 
-    memoryStore.allocators.unshift(newAllocator);
+    if (existingIdx !== -1) {
+      memoryStore.allocators[existingIdx] = { ...memoryStore.allocators[existingIdx], ...newAllocator };
+    } else {
+      memoryStore.allocators.unshift(newAllocator);
+    }
+
     return res.status(201).json({ success: true, message: "Allocator created successfully.", data: newAllocator });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
