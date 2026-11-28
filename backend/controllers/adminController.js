@@ -276,37 +276,102 @@ export const createAllocator = async (req, res) => {
   }
 };
 
+export const getCampaigns = async (req, res) => {
+  try {
+    const list = (memoryStore.campaigns || []).map(c => ({
+      id: c.id,
+      name: c.name,
+      category: c.category || c.type || "PREDICTIVE",
+      borrowerCount: c.total_accounts_count || c.borrowerCount || 4,
+      leftOutBorrower: c.left_out_borrowers !== undefined ? c.left_out_borrowers : (c.leftOutBorrower !== undefined ? c.leftOutBorrower : 0),
+      contactability: c.contactability || "75%",
+      agentsCount: c.assigned_agents_count || c.agentsCount || 4,
+      completedAutochurns: c.completed_autochurns || c.completedAutochurns || 0,
+      lob: c.lob || c.product || "Personal Loan",
+      bucket: c.bucket || "Writeoff",
+      channel: c.channel || "CALL",
+      allocatorName: c.allocator_name || c.allocatorName || "BAJAJ FINSERVE",
+      status: c.status === "RUNNING" ? "Running" : (c.status || "Running")
+    }));
+    return res.status(200).json({ success: true, data: list });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 export const createCampaign = async (req, res) => {
   try {
-    const { name, allocator_id, allocation_id, type = "PREDICTIVE", channel = "CALL" } = req.body;
+    const {
+      name,
+      allocator_id,
+      allocatorId,
+      allocation_id,
+      allocationId,
+      category,
+      type = "PREDICTIVE",
+      channel = "CALL",
+      lob,
+      product,
+      bucket = "Writeoff",
+      agents_count,
+      agentsCount,
+      contactability,
+      status = "Running"
+    } = req.body || {};
+
     if (!name) {
       return res.status(400).json({ success: false, message: "Campaign name is required." });
     }
 
-    const allocator = (memoryStore.allocators || []).find(a => a.id === allocator_id);
-    const allocation = (memoryStore.allocations || []).find(b => b.id === allocation_id);
+    const targetAllocId = allocator_id || allocatorId || "alloc_bajaj";
+    const allocator = (memoryStore.allocators || []).find(a => a.id === targetAllocId) || memoryStore.allocators?.[0] || { id: targetAllocId, name: "BAJAJ FINSERVE", code: "BAJAJ" };
+    const targetBatchId = allocation_id || allocationId || "batch_bajaj_nov_2026";
+    const allocation = (memoryStore.allocations || []).find(b => b.id === targetBatchId);
+
+    const resolvedCategory = (category || type || "PREDICTIVE").toUpperCase();
+    const resolvedChannel = (channel || "CALL").toUpperCase();
+    const resolvedLOB = lob || product || allocation?.product || "Personal Loan";
+    const assignedAgents = Number(agents_count || agentsCount || 4);
+    const resolvedBorrowers = allocation?.total_accounts || allocation?.accounts || 4;
 
     const newCampaign = {
       id: `camp_${uuidv4().substring(0, 8)}`,
       organization_id: "org_paymagic",
-      allocator_id: allocator_id || allocator?.id || "alloc_bajaj",
-      allocator_name: allocator?.name || "BAJAJ FINSERVE",
-      allocation_id: allocation_id || allocation?.id || "batch_bajaj_nov_2026",
+      allocator_id: allocator.id,
+      allocator_name: allocator.name,
+      allocation_id: allocation?.id || targetBatchId,
       allocation_name: allocation?.name || "Bajaj Personal Loan Writeoff",
       name: name.trim(),
-      type: type.toUpperCase(), // PREDICTIVE | AUTO | MANUAL
-      channel: channel.toUpperCase(), // CALL | FIELD
-      assigned_agents_count: 0,
-      total_accounts_count: allocation?.total_accounts || 0,
+      category: resolvedCategory,
+      type: resolvedCategory,
+      channel: resolvedChannel,
+      lob: resolvedLOB,
+      product: resolvedLOB,
+      bucket: bucket,
+      assigned_agents_count: assignedAgents,
+      agentsCount: assignedAgents,
+      total_accounts_count: resolvedBorrowers,
+      borrowerCount: resolvedBorrowers,
+      left_out_borrowers: 0,
+      leftOutBorrower: 0,
+      contactability: contactability ? (String(contactability).includes("%") ? String(contactability) : `${contactability}%`) : "75%",
       connected_calls_count: 0,
+      completed_autochurns: 0,
+      completedAutochurns: 0,
       ptp_count: 0,
       collected_amount: 0,
-      status: "RUNNING",
+      status: status,
       created_at: new Date().toISOString()
     };
 
+    if (!memoryStore.campaigns) memoryStore.campaigns = [];
     memoryStore.campaigns.unshift(newCampaign);
-    return res.status(201).json({ success: true, message: "Campaign created successfully.", data: newCampaign });
+
+    return res.status(201).json({
+      success: true,
+      message: "Campaign created successfully.",
+      data: newCampaign
+    });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }

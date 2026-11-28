@@ -284,10 +284,10 @@ export default function AgentDirectoryView() {
   // ── 3. CAMPAIGN SUB-TAB STATE ──
   const [searchCampaign, setSearchCampaign] = useState("");
   const [showCreateCampaignModal, setShowCreateCampaignModal] = useState(false);
-
-  // ── 4. INCENTIVES SUB-TAB STATE ──
-  const [searchIncentive, setSearchIncentive] = useState("");
-  const [showNewProgramModal, setShowNewProgramModal] = useState(false);
+  const [isSubmittingCampaign, setIsSubmittingCampaign] = useState(false);
+  const [campaignError, setCampaignError] = useState("");
+  const [allocatorOptions, setAllocatorOptions] = useState([]);
+  const [allocationOptions, setAllocationOptions] = useState([]);
 
   // 8 Exact Campaign records specified by user
   const campaignsList = [
@@ -381,6 +381,145 @@ export default function AgentDirectoryView() {
     }
   ];
 
+  const [campaigns, setCampaigns] = useState(campaignsList);
+
+  const [campaignForm, setCampaignForm] = useState({
+    name: "",
+    category: "PREDICTIVE",
+    allocatorId: "alloc_bajaj",
+    allocatorName: "BAJAJ FINSERVE",
+    allocationId: "batch_bajaj_nov_2026",
+    allocationName: "Bajaj Personal Loan Writeoff",
+    channel: "CALL",
+    lob: "Personal Loan",
+    bucket: "Writeoff",
+    agentsCount: 4,
+    contactability: "78%",
+    completedAutochurns: 0,
+    status: "Running",
+    startDate: "2026-11-18",
+    endDate: "2026-12-18"
+  });
+
+  // Live database fetch for campaigns, allocators and allocations
+  useEffect(() => {
+    let isMounted = true;
+    const fetchCampaignData = async () => {
+      try {
+        const [campRes, allocRes, allocBatchRes] = await Promise.allSettled([
+          api.get("/admin/campaigns"),
+          api.get("/admin/allocators"),
+          api.get("/admin/allocations")
+        ]);
+        if (isMounted) {
+          if (campRes.status === "fulfilled" && campRes.value?.data && Array.isArray(campRes.value.data) && campRes.value.data.length > 0) {
+            setCampaigns(prev => {
+              const existingNames = new Set(prev.map(c => c.name));
+              const incoming = campRes.value.data.filter(c => !existingNames.has(c.name));
+              return [...incoming, ...prev];
+            });
+          }
+          if (allocRes.status === "fulfilled" && allocRes.value?.data && Array.isArray(allocRes.value.data)) {
+            setAllocatorOptions(allocRes.value.data);
+          }
+          if (allocBatchRes.status === "fulfilled" && allocBatchRes.value?.data && Array.isArray(allocBatchRes.value.data)) {
+            setAllocationOptions(allocBatchRes.value.data);
+          }
+        }
+      } catch (err) {
+        console.error("fetchCampaignData error:", err);
+      }
+    };
+    fetchCampaignData();
+    return () => { isMounted = false; };
+  }, []);
+
+  // Fallback options for allocators and allocations if database is initializing
+  const fallbackAllocators = allocatorOptions.length > 0 ? allocatorOptions : [
+    { id: "alloc_bajaj", name: "BAJAJ FINSERVE" },
+    { id: "alloc_punewala", name: "PUNEWALA" },
+    { id: "alloc_hdfc", name: "HDFC" },
+    { id: "alloc_unity", name: "UNITY" }
+  ];
+
+  const fallbackAllocations = allocationOptions.length > 0 ? allocationOptions : [
+    { id: "batch_bajaj_nov_2026", name: "Bajaj Personal Loan Writeoff", allocator_id: "alloc_bajaj", total_accounts: 4 },
+    { id: "batch_punewala_auto", name: "Poonawala Auto Loan", allocator_id: "alloc_punewala", total_accounts: 20 },
+    { id: "batch_unity_writeoff", name: "Unity Writeoff Personal Loan", allocator_id: "alloc_unity", total_accounts: 117 }
+  ];
+
+  const handleCreateCampaignSubmit = async (e) => {
+    e.preventDefault();
+    if (!campaignForm.name.trim()) {
+      setCampaignError("Campaign Name is required.");
+      return;
+    }
+
+    try {
+      setIsSubmittingCampaign(true);
+      setCampaignError("");
+      const activeAlloc = fallbackAllocators.find(a => a.id === campaignForm.allocatorId);
+      const activeBatch = fallbackAllocations.find(b => b.id === campaignForm.allocationId);
+
+      const payload = {
+        name: campaignForm.name.trim(),
+        category: campaignForm.category,
+        allocator_id: campaignForm.allocatorId,
+        allocatorId: campaignForm.allocatorId,
+        allocator_name: activeAlloc?.name || campaignForm.allocatorName,
+        allocation_id: campaignForm.allocationId,
+        allocationId: campaignForm.allocationId,
+        allocation_name: activeBatch?.name || campaignForm.allocationName,
+        channel: campaignForm.channel,
+        lob: campaignForm.lob,
+        product: campaignForm.lob,
+        bucket: campaignForm.bucket,
+        agents_count: Number(campaignForm.agentsCount) || 4,
+        agentsCount: Number(campaignForm.agentsCount) || 4,
+        contactability: campaignForm.contactability || "75%",
+        completed_autochurns: Number(campaignForm.completedAutochurns) || 0,
+        status: campaignForm.status || "Running",
+        start_date: campaignForm.startDate,
+        end_date: campaignForm.endDate
+      };
+
+      const res = await api.post("/admin/campaigns", payload);
+      const createdItem = res?.data || {
+        ...payload,
+        borrowerCount: activeBatch?.total_accounts || activeBatch?.accounts || 4,
+        leftOutBorrower: 0
+      };
+
+      setCampaigns(prev => [createdItem, ...prev]);
+      setShowCreateCampaignModal(false);
+      setCampaignForm({
+        name: "",
+        category: "PREDICTIVE",
+        allocatorId: fallbackAllocators[0]?.id || "alloc_bajaj",
+        allocatorName: fallbackAllocators[0]?.name || "BAJAJ FINSERVE",
+        allocationId: fallbackAllocations[0]?.id || "batch_bajaj_nov_2026",
+        allocationName: fallbackAllocations[0]?.name || "Bajaj Personal Loan Writeoff",
+        channel: "CALL",
+        lob: "Personal Loan",
+        bucket: "Writeoff",
+        agentsCount: 4,
+        contactability: "78%",
+        completedAutochurns: 0,
+        status: "Running",
+        startDate: "2026-11-18",
+        endDate: "2026-12-18"
+      });
+    } catch (err) {
+      setCampaignError(err?.message || "Failed to create campaign.");
+    } finally {
+      setIsSubmittingCampaign(false);
+    }
+  };
+
+  // ── 4. INCENTIVES SUB-TAB STATE ──
+  const [searchIncentive, setSearchIncentive] = useState("");
+  const [showNewProgramModal, setShowNewProgramModal] = useState(false);
+
   const filteredAgents = agentsList.filter((a) => {
     const matchesSearch =
       a.name.toLowerCase().includes(searchAgentList.toLowerCase()) ||
@@ -391,10 +530,10 @@ export default function AgentDirectoryView() {
     return matchesSearch;
   });
 
-  const filteredCampaigns = campaignsList.filter((c) =>
-    c.name.toLowerCase().includes(searchCampaign.toLowerCase()) ||
-    c.lob.toLowerCase().includes(searchCampaign.toLowerCase()) ||
-    c.category.toLowerCase().includes(searchCampaign.toLowerCase())
+  const filteredCampaigns = campaigns.filter((c) =>
+    (c.name || "").toLowerCase().includes(searchCampaign.toLowerCase()) ||
+    (c.lob || "").toLowerCase().includes(searchCampaign.toLowerCase()) ||
+    (c.category || "").toLowerCase().includes(searchCampaign.toLowerCase())
   );
 
   return (
@@ -1761,74 +1900,436 @@ export default function AgentDirectoryView() {
           <div
             style={{
               width: "100%",
-              maxWidth: "460px",
+              maxWidth: "620px",
+              maxHeight: "90vh",
+              overflowY: "auto",
               backgroundColor: "#051336",
               border: "1px solid rgba(255, 255, 255, 0.12)",
               borderRadius: "16px",
-              padding: "20px",
+              padding: "24px",
               display: "flex",
               flexDirection: "column",
-              gap: "16px",
+              gap: "20px",
               boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.8)"
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "12px" }}>
               <h4 style={{ fontWeight: 700, fontSize: "16px", color: "#ffffff", margin: 0 }}>Create Campaign</h4>
               <button
+                type="button"
                 onClick={() => setShowCreateCampaignModal(false)}
                 style={{ padding: "4px", borderRadius: "6px", backgroundColor: "transparent", border: "none", color: "#94a3b8", cursor: "pointer" }}
               >
-                <XCircle style={{ width: "18px", height: "18px" }} />
+                <XCircle style={{ width: "20px", height: "20px" }} />
               </button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px", fontSize: "12px" }}>
-              <input
-                type="text"
-                placeholder="Campaign Name (e.g. Q4 RECOVERY)"
+
+            {campaignError && (
+              <div
                 style={{
-                  width: "100%",
                   padding: "10px 14px",
                   borderRadius: "10px",
-                  backgroundColor: "#020921",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  color: "#ffffff",
+                  backgroundColor: "rgba(239, 68, 68, 0.15)",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                  color: "#f87171",
                   fontSize: "12px",
-                  outline: "none",
-                  boxSizing: "border-box"
-                }}
-              />
-              <select
-                style={{
-                  width: "100%",
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  backgroundColor: "#020921",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  color: "#ffffff",
-                  fontSize: "12px",
-                  outline: "none",
-                  boxSizing: "border-box"
+                  fontWeight: 600
                 }}
               >
-                <option value="PREDICTIVE">Predictive Dialer</option>
-                <option value="MANUAL">Manual Preview</option>
-              </select>
-            </div>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-              <button
-                onClick={() => setShowCreateCampaignModal(false)}
-                style={{ padding: "8px 16px", borderRadius: "10px", backgroundColor: "rgba(255, 255, 255, 0.08)", color: "#ffffff", fontWeight: 700, fontSize: "12px", border: "none", cursor: "pointer" }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setShowCreateCampaignModal(false)}
-                style={{ padding: "8px 16px", borderRadius: "10px", backgroundColor: "#1d4ed8", color: "#ffffff", fontWeight: 700, fontSize: "12px", border: "none", cursor: "pointer" }}
-              >
-                Create Campaign
-              </button>
-            </div>
+                {campaignError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateCampaignSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                
+                {/* Campaign Name (Full Width) */}
+                <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Campaign Name <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={campaignForm.name}
+                    onChange={(e) => setCampaignForm({ ...campaignForm, name: e.target.value })}
+                    placeholder="Campaign Name"
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  />
+                </div>
+
+                {/* Allocator / Bank */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Allocator <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <select
+                    value={campaignForm.allocatorId}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      const selectedAlloc = (allocatorOptions.length > 0 ? allocatorOptions : [
+                        { id: "alloc_bajaj", name: "BAJAJ FINSERVE" },
+                        { id: "alloc_punewala", name: "PUNEWALA" },
+                        { id: "alloc_hdfc", name: "HDFC" },
+                        { id: "alloc_unity", name: "UNITY" }
+                      ]).find(a => a.id === selectedId);
+                      setCampaignForm({
+                        ...campaignForm,
+                        allocatorId: selectedId,
+                        allocatorName: selectedAlloc?.name || ""
+                      });
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  >
+                    {(allocatorOptions.length > 0 ? allocatorOptions : [
+                      { id: "alloc_bajaj", name: "BAJAJ FINSERVE" },
+                      { id: "alloc_punewala", name: "PUNEWALA" },
+                      { id: "alloc_hdfc", name: "HDFC" },
+                      { id: "alloc_unity", name: "UNITY" }
+                    ]).map((alloc) => (
+                      <option key={alloc.id} value={alloc.id}>
+                        {alloc.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Allocation Portfolio */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Allocation Portfolio <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <select
+                    value={campaignForm.allocationId}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      const selectedBatch = (allocationOptions.length > 0 ? allocationOptions : [
+                        { id: "batch_bajaj_nov_2026", name: "Bajaj Personal Loan Writeoff" },
+                        { id: "batch_punewala_auto", name: "Poonawala Auto Loan" },
+                        { id: "batch_unity_writeoff", name: "Unity Writeoff Personal Loan" },
+                        { id: "batch_hdfc_cc", name: "HDFC Credit Card" }
+                      ]).find(b => b.id === selectedId);
+                      setCampaignForm({
+                        ...campaignForm,
+                        allocationId: selectedId,
+                        allocationName: selectedBatch?.name || ""
+                      });
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  >
+                    {(allocationOptions.length > 0 ? allocationOptions : [
+                      { id: "batch_bajaj_nov_2026", name: "Bajaj Personal Loan Writeoff" },
+                      { id: "batch_punewala_auto", name: "Poonawala Auto Loan" },
+                      { id: "batch_unity_writeoff", name: "Unity Writeoff Personal Loan" },
+                      { id: "batch_hdfc_cc", name: "HDFC Credit Card" }
+                    ]).map((batch) => (
+                      <option key={batch.id} value={batch.id}>
+                        {batch.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Dialing Category */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Category <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <select
+                    value={campaignForm.category}
+                    onChange={(e) => setCampaignForm({ ...campaignForm, category: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  >
+                    <option value="PREDICTIVE">PREDICTIVE</option>
+                    <option value="MANUAL">MANUAL</option>
+                    <option value="AUTO">AUTO</option>
+                    <option value="PREVIEW">PREVIEW</option>
+                  </select>
+                </div>
+
+                {/* Channel */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Channel <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <select
+                    value={campaignForm.channel}
+                    onChange={(e) => setCampaignForm({ ...campaignForm, channel: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  >
+                    <option value="CALL">CALL</option>
+                    <option value="FIELD">FIELD</option>
+                    <option value="DIGITAL">DIGITAL</option>
+                  </select>
+                </div>
+
+                {/* Line of Business (LOB) / Product */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Line of Business (LOB) <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <select
+                    value={campaignForm.lob}
+                    onChange={(e) => setCampaignForm({ ...campaignForm, lob: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  >
+                    {PRODUCT_OPTIONS.map((prod) => (
+                      <option key={prod} value={prod}>
+                        {prod}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Bucket */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Bucket <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <select
+                    value={campaignForm.bucket}
+                    onChange={(e) => setCampaignForm({ ...campaignForm, bucket: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  >
+                    {BUCKET_OPTIONS.map((b) => (
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Agents Count */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Agents Count <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={campaignForm.agentsCount}
+                    onChange={(e) => setCampaignForm({ ...campaignForm, agentsCount: e.target.value })}
+                    placeholder="4"
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  />
+                </div>
+
+                {/* Target Contactability Rate */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Target Contactability (%)
+                  </label>
+                  <input
+                    type="text"
+                    value={campaignForm.contactability}
+                    onChange={(e) => setCampaignForm({ ...campaignForm, contactability: e.target.value })}
+                    placeholder="78%"
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  />
+                </div>
+
+                {/* Status */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Status <span style={{ color: "#ef4444" }}>*</span>
+                  </label>
+                  <select
+                    value={campaignForm.status}
+                    onChange={(e) => setCampaignForm({ ...campaignForm, status: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  >
+                    <option value="Running">Running</option>
+                    <option value="Paused">Paused</option>
+                    <option value="Draft">Draft</option>
+                  </select>
+                </div>
+
+                {/* Start Date */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={campaignForm.startDate}
+                    onChange={(e) => setCampaignForm({ ...campaignForm, startDate: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  />
+                </div>
+
+                {/* End Date */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "11px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={campaignForm.endDate}
+                    onChange={(e) => setCampaignForm({ ...campaignForm, endDate: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                      color: "#ffffff",
+                      fontSize: "12px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  />
+                </div>
+
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", paddingTop: "12px", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateCampaignModal(false)}
+                  style={{
+                    padding: "9px 18px",
+                    borderRadius: "10px",
+                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    color: "#ffffff",
+                    fontWeight: 700,
+                    fontSize: "12px",
+                    border: "none",
+                    cursor: "pointer"
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingCampaign}
+                  style={{
+                    padding: "9px 18px",
+                    borderRadius: "10px",
+                    backgroundColor: isSubmittingCampaign ? "#3b82f6" : "#1d4ed8",
+                    color: "#ffffff",
+                    fontWeight: 700,
+                    fontSize: "12px",
+                    border: "none",
+                    cursor: isSubmittingCampaign ? "not-allowed" : "pointer",
+                    boxShadow: "0 2px 6px rgba(29, 78, 216, 0.4)"
+                  }}
+                >
+                  {isSubmittingCampaign ? "Creating..." : "Create Campaign"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -6,6 +6,7 @@ import {
   getCaseDetails,
   getAllocators,
   createAllocator,
+  getCampaigns,
   createCampaign,
   uploadAllocationFile,
   allocateAccounts,
@@ -64,6 +65,7 @@ router.post("/allocations/assign", assignAllocationToAllocator);
 router.get("/allocators", getAllocators);
 router.post("/allocators", createAllocator);
 router.post("/allocations/upload", uploadAllocationFile);
+router.get("/campaigns", getCampaigns);
 router.post("/campaigns", createCampaign);
 router.get("/campaigns/:campaignId/members", getCampaignMembers);
 router.post("/campaigns/:campaignId/members", mapCampaignMembers);
