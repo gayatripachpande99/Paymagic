@@ -34,8 +34,48 @@ export default function AllocationView({
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Three dots menu state
+  // Three dots menu state (with viewport-safe fixed positioning)
   const [activeMenuId, setActiveMenuId] = useState(null);
+  const [activeMenuItem, setActiveMenuItem] = useState(null);
+  const [menuPosition, setMenuPosition] = useState({ top: null, bottom: null, right: 16 });
+
+  // Handle opening action menu with viewport-safe fixed positioning
+  const handleToggleActionMenu = (e, item) => {
+    e.stopPropagation();
+    if (activeMenuId === item.id) {
+      setActiveMenuId(null);
+      setActiveMenuItem(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUpwards = spaceBelow < 230;
+
+    setMenuPosition({
+      top: openUpwards ? undefined : rect.bottom + 4,
+      bottom: openUpwards ? window.innerHeight - rect.top + 4 : undefined,
+      right: Math.max(16, window.innerWidth - rect.right)
+    });
+    setActiveMenuId(item.id);
+    setActiveMenuItem(item);
+  };
+
+  // Close floating action menu on click outside, scroll, or resize
+  useEffect(() => {
+    if (!activeMenuId) return;
+    const handleClose = () => {
+      setActiveMenuId(null);
+      setActiveMenuItem(null);
+    };
+    window.addEventListener("click", handleClose);
+    window.addEventListener("scroll", handleClose, true);
+    window.addEventListener("resize", handleClose);
+    return () => {
+      window.removeEventListener("click", handleClose);
+      window.removeEventListener("scroll", handleClose, true);
+      window.removeEventListener("resize", handleClose);
+    };
+  }, [activeMenuId]);
 
   // Modals state
   const [showUnsubscribeModal, setShowUnsubscribeModal] = useState(false);
@@ -684,161 +724,198 @@ export default function AllocationView({
 
                     <td style={{ padding: "14px 14px", color: "#94a3b8" }}>{item.uploader || "PayMagic PVT LTD"}</td>
 
-                    <td style={{ padding: "14px 4px 14px 14px", textAlign: "right", position: "relative" }}>
+                    <td style={{ padding: "14px 4px 14px 14px", textAlign: "right" }}>
                       <button
-                        onClick={() => setActiveMenuId(activeMenuId === item.id ? null : item.id)}
+                        onClick={(e) => handleToggleActionMenu(e, item)}
                         style={{
-                          padding: "4px",
-                          borderRadius: "4px",
-                          backgroundColor: "transparent",
+                          padding: "6px",
+                          borderRadius: "6px",
+                          backgroundColor: activeMenuId === item.id ? "rgba(255, 255, 255, 0.12)" : "transparent",
                           border: "none",
-                          color: "#94a3b8",
-                          cursor: "pointer"
+                          color: activeMenuId === item.id ? "#ffffff" : "#94a3b8",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center"
                         }}
                         title="Actions"
                       >
                         <MoreVertical style={{ width: "16px", height: "16px" }} />
                       </button>
-
-                      {/* Three-dot dropdown menu */}
-                      {activeMenuId === item.id && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            right: 0,
-                            marginTop: "4px",
-                            width: "208px",
-                            borderRadius: "12px",
-                            backgroundColor: "#051336",
-                            border: "1px solid rgba(255, 255, 255, 0.12)",
-                            padding: "6px",
-                            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
-                            zIndex: 50,
-                            textAlign: "left"
-                          }}
-                          onClick={() => setActiveMenuId(null)}
-                        >
-                          <button
-                            onClick={() => onOpenPortfolioDashboard && onOpenPortfolioDashboard(item.id)}
-                            style={{
-                              width: "100%",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              padding: "8px 12px",
-                              fontSize: "12px",
-                              fontWeight: 600,
-                              color: "#e2e8f0",
-                              backgroundColor: "transparent",
-                              border: "none",
-                              borderRadius: "8px",
-                              cursor: "pointer"
-                            }}
-                          >
-                            <Eye style={{ width: "14px", height: "14px", color: "#60a5fa" }} />
-                            <span>View Dashboard</span>
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setTargetAllocation(item);
-                              setShowAddAccountsModal(true);
-                            }}
-                            style={{
-                              width: "100%",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              padding: "8px 12px",
-                              fontSize: "12px",
-                              fontWeight: 600,
-                              color: "#e2e8f0",
-                              backgroundColor: "transparent",
-                              border: "none",
-                              borderRadius: "8px",
-                              cursor: "pointer"
-                            }}
-                          >
-                            <Plus style={{ width: "14px", height: "14px", color: "#34d399" }} />
-                            <span>Add Accounts</span>
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setTargetAllocation(item);
-                              setShowUnsubscribeModal(true);
-                            }}
-                            style={{
-                              width: "100%",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              padding: "8px 12px",
-                              fontSize: "12px",
-                              fontWeight: 600,
-                              color: "#e2e8f0",
-                              backgroundColor: "transparent",
-                              border: "none",
-                              borderRadius: "8px",
-                              cursor: "pointer"
-                            }}
-                          >
-                            <X style={{ width: "14px", height: "14px", color: "#fbbf24" }} />
-                            <span>Unsubscribe Accounts</span>
-                          </button>
-
-                          <button
-                            onClick={handleDownloadSample}
-                            style={{
-                              width: "100%",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              padding: "8px 12px",
-                              fontSize: "12px",
-                              fontWeight: 600,
-                              color: "#e2e8f0",
-                              backgroundColor: "transparent",
-                              border: "none",
-                              borderRadius: "8px",
-                              cursor: "pointer"
-                            }}
-                          >
-                            <Download style={{ width: "14px", height: "14px", color: "#60a5fa" }} />
-                            <span>Download Allocation</span>
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setTargetAllocation(item);
-                              setShowDeleteModal(true);
-                            }}
-                            style={{
-                              width: "100%",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              padding: "8px 12px",
-                              fontSize: "12px",
-                              fontWeight: 600,
-                              color: "#f87171",
-                              backgroundColor: "transparent",
-                              border: "none",
-                              borderRadius: "8px",
-                              cursor: "pointer"
-                            }}
-                          >
-                            <Trash2 style={{ width: "14px", height: "14px", color: "#f87171" }} />
-                            <span>Delete Allocation</span>
-                          </button>
-                        </div>
-                      )}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          {/* Viewport-Anchored Fixed Action Menu (Completely escapes table overflow & y-axis scrolling) */}
+          {activeMenuId && activeMenuItem && (
+            <div
+              style={{
+                position: "fixed",
+                top: menuPosition.top !== undefined ? `${menuPosition.top}px` : "auto",
+                bottom: menuPosition.bottom !== undefined ? `${menuPosition.bottom}px` : "auto",
+                right: `${menuPosition.right}px`,
+                width: "210px",
+                borderRadius: "12px",
+                backgroundColor: "#051336",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                padding: "6px",
+                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.5)",
+                zIndex: 99999,
+                textAlign: "left"
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => {
+                  const id = activeMenuItem.id;
+                  setActiveMenuId(null);
+                  setActiveMenuItem(null);
+                  if (onOpenPortfolioDashboard) onOpenPortfolioDashboard(id);
+                }}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px 12px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#e2e8f0",
+                  backgroundColor: "transparent",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  transition: "background 0.15s ease"
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+              >
+                <Eye style={{ width: "14px", height: "14px", color: "#60a5fa" }} />
+                <span>View Dashboard</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const item = activeMenuItem;
+                  setActiveMenuId(null);
+                  setActiveMenuItem(null);
+                  setTargetAllocation(item);
+                  setShowAddAccountsModal(true);
+                }}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px 12px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#e2e8f0",
+                  backgroundColor: "transparent",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  transition: "background 0.15s ease"
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+              >
+                <Plus style={{ width: "14px", height: "14px", color: "#34d399" }} />
+                <span>Add Accounts</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const item = activeMenuItem;
+                  setActiveMenuId(null);
+                  setActiveMenuItem(null);
+                  setTargetAllocation(item);
+                  setShowUnsubscribeModal(true);
+                }}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px 12px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#e2e8f0",
+                  backgroundColor: "transparent",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  transition: "background 0.15s ease"
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+              >
+                <X style={{ width: "14px", height: "14px", color: "#fbbf24" }} />
+                <span>Unsubscribe Accounts</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveMenuId(null);
+                  setActiveMenuItem(null);
+                  handleDownloadSample();
+                }}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px 12px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#e2e8f0",
+                  backgroundColor: "transparent",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  transition: "background 0.15s ease"
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+              >
+                <Download style={{ width: "14px", height: "14px", color: "#60a5fa" }} />
+                <span>Download Allocation</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const item = activeMenuItem;
+                  setActiveMenuId(null);
+                  setActiveMenuItem(null);
+                  setTargetAllocation(item);
+                  setShowDeleteModal(true);
+                }}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px 12px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#f87171",
+                  backgroundColor: "transparent",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  transition: "background 0.15s ease"
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(248, 113, 113, 0.12)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+              >
+                <Trash2 style={{ width: "14px", height: "14px", color: "#f87171" }} />
+                <span>Delete Allocation</span>
+              </button>
+            </div>
+          )}
 
         </div>
       )}

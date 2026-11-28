@@ -163,6 +163,47 @@ export default function AgentDirectoryView() {
   const [agentListFilter, setAgentListFilter] = useState("all"); // 'all' | 'call' | 'field'
   const [searchAgentList, setSearchAgentList] = useState("");
   const [actionMenuOpen, setActionMenuOpen] = useState(null);
+  const [actionMenuAgent, setActionMenuAgent] = useState(null);
+  const [agentMenuPosition, setAgentMenuPosition] = useState({ top: null, bottom: null, right: 16 });
+
+  // Handle opening agent action menu with viewport-safe fixed positioning
+  const handleToggleAgentMenu = (e, idx, agent) => {
+    e.stopPropagation();
+    if (actionMenuOpen === idx) {
+      setActionMenuOpen(null);
+      setActionMenuAgent(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUpwards = spaceBelow < 200;
+
+    setAgentMenuPosition({
+      top: openUpwards ? undefined : rect.bottom + 4,
+      bottom: openUpwards ? window.innerHeight - rect.top + 4 : undefined,
+      right: Math.max(16, window.innerWidth - rect.right)
+    });
+    setActionMenuOpen(idx);
+    setActionMenuAgent(agent);
+  };
+
+  // Close floating action menu on click outside, scroll, or resize
+  useEffect(() => {
+    if (actionMenuOpen === null) return;
+    const handleClose = () => {
+      setActionMenuOpen(null);
+      setActionMenuAgent(null);
+    };
+    window.addEventListener("click", handleClose);
+    window.addEventListener("scroll", handleClose, true);
+    window.addEventListener("resize", handleClose);
+    return () => {
+      window.removeEventListener("click", handleClose);
+      window.removeEventListener("scroll", handleClose, true);
+      window.removeEventListener("resize", handleClose);
+    };
+  }, [actionMenuOpen]);
+
   const [activeActionModal, setActiveActionModal] = useState(null); // 'view_profile' | 'edit_profile' | 'offboard' | 'unblock'
   const [selectedAgentForModal, setSelectedAgentForModal] = useState(null);
 
@@ -783,151 +824,167 @@ export default function AgentDirectoryView() {
                         {agent.campaign}
                       </td>
                       <td style={{ padding: "14px", fontWeight: 700, color: "#ffffff" }}>{agent.acr}</td>
-                      <td style={{ padding: "14px", textAlign: "right", position: "relative" }}>
+                      <td style={{ padding: "14px", textAlign: "right" }}>
                         <button
-                          onClick={() => setActionMenuOpen(actionMenuOpen === idx ? null : idx)}
+                          onClick={(e) => handleToggleAgentMenu(e, idx, agent)}
                           style={{
-                            padding: "4px",
+                            padding: "6px",
                             borderRadius: "6px",
-                            backgroundColor: "transparent",
+                            backgroundColor: actionMenuOpen === idx ? "rgba(255, 255, 255, 0.12)" : "transparent",
                             border: "none",
-                            color: "#94a3b8",
-                            cursor: "pointer"
+                            color: actionMenuOpen === idx ? "#ffffff" : "#94a3b8",
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center"
                           }}
                         >
                           <MoreVertical style={{ width: "16px", height: "16px" }} />
                         </button>
-
-                        {/* Three Dots Dropdown Menu: View Profile, Edit Profile, Offboard Agent, Unblock User */}
-                        {actionMenuOpen === idx && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              right: 0,
-                              marginTop: "4px",
-                              width: "180px",
-                              borderRadius: "12px",
-                              backgroundColor: "#051336",
-                              border: "1px solid rgba(255, 255, 255, 0.12)",
-                              padding: "6px",
-                              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.7)",
-                              zIndex: 50,
-                              textAlign: "left"
-                            }}
-                            onClick={() => setActionMenuOpen(null)}
-                          >
-                            <button
-                              onClick={() => {
-                                setSelectedAgentForModal(agent);
-                                setActiveActionModal("view_profile");
-                              }}
-                              style={{
-                                width: "100%",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                padding: "8px 10px",
-                                fontSize: "12px",
-                                fontWeight: 600,
-                                color: "#ffffff",
-                                backgroundColor: "transparent",
-                                border: "none",
-                                borderRadius: "6px",
-                                cursor: "pointer",
-                                textAlign: "left"
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)"; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
-                            >
-                              <Eye style={{ width: "14px", height: "14px", color: "#60a5fa" }} />
-                              <span>View Profile</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setSelectedAgentForModal(agent);
-                                setActiveActionModal("edit_profile");
-                              }}
-                              style={{
-                                width: "100%",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                padding: "8px 10px",
-                                fontSize: "12px",
-                                fontWeight: 600,
-                                color: "#ffffff",
-                                backgroundColor: "transparent",
-                                border: "none",
-                                borderRadius: "6px",
-                                cursor: "pointer",
-                                textAlign: "left"
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)"; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
-                            >
-                              <Edit style={{ width: "14px", height: "14px", color: "#fbbf24" }} />
-                              <span>Edit Profile</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setSelectedAgentForModal(agent);
-                                setActiveActionModal("offboard");
-                              }}
-                              style={{
-                                width: "100%",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                padding: "8px 10px",
-                                fontSize: "12px",
-                                fontWeight: 600,
-                                color: "#fb7185",
-                                backgroundColor: "transparent",
-                                border: "none",
-                                borderRadius: "6px",
-                                cursor: "pointer",
-                                textAlign: "left"
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(244, 63, 94, 0.1)"; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
-                            >
-                              <UserMinus style={{ width: "14px", height: "14px", color: "#fb7185" }} />
-                              <span>Offboard Agent</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setSelectedAgentForModal(agent);
-                                setActiveActionModal("unblock");
-                              }}
-                              style={{
-                                width: "100%",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                padding: "8px 10px",
-                                fontSize: "12px",
-                                fontWeight: 600,
-                                color: "#34d399",
-                                backgroundColor: "transparent",
-                                border: "none",
-                                borderRadius: "6px",
-                                cursor: "pointer",
-                                textAlign: "left"
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(16, 185, 129, 0.1)"; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
-                            >
-                              <Unlock style={{ width: "14px", height: "14px", color: "#34d399" }} />
-                              <span>Unblock User</span>
-                            </button>
-                          </div>
-                        )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+
+            {/* Viewport-Anchored Fixed Action Menu (Escapes table container & y-axis scrolling) */}
+            {actionMenuOpen !== null && actionMenuAgent && (
+              <div
+                style={{
+                  position: "fixed",
+                  top: agentMenuPosition.top !== undefined ? `${agentMenuPosition.top}px` : "auto",
+                  bottom: agentMenuPosition.bottom !== undefined ? `${agentMenuPosition.bottom}px` : "auto",
+                  right: `${agentMenuPosition.right}px`,
+                  width: "180px",
+                  borderRadius: "12px",
+                  backgroundColor: "#051336",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  padding: "6px",
+                  boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.5)",
+                  zIndex: 99999,
+                  textAlign: "left"
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => {
+                    const agent = actionMenuAgent;
+                    setActionMenuOpen(null);
+                    setActionMenuAgent(null);
+                    setSelectedAgentForModal(agent);
+                    setActiveActionModal("view_profile");
+                  }}
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 10px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "#ffffff",
+                    backgroundColor: "transparent",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    textAlign: "left"
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+                >
+                  <Eye style={{ width: "14px", height: "14px", color: "#60a5fa" }} />
+                  <span>View Profile</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const agent = actionMenuAgent;
+                    setActionMenuOpen(null);
+                    setActionMenuAgent(null);
+                    setSelectedAgentForModal(agent);
+                    setActiveActionModal("edit_profile");
+                  }}
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 10px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "#ffffff",
+                    backgroundColor: "transparent",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    textAlign: "left"
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.06)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+                >
+                  <Edit style={{ width: "14px", height: "14px", color: "#fbbf24" }} />
+                  <span>Edit Profile</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const agent = actionMenuAgent;
+                    setActionMenuOpen(null);
+                    setActionMenuAgent(null);
+                    setSelectedAgentForModal(agent);
+                    setActiveActionModal("offboard");
+                  }}
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 10px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "#fb7185",
+                    backgroundColor: "transparent",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    textAlign: "left"
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(244, 63, 94, 0.1)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+                >
+                  <UserMinus style={{ width: "14px", height: "14px", color: "#fb7185" }} />
+                  <span>Offboard Agent</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const agent = actionMenuAgent;
+                    setActionMenuOpen(null);
+                    setActionMenuAgent(null);
+                    setSelectedAgentForModal(agent);
+                    setActiveActionModal("unblock");
+                  }}
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 10px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "#34d399",
+                    backgroundColor: "transparent",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    textAlign: "left"
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "rgba(16, 185, 129, 0.1)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+                >
+                  <Unlock style={{ width: "14px", height: "14px", color: "#34d399" }} />
+                  <span>Unblock User</span>
+                </button>
+              </div>
+            )}
           </div>
 
         </div>
