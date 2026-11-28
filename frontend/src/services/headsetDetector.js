@@ -1,17 +1,97 @@
 /**
  * PayMagic Enterprise Headset & Audio Hardware Detection Service
- * Automatically detects whether physical/virtual headset, headphones,
- * microphone, and sound output devices are connected to the device's ports.
+ * Automatically detects whether an EXTERNAL headset (USB, 3.5mm Jack, or Bluetooth)
+ * is connected to the device's ports.
+ *
+ * Built-in / internal device microphones and built-in laptop/PC speakers are strictly
+ * NOT allowed; an external headset with microphone and sound is required.
  */
+
+export const EXTERNAL_HEADSET_KEYWORDS = [
+  "headset",
+  "headphone",
+  "headphones",
+  "earphone",
+  "earphones",
+  "earbuds",
+  "airpods",
+  "buds",
+  "bluetooth",
+  "usb",
+  "wireless",
+  "hands-free",
+  "handsfree",
+  "external",
+  "line in",
+  "front panel",
+  "jack",
+  "jabra",
+  "plantronics",
+  "logitech",
+  "sennheiser",
+  "poly",
+  "hyperx",
+  "boat",
+  "noise",
+  "realme",
+  "oneplus",
+  "sony",
+  "bose",
+  "audio-technica",
+  "corsair",
+  "steelseries",
+  "razer",
+  "anker",
+  "soundcore",
+  "epos",
+  "beyerdynamic"
+];
+
+export const INTERNAL_BUILTIN_KEYWORDS = [
+  "internal microphone",
+  "built-in microphone",
+  "builtin microphone",
+  "integrated microphone",
+  "microphone array",
+  "mic array",
+  "pc speaker",
+  "pc speakers",
+  "laptop speaker",
+  "laptop speakers",
+  "internal speaker",
+  "internal speakers",
+  "intel smart sound",
+  "intel(r) smart sound",
+  "amd audio coprocessor"
+];
+
+/**
+ * Check if a device label represents an external headset/headphone
+ */
+export function isExternalHeadsetDevice(label = "") {
+  if (!label || typeof label !== "string") return false;
+  const lower = label.toLowerCase();
+  return EXTERNAL_HEADSET_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+/**
+ * Check if a device label represents a built-in / internal device mic or speaker
+ */
+export function isInternalBuiltinDevice(label = "") {
+  if (!label || typeof label !== "string") return false;
+  const lower = label.toLowerCase();
+  return INTERNAL_BUILTIN_KEYWORDS.some((kw) => lower.includes(kw));
+}
 
 /**
  * Perform a physical/hardware check of audio input (mic) and audio output (sound/headphones).
- * Automatically requests and tests media streams to verify actual port connectivity.
+ * Strictly requires an EXTERNAL headset; rejects built-in device mic & speakers.
  */
 export async function verifyHeadsetHardware() {
   if (typeof window === "undefined" || !navigator || !navigator.mediaDevices) {
     return {
       connected: false,
+      isExternalHeadset: false,
       reason: "UNSUPPORTED",
       message: "Media devices API not supported in this browser."
     };
@@ -25,15 +105,16 @@ export async function verifyHeadsetHardware() {
       if (!hasAnyAudioInput) {
         return {
           connected: false,
+          isExternalHeadset: false,
           hasMic: false,
           hasSound: false,
           reason: "NO_MIC_PORT",
-          message: "No microphone detected on any port. Please plug in a headset or microphone."
+          message: "No microphone detected on any port. Please plug in an external headset."
         };
       }
     }
 
-    // Step 2: Request audio stream to test mic connectivity and unlock device hardware labels
+    // Step 2: Request audio stream to test mic connectivity and unlock hardware device labels
     let stream = null;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -46,23 +127,26 @@ export async function verifyHeadsetHardware() {
       if (mediaErr.name === "NotFoundError" || mediaErr.name === "DevicesNotFoundError") {
         return {
           connected: false,
+          isExternalHeadset: false,
           hasMic: false,
           hasSound: false,
           reason: "NO_DEVICE",
-          message: "No headset or microphone device found on this port/device."
+          message: "No audio device found on this port. Please connect an external headset."
         };
       }
       if (mediaErr.name === "NotAllowedError" || mediaErr.name === "PermissionDeniedError") {
         return {
           connected: false,
+          isExternalHeadset: false,
           hasMic: false,
           hasSound: false,
           reason: "PERMISSION_DENIED",
-          message: "Microphone permission required to verify headset. Please allow microphone access."
+          message: "Microphone permission is required to verify your headset. Please allow microphone access."
         };
       }
       return {
         connected: false,
+        isExternalHeadset: false,
         hasMic: false,
         hasSound: false,
         reason: "HARDWARE_ERROR",
@@ -83,50 +167,102 @@ export async function verifyHeadsetHardware() {
     if (!activeTrack) {
       return {
         connected: false,
+        isExternalHeadset: false,
         hasMic: false,
         hasSound: false,
         reason: "TRACK_INACTIVE",
-        message: "Microphone port is not actively transmitting. Please re-plug your headset."
+        message: "Microphone port is not actively transmitting. Please re-plug your external headset."
       };
     }
 
-    // Step 4: Enumerate devices with unlocked labels to verify both mic and sound output
+    // Step 4: Enumerate all devices now that labels are unlocked
     const devices = await navigator.mediaDevices.enumerateDevices();
     const audioInputs = devices.filter((d) => d.kind === "audioinput");
     const audioOutputs = devices.filter((d) => d.kind === "audiooutput");
 
     const hasMic = audioInputs.length > 0;
-    // Some browsers do not enumerate audiooutput for privacy, but AudioContext / default sound is available
     const hasSound = audioOutputs.length > 0 || typeof AudioContext !== "undefined" || typeof window.Audio !== "undefined";
 
     if (!hasMic) {
       return {
         connected: false,
+        isExternalHeadset: false,
         hasMic: false,
         hasSound,
         reason: "NO_MIC",
-        message: "No microphone detected on port. Headset with microphone is required."
+        message: "No microphone detected. An external headset with microphone is required."
       };
     }
 
-    // Pick best human-readable device name
-    const detectedName =
+    // Step 5: Check for EXTERNAL headset vs. Internal Built-in Device Mic/Speakers
+    // Search both audio inputs and audio outputs for external headset indicators
+    const externalInputDevice = audioInputs.find((d) => isExternalHeadsetDevice(d.label));
+    const externalOutputDevice = audioOutputs.find((d) => isExternalHeadsetDevice(d.label));
+    const trackIsExternal = isExternalHeadsetDevice(micLabel);
+
+    const hasExternalHeadset = Boolean(externalInputDevice || externalOutputDevice || trackIsExternal);
+
+    // Check if the only available inputs are built-in device mics
+    const isOnlyBuiltinMic = audioInputs.every((d) => {
+      const lbl = d.label.toLowerCase();
+      return (
+        lbl.includes("internal") ||
+        lbl.includes("built-in") ||
+        lbl.includes("builtin") ||
+        lbl.includes("microphone array") ||
+        lbl.includes("mic array") ||
+        lbl.includes("integrated") ||
+        lbl.includes("intel smart sound") ||
+        lbl.includes("intel(r) smart sound")
+      );
+    });
+
+    // Pick best external device name or fallback
+    const externalName =
+      (externalInputDevice && externalInputDevice.label) ||
+      (externalOutputDevice && externalOutputDevice.label) ||
+      (trackIsExternal && micLabel) ||
+      null;
+
+    const detectedBuiltinName =
       micLabel ||
       audioInputs[0]?.label ||
-      "Headset / Audio Device";
+      "Built-in Device Microphone";
+
+    // STRICT INVARIANT: Device internal mic and sound are NOT allowed. External headset is required!
+    if (!hasExternalHeadset || isOnlyBuiltinMic) {
+      return {
+        connected: false,
+        isExternalHeadset: false,
+        isBuiltinOnly: true,
+        hasMic: true,
+        hasSound,
+        deviceName: detectedBuiltinName,
+        audioInputsCount: audioInputs.length,
+        audioOutputsCount: audioOutputs.length,
+        reason: "BUILTIN_NOT_ALLOWED",
+        message: "Device internal microphone & sound are not allowed. An external headset (USB, 3.5mm Jack, or Bluetooth) is required to go online."
+      };
+    }
+
+    // External headset successfully detected and verified!
+    const verifiedDeviceName = externalName || micLabel || "External Headset (USB / 3.5mm / Bluetooth)";
 
     return {
       connected: true,
+      isExternalHeadset: true,
+      isBuiltinOnly: false,
       hasMic: true,
       hasSound: true,
-      deviceName: detectedName,
+      deviceName: verifiedDeviceName,
       audioInputsCount: audioInputs.length,
       audioOutputsCount: audioOutputs.length,
-      message: `Verified: ${detectedName} connected to port.`
+      message: `Verified: External headset (${verifiedDeviceName}) connected to port.`
     };
   } catch (err) {
     return {
       connected: false,
+      isExternalHeadset: false,
       reason: "ERROR",
       message: err.message || "Failed to verify audio hardware on this device."
     };
@@ -134,19 +270,20 @@ export async function verifyHeadsetHardware() {
 }
 
 /**
- * Check if audio device is currently present (quick non-blocking enumeration check)
+ * Check if external audio device is currently present (quick non-blocking enumeration check)
  */
 export async function quickCheckAudioDevices() {
   if (typeof window === "undefined" || !navigator || !navigator.mediaDevices?.enumerateDevices) {
-    return { hasMic: false, hasSound: false };
+    return { hasMic: false, hasSound: false, hasExternalHeadset: false };
   }
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const hasMic = devices.some((d) => d.kind === "audioinput");
     const hasSound = devices.some((d) => d.kind === "audiooutput") || typeof AudioContext !== "undefined";
-    return { hasMic, hasSound, count: devices.length };
+    const hasExternalHeadset = devices.some((d) => isExternalHeadsetDevice(d.label));
+    return { hasMic, hasSound, hasExternalHeadset, count: devices.length };
   } catch {
-    return { hasMic: false, hasSound: false };
+    return { hasMic: false, hasSound: false, hasExternalHeadset: false };
   }
 }
 
@@ -163,7 +300,11 @@ export function subscribeToAudioDeviceChanges(callback) {
       const res = await verifyHeadsetHardware();
       callback(res);
     } catch {
-      callback({ connected: false, message: "Audio device change detection error." });
+      callback({
+        connected: false,
+        isExternalHeadset: false,
+        message: "Audio device change detection error."
+      });
     }
   };
 

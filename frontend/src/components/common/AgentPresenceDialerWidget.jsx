@@ -60,7 +60,9 @@ export default function AgentPresenceDialerWidget({
   const [detectedAudioDevice, setDetectedAudioDevice] = useState(null);
   const [headsetHardwareDetails, setHeadsetHardwareDetails] = useState({
     hasMic: false,
-    hasSound: false
+    hasSound: false,
+    isExternalHeadset: false,
+    isBuiltinOnly: false
   });
 
   // Break timer effect
@@ -95,26 +97,30 @@ export default function AgentPresenceDialerWidget({
       setIsCheckingHeadset(true);
       try {
         const result = await verifyHeadsetHardware();
-        if (result.connected) {
+        if (result.connected && result.isExternalHeadset) {
           setIsHeadsetConnected(true);
-          setDetectedAudioDevice(result.deviceName || "Headset (Mic & Sound Connected)");
+          setDetectedAudioDevice(result.deviceName || "External Headset (USB / 3.5mm / Bluetooth)");
           setHeadsetHardwareDetails({
             hasMic: result.hasMic,
-            hasSound: result.hasSound
+            hasSound: result.hasSound,
+            isExternalHeadset: true,
+            isBuiltinOnly: false
           });
           setHeadsetAlert("");
           return true;
         } else {
           setIsHeadsetConnected(false);
-          setDetectedAudioDevice(null);
+          setDetectedAudioDevice(result.isBuiltinOnly ? result.deviceName : null);
           setHeadsetHardwareDetails({
             hasMic: result.hasMic || false,
-            hasSound: result.hasSound || false
+            hasSound: result.hasSound || false,
+            isExternalHeadset: false,
+            isBuiltinOnly: Boolean(result.isBuiltinOnly)
           });
           if (showPromptOnError) {
             setHeadsetAlert(
               result.message ||
-                "No headset detected on port. Headphone with microphone must be connected."
+                "Device internal microphone & sound are not allowed. An external headset is required."
             );
           }
           return false;
@@ -122,6 +128,12 @@ export default function AgentPresenceDialerWidget({
       } catch (err) {
         setIsHeadsetConnected(false);
         setDetectedAudioDevice(null);
+        setHeadsetHardwareDetails({
+          hasMic: false,
+          hasSound: false,
+          isExternalHeadset: false,
+          isBuiltinOnly: false
+        });
         if (showPromptOnError) {
           setHeadsetAlert(err?.message || "Failed to verify audio hardware on this device.");
         }
@@ -136,11 +148,13 @@ export default function AgentPresenceDialerWidget({
   // Automatic non-intrusive port check on initial load
   useEffect(() => {
     quickCheckAudioDevices().then((res) => {
-      setHeadsetHardwareDetails({
+      setHeadsetHardwareDetails((prev) => ({
+        ...prev,
         hasMic: res.hasMic,
-        hasSound: res.hasSound
-      });
-      if (!res.hasMic) {
+        hasSound: res.hasSound,
+        hasExternalHeadset: res.hasExternalHeadset
+      }));
+      if (!res.hasMic || !res.hasExternalHeadset) {
         setIsHeadsetConnected(false);
       }
     });
@@ -156,26 +170,32 @@ export default function AgentPresenceDialerWidget({
   // Listen for hardware audio/headset device changes (plugging or unplugging 3.5mm jack or USB headset)
   useEffect(() => {
     const unsubscribe = subscribeToAudioDeviceChanges((res) => {
-      if (res.connected) {
+      if (res.connected && res.isExternalHeadset) {
         setIsHeadsetConnected(true);
-        setDetectedAudioDevice(res.deviceName || "Headset (Mic & Sound Connected)");
+        setDetectedAudioDevice(res.deviceName || "External Headset (Connected)");
         setHeadsetHardwareDetails({
           hasMic: res.hasMic,
-          hasSound: res.hasSound
+          hasSound: res.hasSound,
+          isExternalHeadset: true,
+          isBuiltinOnly: false
         });
         setHeadsetAlert("");
       } else {
         setIsHeadsetConnected(false);
-        setDetectedAudioDevice(null);
+        setDetectedAudioDevice(res.isBuiltinOnly ? res.deviceName : null);
         setHeadsetHardwareDetails({
           hasMic: res.hasMic || false,
-          hasSound: res.hasSound || false
+          hasSound: res.hasSound || false,
+          isExternalHeadset: false,
+          isBuiltinOnly: Boolean(res.isBuiltinOnly)
         });
         // If headset is disconnected while ONLINE, automatically change to OFFLINE
         if (presenceStatus === "ONLINE") {
           setPresenceStatus("OFFLINE");
           setIsOpen(true);
-          setHeadsetAlert("Headset was disconnected from port. Status changed to Offline.");
+          setHeadsetAlert(
+            res.message || "External headset was disconnected from port. Status changed to Offline."
+          );
           if (typeof onPresenceChange === "function") {
             onPresenceChange("OFFLINE");
           }
@@ -674,36 +694,66 @@ export default function AgentPresenceDialerWidget({
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                       {headsetHardwareDetails.hasMic ? (
-                        <Mic style={{ width: "12px", height: "12px", color: "#34d399" }} />
+                        <Mic style={{ width: "12px", height: "12px", color: headsetHardwareDetails.isExternalHeadset ? "#34d399" : "#fbbf24" }} />
                       ) : (
                         <MicOff style={{ width: "12px", height: "12px", color: "#f87171" }} />
                       )}
                       <span
                         style={{
                           fontWeight: 600,
-                          color: headsetHardwareDetails.hasMic ? "#34d399" : "#94a3b8"
+                          color: headsetHardwareDetails.isExternalHeadset
+                            ? "#34d399"
+                            : headsetHardwareDetails.hasMic
+                            ? "#fbbf24"
+                            : "#94a3b8"
                         }}
                       >
-                        Mic {headsetHardwareDetails.hasMic ? "Detected" : "Not Found"}
+                        {headsetHardwareDetails.isExternalHeadset
+                          ? "External Mic ✓"
+                          : headsetHardwareDetails.hasMic
+                          ? "Device Mic (Blocked)"
+                          : "Mic Missing"}
                       </span>
                     </div>
 
                     <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                       {headsetHardwareDetails.hasSound ? (
-                        <Volume2 style={{ width: "12px", height: "12px", color: "#34d399" }} />
+                        <Volume2 style={{ width: "12px", height: "12px", color: headsetHardwareDetails.isExternalHeadset ? "#34d399" : "#cbd5e1" }} />
                       ) : (
                         <VolumeX style={{ width: "12px", height: "12px", color: "#f87171" }} />
                       )}
                       <span
                         style={{
                           fontWeight: 600,
-                          color: headsetHardwareDetails.hasSound ? "#34d399" : "#94a3b8"
+                          color: headsetHardwareDetails.isExternalHeadset
+                            ? "#34d399"
+                            : "#94a3b8"
                         }}
                       >
-                        Sound {headsetHardwareDetails.hasSound ? "Detected" : "Not Found"}
+                        {headsetHardwareDetails.isExternalHeadset ? "Headset Sound ✓" : "Sound Output"}
                       </span>
                     </div>
                   </div>
+
+                  {/* Warning if device mic is detected without external headset */}
+                  {headsetHardwareDetails.isBuiltinOnly && (
+                    <div
+                      style={{
+                        padding: "6px 8px",
+                        borderRadius: "6px",
+                        backgroundColor: "rgba(245, 158, 11, 0.12)",
+                        border: "1px solid rgba(245, 158, 11, 0.3)",
+                        color: "#fbbf24",
+                        fontSize: "10px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px"
+                      }}
+                    >
+                      <AlertTriangle style={{ width: "13px", height: "13px", flexShrink: 0 }} />
+                      <span>Device internal mic/sound is not allowed. External headset is required.</span>
+                    </div>
+                  )}
 
                   <div
                     style={{
@@ -714,9 +764,9 @@ export default function AgentPresenceDialerWidget({
                   >
                     {isHeadsetConnected
                       ? detectedAudioDevice
-                        ? `Connected: ${detectedAudioDevice}`
-                        : "Headphone and microphone joined and active on device port."
-                      : "Headset of headphone must be connected to go online."}
+                        ? `External Headset Verified: ${detectedAudioDevice}`
+                        : "External headset joined and active on device port."
+                      : "External headset (USB, 3.5mm Jack, or Bluetooth) must be connected to go online."}
                   </div>
                 </div>
 

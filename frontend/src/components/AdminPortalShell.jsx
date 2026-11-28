@@ -91,7 +91,7 @@ export default function AdminPortalShell({
     if (val) {
       // Automatically verify headset port connection before turning online
       const check = await verifyHeadsetHardware();
-      if (!check.connected) {
+      if (!check.connected || !check.isExternalHeadset) {
         setIsHeadsetConnected(false);
         setIsDialerWidgetOpen(true);
         return;

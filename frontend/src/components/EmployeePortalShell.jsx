@@ -559,7 +559,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
               if (presenceStatus === "OFFLINE") {
                 // Automatically verify headset port connection before turning online
                 const check = await verifyHeadsetHardware();
-                if (!check.connected) {
+                if (!check.connected || !check.isExternalHeadset) {
                   setIsHeadsetConnected(false);
                   setIsDialerWidgetOpen(true);
                   return;
