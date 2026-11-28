@@ -326,6 +326,25 @@ export default function HomePortfolioView({
 
   // If a portfolio is clicked, render the detailed portfolio breakdown
   if (activePortfolio) {
+    const isBajajSample = activePortfolio.id === "bajaj_nov_13";
+    const portfolioAccounts = Number(activePortfolio.accounts) || 0;
+    const portfolioOutstanding = activePortfolio.outstanding || "₹0.00";
+    const portfolioCollectable = activePortfolio.collectable || activePortfolio.outstanding || "₹0.00";
+    const portfolioCollectedPct = activePortfolio.collectedPct || "0.00%";
+
+    // Derived dynamic allocation & metrics
+    const totalAllocatedAgents = isBajajSample ? 4 : (portfolioAccounts > 0 ? Math.min(4, portfolioAccounts) : 0);
+    const allocatedAccounts = isBajajSample ? 116 : portfolioAccounts;
+    const unallocatedAccounts = isBajajSample ? 0 : Math.max(0, portfolioAccounts - allocatedAccounts);
+
+    const totalAttempts = isBajajSample ? "173/35" : (portfolioAccounts > 0 ? `${portfolioAccounts * 2}/0` : "0/0");
+    const callAttempts = isBajajSample ? "173/35" : (portfolioAccounts > 0 ? `${portfolioAccounts * 2}/0` : "0/0");
+    const untouchedAccounts = isBajajSample ? "0/82" : `0/${portfolioAccounts}`;
+
+    // Dispositions pool dynamic values
+    const ncPercentage = isBajajSample ? "29.9%" : "0.0%";
+    const ncAmt = isBajajSample ? "₹90.2 Lakh" : "₹0";
+
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
         
@@ -443,156 +462,351 @@ export default function HomePortfolioView({
 
         {/* ── 1. ONE VIEW CONTENT ── */}
         {detailTab === "one_view" && (
-          <div className="space-y-6">
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             
             {/* KPI Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-4 rounded-xl bg-card border border-border">
-                <span className="text-xs font-semibold text-muted-foreground">Total Accounts</span>
-                <div className="text-2xl font-black text-foreground mt-1">117</div>
-                <div className="flex items-center gap-2 mt-2 text-[11px] text-muted-foreground">
-                  <span>Unsubscribed: <strong className="text-foreground">0</strong></span>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+              <div
+                style={{
+                  backgroundColor: "#041030",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: "16px",
+                  padding: "16px 20px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+                }}
+              >
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>Total Accounts</span>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "#ffffff", marginTop: "4px" }}>
+                  {portfolioAccounts}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", fontSize: "11px", color: "#94a3b8" }}>
+                  <span>Unsubscribed: <strong style={{ color: "#ffffff" }}>0</strong></span>
                   <span>•</span>
                   <span>0 Resolution</span>
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-card border border-border">
-                <span className="text-xs font-semibold text-muted-foreground">Total Outstanding</span>
-                <div className="text-2xl font-black text-foreground mt-1">₹4.74 Cr</div>
-                <div className="flex items-center gap-2 mt-2 text-[11px] text-muted-foreground">
-                  <span>Unsubscribed: <strong className="text-foreground">₹0</strong></span>
+              <div
+                style={{
+                  backgroundColor: "#041030",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: "16px",
+                  padding: "16px 20px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+                }}
+              >
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>Total Outstanding</span>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "#ffffff", marginTop: "4px" }}>
+                  {portfolioOutstanding}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", fontSize: "11px", color: "#94a3b8" }}>
+                  <span>Unsubscribed: <strong style={{ color: "#ffffff" }}>₹0</strong></span>
                   <span>•</span>
                   <span>0 Engagement</span>
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-card border border-border">
-                <span className="text-xs font-semibold text-muted-foreground">Collectable Amount</span>
-                <div className="text-2xl font-black text-emerald-500 mt-1">₹2.81 Cr</div>
-                <div className="flex items-center gap-2 mt-2 text-[11px] text-muted-foreground">
-                  <span>Collected: <strong className="text-foreground">₹0</strong></span>
+              <div
+                style={{
+                  backgroundColor: "#041030",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: "16px",
+                  padding: "16px 20px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+                }}
+              >
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>Collectable Amount</span>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "#34d399", marginTop: "4px" }}>
+                  {portfolioCollectable}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", fontSize: "11px", color: "#94a3b8" }}>
+                  <span>Collected: <strong style={{ color: "#ffffff" }}>₹0</strong></span>
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-card border border-border">
-                <span className="text-xs font-semibold text-muted-foreground">Collection Realization</span>
-                <div className="text-2xl font-black text-blue-500 mt-1">0.00%</div>
-                <div className="flex items-center gap-2 mt-2 text-[11px] text-muted-foreground">
+              <div
+                style={{
+                  backgroundColor: "#041030",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: "16px",
+                  padding: "16px 20px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+                }}
+              >
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>Collection Realization</span>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "#60a5fa", marginTop: "4px" }}>
+                  {portfolioCollectedPct}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", fontSize: "11px", color: "#94a3b8" }}>
                   <span>Target: 18.5% recovery rate</span>
                 </div>
               </div>
             </div>
 
             {/* Dispositions Pools: Positive Pool vs Difficult Pool */}
-            <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-              <h4 className="text-sm font-bold text-foreground">Dispositions Breakdown</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div
+              style={{
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "16px",
+                padding: "20px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px"
+              }}
+            >
+              <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                Dispositions Breakdown
+              </h4>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px" }}>
                 
                 {/* Positive Pool */}
-                <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-                  <span className="text-xs font-bold text-emerald-500 uppercase tracking-wider">
+                <div
+                  style={{
+                    padding: "16px",
+                    borderRadius: "12px",
+                    backgroundColor: "rgba(16, 185, 129, 0.04)",
+                    border: "1px solid rgba(16, 185, 129, 0.2)"
+                  }}
+                >
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#34d399", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     Positive Pool
                   </span>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
-                    <div className="p-2.5 rounded-lg bg-card border border-border text-center">
-                      <span className="text-[10px] text-muted-foreground">Paid</span>
-                      <div className="text-sm font-bold text-foreground">0.0%</div>
-                      <div className="text-[11px] text-muted-foreground font-mono">₹0</div>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-card border border-border text-center">
-                      <span className="text-[10px] text-muted-foreground">PTP</span>
-                      <div className="text-sm font-bold text-foreground">0.0%</div>
-                      <div className="text-[11px] text-muted-foreground font-mono">₹0</div>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-card border border-border text-center">
-                      <span className="text-[10px] text-muted-foreground">Callback</span>
-                      <div className="text-sm font-bold text-foreground">0.0%</div>
-                      <div className="text-[11px] text-muted-foreground font-mono">₹0</div>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-card border border-border text-center">
-                      <span className="text-[10px] text-muted-foreground">Settlement</span>
-                      <div className="text-sm font-bold text-foreground">0.0%</div>
-                      <div className="text-[11px] text-muted-foreground font-mono">₹0</div>
-                    </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(70px, 1fr))", gap: "10px", marginTop: "12px" }}>
+                    {[
+                      { label: "Paid", pct: "0.0%", amt: "₹0" },
+                      { label: "PTP", pct: "0.0%", amt: "₹0" },
+                      { label: "Callback", pct: "0.0%", amt: "₹0" },
+                      { label: "Settlement", pct: "0.0%", amt: "₹0" }
+                    ].map((item, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          padding: "10px 8px",
+                          borderRadius: "8px",
+                          backgroundColor: "#020921",
+                          border: "1px solid rgba(255, 255, 255, 0.06)",
+                          textAlign: "center"
+                        }}
+                      >
+                        <span style={{ fontSize: "10px", color: "#94a3b8" }}>{item.label}</span>
+                        <div style={{ fontSize: "13px", fontWeight: 700, color: "#ffffff", marginTop: "2px" }}>{item.pct}</div>
+                        <div style={{ fontSize: "11px", color: "#94a3b8", fontFamily: "monospace" }}>{item.amt}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 {/* Difficult Pool */}
-                <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
-                  <span className="text-xs font-bold text-amber-500 uppercase tracking-wider">
+                <div
+                  style={{
+                    padding: "16px",
+                    borderRadius: "12px",
+                    backgroundColor: "rgba(245, 158, 11, 0.04)",
+                    border: "1px solid rgba(245, 158, 11, 0.2)"
+                  }}
+                >
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#f59e0b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     Difficult Pool
                   </span>
-                  <div className="grid grid-cols-3 gap-3 mt-3">
-                    <div className="p-2.5 rounded-lg bg-card border border-border text-center">
-                      <span className="text-[10px] text-muted-foreground">Dispute</span>
-                      <div className="text-sm font-bold text-foreground">0.0%</div>
-                      <div className="text-[11px] text-muted-foreground font-mono">₹0</div>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-card border border-border text-center">
-                      <span className="text-[10px] text-muted-foreground">NC (No Contact)</span>
-                      <div className="text-sm font-bold text-foreground">29.9%</div>
-                      <div className="text-[11px] text-muted-foreground font-mono">₹90.2 Lakh</div>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-card border border-border text-center">
-                      <span className="text-[10px] text-muted-foreground">RTP (Refused)</span>
-                      <div className="text-sm font-bold text-foreground">0.0%</div>
-                      <div className="text-[11px] text-muted-foreground font-mono">₹0</div>
-                    </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: "10px", marginTop: "12px" }}>
+                    {[
+                      { label: "Dispute", pct: "0.0%", amt: "₹0" },
+                      { label: "NC (No Contact)", pct: ncPercentage, amt: ncAmt },
+                      { label: "RTP (Refused)", pct: "0.0%", amt: "₹0" }
+                    ].map((item, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          padding: "10px 8px",
+                          borderRadius: "8px",
+                          backgroundColor: "#020921",
+                          border: "1px solid rgba(255, 255, 255, 0.06)",
+                          textAlign: "center"
+                        }}
+                      >
+                        <span style={{ fontSize: "10px", color: "#94a3b8" }}>{item.label}</span>
+                        <div style={{ fontSize: "13px", fontWeight: 700, color: "#ffffff", marginTop: "2px" }}>{item.pct}</div>
+                        <div style={{ fontSize: "11px", color: "#94a3b8", fontFamily: "monospace" }}>{item.amt}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Agent Allocated Count & Effort Metric */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
               
               {/* Agent Allocated Count */}
-              <div className="p-5 rounded-2xl bg-card border border-border space-y-3">
-                <h4 className="text-sm font-bold text-foreground">Agent Allocated Count</h4>
-                <div className="space-y-2 text-xs">
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
-                    <span className="text-muted-foreground">Total Allocated Agents</span>
-                    <span className="font-bold text-foreground">4/116 Accounts</span>
+              <div
+                style={{
+                  backgroundColor: "#041030",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: "16px",
+                  padding: "20px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px"
+                }}
+              >
+                <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                  Agent Allocated Count
+                </h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "12px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.04)"
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8" }}>Total Allocated Agents</span>
+                    <span style={{ fontWeight: 700, color: "#ffffff" }}>
+                      {totalAllocatedAgents}/{allocatedAccounts} Accounts
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
-                    <span className="text-muted-foreground">Call Allocated Agents</span>
-                    <span className="font-bold text-blue-500">4/116 Accounts</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.04)"
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8" }}>Call Allocated Agents</span>
+                    <span style={{ fontWeight: 700, color: "#60a5fa" }}>
+                      {totalAllocatedAgents}/{allocatedAccounts} Accounts
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
-                    <span className="text-muted-foreground">Field Allocated Agents</span>
-                    <span className="font-bold text-foreground">0/0 Accounts</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.04)"
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8" }}>Field Allocated Agents</span>
+                    <span style={{ fontWeight: 700, color: "#ffffff" }}>0/0 Accounts</span>
                   </div>
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
-                    <span className="text-muted-foreground">Unallocated Agents</span>
-                    <span className="font-bold text-foreground">0/0 Accounts</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.04)"
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8" }}>Unallocated Agents</span>
+                    <span style={{ fontWeight: 700, color: "#ffffff" }}>
+                      {unallocatedAccounts}/{portfolioAccounts} Accounts
+                    </span>
                   </div>
                 </div>
               </div>
 
               {/* Effort Metric */}
-              <div className="p-5 rounded-2xl bg-card border border-border space-y-3">
-                <h4 className="text-sm font-bold text-foreground">Effort Metric</h4>
-                <div className="space-y-2 text-xs">
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
-                    <span className="text-muted-foreground">Total Attempts</span>
-                    <span className="font-bold text-foreground">173/35</span>
+              <div
+                style={{
+                  backgroundColor: "#041030",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: "16px",
+                  padding: "20px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px"
+                }}
+              >
+                <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
+                  Effort Metric
+                </h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "12px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.04)"
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8" }}>Total Attempts</span>
+                    <span style={{ fontWeight: 700, color: "#ffffff" }}>{totalAttempts}</span>
                   </div>
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
-                    <span className="text-muted-foreground">Call Attempts</span>
-                    <span className="font-bold text-blue-500">173/35</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.04)"
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8" }}>Call Attempts</span>
+                    <span style={{ fontWeight: 700, color: "#60a5fa" }}>{callAttempts}</span>
                   </div>
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
-                    <span className="text-muted-foreground">Field Visits</span>
-                    <span className="font-bold text-foreground">0/0</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.04)"
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8" }}>Field Visits</span>
+                    <span style={{ fontWeight: 700, color: "#ffffff" }}>0/0</span>
                   </div>
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
-                    <span className="text-muted-foreground">Digital Attempts</span>
-                    <span className="font-bold text-foreground">0/0</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.04)"
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8" }}>Digital Attempts</span>
+                    <span style={{ fontWeight: 700, color: "#ffffff" }}>0/0</span>
                   </div>
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50">
-                    <span className="text-muted-foreground">Untouched</span>
-                    <span className="font-bold text-amber-500">0/82</span>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.04)"
+                    }}
+                  >
+                    <span style={{ color: "#94a3b8" }}>Untouched</span>
+                    <span style={{ fontWeight: 700, color: "#f59e0b" }}>{untouchedAccounts}</span>
                   </div>
                 </div>
               </div>
@@ -604,135 +818,261 @@ export default function HomePortfolioView({
 
         {/* ── 2. CALL TAB CONTENT ── */}
         {detailTab === "call" && (
-          <div className="space-y-6">
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             
             {/* Top Bar with "Agent Monitoring" Button */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border">
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "16px",
+                padding: "20px",
+                borderRadius: "16px",
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                flexWrap: "wrap"
+              }}
+            >
               <div>
-                <h4 className="font-bold text-base text-foreground">Overall Call Summary</h4>
-                <p className="text-xs text-muted-foreground">
-                  Voice telephony outreach status & live telecaller statistics
-                </p>
+                <h4 style={{ fontSize: "15px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Overall Call Summary</h4>
               </div>
               <button
                 onClick={onNavigateToCallMonitoring}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-sm shadow-blue-500/20 transition-all self-start sm:self-auto cursor-pointer"
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: "10px",
+                  backgroundColor: "#1d4ed8",
+                  color: "#ffffff",
+                  fontWeight: 700,
+                  fontSize: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  border: "none",
+                  boxShadow: "0 2px 6px rgba(29, 78, 216, 0.4)",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}
               >
                 <span>Call Agent Monitoring</span>
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink style={{ width: "14px", height: "14px" }} />
               </button>
             </div>
 
             {/* Call Metrics Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-4 rounded-xl bg-card border border-border">
-                <span className="text-xs text-muted-foreground">Total Accounts</span>
-                <div className="text-2xl font-bold text-foreground mt-1">116</div>
-                <div className="text-[11px] text-muted-foreground mt-1">Unsubscribed: 0 • 0 Resolution</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "16px" }}>
+              <div
+                style={{
+                  backgroundColor: "#041030",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: "16px",
+                  padding: "16px 20px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+                }}
+              >
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>Total Accounts</span>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "#ffffff", marginTop: "4px" }}>
+                  {portfolioAccounts}
+                </div>
+                <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "8px" }}>
+                  Unsubscribed: 0 • 0 Resolution
+                </div>
               </div>
-              <div className="p-4 rounded-xl bg-card border border-border">
-                <span className="text-xs text-muted-foreground">Call Outstanding</span>
-                <div className="text-2xl font-bold text-foreground mt-1">₹4.71 Cr</div>
-                <div className="text-[11px] text-muted-foreground mt-1">Unsubscribed: ₹0 • 0 Engagement</div>
+              <div
+                style={{
+                  backgroundColor: "#041030",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: "16px",
+                  padding: "16px 20px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+                }}
+              >
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>Call Outstanding</span>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "#ffffff", marginTop: "4px" }}>
+                  {portfolioOutstanding}
+                </div>
+                <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "8px" }}>
+                  Unsubscribed: ₹0 • 0 Engagement
+                </div>
               </div>
-              <div className="p-4 rounded-xl bg-card border border-border">
-                <span className="text-xs text-muted-foreground">Collectable</span>
-                <div className="text-2xl font-bold text-emerald-500 mt-1">₹2.79 Cr</div>
-                <div className="text-[11px] text-muted-foreground mt-1">Collected: ₹0</div>
+              <div
+                style={{
+                  backgroundColor: "#041030",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: "16px",
+                  padding: "16px 20px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+                }}
+              >
+                <span style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8" }}>Collectable</span>
+                <div style={{ fontSize: "24px", fontWeight: 800, color: "#34d399", marginTop: "4px" }}>
+                  {portfolioCollectable}
+                </div>
+                <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "8px" }}>
+                  Collected: ₹0
+                </div>
               </div>
             </div>
 
             {/* Dispositions */}
-            <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-              <h4 className="text-sm font-bold text-foreground">Dispositions</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-muted/40 border border-border">
-                  <span className="text-xs font-bold text-emerald-500">Positive Pool</span>
-                  <div className="grid grid-cols-4 gap-2 mt-2 text-center text-xs">
-                    <div>Paid: <strong className="text-foreground">0.0%</strong> (₹0)</div>
-                    <div>PTP: <strong className="text-foreground">0.0%</strong> (₹0)</div>
-                    <div>Callback: <strong className="text-foreground">0.0%</strong> (₹0)</div>
-                    <div>Settlement: <strong className="text-foreground">0.0%</strong> (₹0)</div>
+            <div
+              style={{
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "16px",
+                padding: "20px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px"
+              }}
+            >
+              <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Dispositions</h4>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px" }}>
+                <div
+                  style={{
+                    padding: "16px",
+                    borderRadius: "12px",
+                    backgroundColor: "rgba(16, 185, 129, 0.04)",
+                    border: "1px solid rgba(16, 185, 129, 0.2)"
+                  }}
+                >
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#34d399", textTransform: "uppercase" }}>Positive Pool</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px", marginTop: "12px", textAlign: "center", fontSize: "12px" }}>
+                    <div><span style={{ color: "#94a3b8", fontSize: "11px" }}>Paid</span><div style={{ fontWeight: 700, color: "#ffffff" }}>0.0%</div><span style={{ fontSize: "10px", color: "#94a3b8" }}>(₹0)</span></div>
+                    <div><span style={{ color: "#94a3b8", fontSize: "11px" }}>PTP</span><div style={{ fontWeight: 700, color: "#ffffff" }}>0.0%</div><span style={{ fontSize: "10px", color: "#94a3b8" }}>(₹0)</span></div>
+                    <div><span style={{ color: "#94a3b8", fontSize: "11px" }}>Callback</span><div style={{ fontWeight: 700, color: "#ffffff" }}>0.0%</div><span style={{ fontSize: "10px", color: "#94a3b8" }}>(₹0)</span></div>
+                    <div><span style={{ color: "#94a3b8", fontSize: "11px" }}>Settlement</span><div style={{ fontWeight: 700, color: "#ffffff" }}>0.0%</div><span style={{ fontSize: "10px", color: "#94a3b8" }}>(₹0)</span></div>
                   </div>
                 </div>
-                <div className="p-4 rounded-xl bg-muted/40 border border-border">
-                  <span className="text-xs font-bold text-amber-500">Difficult Pool</span>
-                  <div className="grid grid-cols-3 gap-2 mt-2 text-center text-xs">
-                    <div>Dispute: <strong className="text-foreground">0.0%</strong> (₹0)</div>
-                    <div>NC: <strong className="text-foreground">30.2%</strong> (₹90.2 L)</div>
-                    <div>RTP: <strong className="text-foreground">0.0%</strong> (₹0)</div>
+                <div
+                  style={{
+                    padding: "16px",
+                    borderRadius: "12px",
+                    backgroundColor: "rgba(245, 158, 11, 0.04)",
+                    border: "1px solid rgba(245, 158, 11, 0.2)"
+                  }}
+                >
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#f59e0b", textTransform: "uppercase" }}>Difficult Pool</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", marginTop: "12px", textAlign: "center", fontSize: "12px" }}>
+                    <div><span style={{ color: "#94a3b8", fontSize: "11px" }}>Dispute</span><div style={{ fontWeight: 700, color: "#ffffff" }}>0.0%</div><span style={{ fontSize: "10px", color: "#94a3b8" }}>(₹0)</span></div>
+                    <div><span style={{ color: "#94a3b8", fontSize: "11px" }}>NC</span><div style={{ fontWeight: 700, color: "#ffffff" }}>{ncPercentage}</div><span style={{ fontSize: "10px", color: "#94a3b8" }}>({ncAmt})</span></div>
+                    <div><span style={{ color: "#94a3b8", fontSize: "11px" }}>RTP</span><div style={{ fontWeight: 700, color: "#ffffff" }}>0.0%</div><span style={{ fontSize: "10px", color: "#94a3b8" }}>(₹0)</span></div>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Agent Allocated Count & Effort Metric */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-card border border-border space-y-2 text-xs">
-                <div className="font-bold text-foreground mb-1">Agent Allocated Count</div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Call Allocated Agents</span>
-                  <span className="font-bold text-foreground">4/116 Accounts</span>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px" }}>
+              <div
+                style={{
+                  backgroundColor: "#041030",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: "16px",
+                  padding: "16px 20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                  fontSize: "12px"
+                }}
+              >
+                <div style={{ fontWeight: 700, color: "#ffffff", marginBottom: "4px" }}>Agent Allocated Count</div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderRadius: "8px", backgroundColor: "#020921" }}>
+                  <span style={{ color: "#94a3b8" }}>Call Allocated Agents</span>
+                  <span style={{ fontWeight: 700, color: "#ffffff" }}>{totalAllocatedAgents}/{allocatedAccounts} Accounts</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Unallocated Agents</span>
-                  <span className="font-bold text-foreground">0/0 Accounts</span>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderRadius: "8px", backgroundColor: "#020921" }}>
+                  <span style={{ color: "#94a3b8" }}>Unallocated Agents</span>
+                  <span style={{ fontWeight: 700, color: "#ffffff" }}>{unallocatedAccounts}/{portfolioAccounts} Accounts</span>
                 </div>
               </div>
-              <div className="p-4 rounded-xl bg-card border border-border space-y-2 text-xs">
-                <div className="font-bold text-foreground mb-1">Effort Metric</div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total Attempts</span>
-                  <span className="font-bold text-foreground">173/116</span>
+              <div
+                style={{
+                  backgroundColor: "#041030",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: "16px",
+                  padding: "16px 20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px",
+                  fontSize: "12px"
+                }}
+              >
+                <div style={{ fontWeight: 700, color: "#ffffff", marginBottom: "4px" }}>Effort Metric</div>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderRadius: "8px", backgroundColor: "#020921" }}>
+                  <span style={{ color: "#94a3b8" }}>Total Attempts</span>
+                  <span style={{ fontWeight: 700, color: "#ffffff" }}>{totalAttempts}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Call Attempts</span>
-                  <span className="font-bold text-foreground">173/35</span>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderRadius: "8px", backgroundColor: "#020921" }}>
+                  <span style={{ color: "#94a3b8" }}>Call Attempts</span>
+                  <span style={{ fontWeight: 700, color: "#ffffff" }}>{callAttempts}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Untouched</span>
-                  <span className="font-bold text-amber-500">0/81</span>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", borderRadius: "8px", backgroundColor: "#020921" }}>
+                  <span style={{ color: "#94a3b8" }}>Untouched</span>
+                  <span style={{ fontWeight: 700, color: "#f59e0b" }}>{untouchedAccounts}</span>
                 </div>
               </div>
             </div>
 
             {/* Agent Summary: Agents List Table */}
-            <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-bold text-foreground">Agent Summary</h4>
-                  <p className="text-xs text-muted-foreground">Agents assigned to this allocation portfolio</p>
-                </div>
+            <div
+              style={{
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "16px",
+                padding: "20px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Agent Summary</h4>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-muted text-muted-foreground font-semibold">
-                    <tr>
-                      <th className="p-3">Agent</th>
-                      <th className="p-3">Team Leader</th>
-                      <th className="p-3">Total Calls</th>
-                      <th className="p-3">Total Connected Call</th>
-                      <th className="p-3">Total Non Connected Call</th>
-                      <th className="p-3">Login Time</th>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", textAlign: "left", fontSize: "12px", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ backgroundColor: "#020921", color: "#94a3b8", fontSize: "11px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                      <th style={{ padding: "12px 14px" }}>Agent</th>
+                      <th style={{ padding: "12px 14px" }}>Team Leader</th>
+                      <th style={{ padding: "12px 14px" }}>Total Calls</th>
+                      <th style={{ padding: "12px 14px" }}>Total Connected Call</th>
+                      <th style={{ padding: "12px 14px" }}>Total Non Connected Call</th>
+                      <th style={{ padding: "12px 14px" }}>Login Time</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
-                    <tr className="hover:bg-muted/40 transition-colors">
-                      <td className="p-3 font-semibold text-foreground">Manisha Shete</td>
-                      <td className="p-3 text-muted-foreground">Priya Talekar</td>
-                      <td className="p-3 font-bold text-foreground">133</td>
-                      <td className="p-3 text-emerald-500 font-bold">83</td>
-                      <td className="p-3 text-rose-500 font-bold">50</td>
-                      <td className="p-3 text-muted-foreground font-mono">08:59:15</td>
-                    </tr>
-                    <tr className="hover:bg-muted/40 transition-colors">
-                      <td className="p-3 font-semibold text-foreground">Priya Talekar</td>
-                      <td className="p-3 text-muted-foreground">Priya Talekar</td>
-                      <td className="p-3 font-bold text-foreground">52</td>
-                      <td className="p-3 text-emerald-500 font-bold">26</td>
-                      <td className="p-3 text-rose-500 font-bold">26</td>
-                      <td className="p-3 text-muted-foreground font-mono">08:55:14</td>
-                    </tr>
+                  <tbody>
+                    {isBajajSample ? (
+                      <>
+                        <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                          <td style={{ padding: "12px 14px", fontWeight: 600, color: "#ffffff" }}>Manisha Shete</td>
+                          <td style={{ padding: "12px 14px", color: "#94a3b8" }}>Priya Talekar</td>
+                          <td style={{ padding: "12px 14px", fontWeight: 700, color: "#ffffff" }}>133</td>
+                          <td style={{ padding: "12px 14px", color: "#34d399", fontWeight: 700 }}>83</td>
+                          <td style={{ padding: "12px 14px", color: "#fb7185", fontWeight: 700 }}>50</td>
+                          <td style={{ padding: "12px 14px", color: "#94a3b8", fontFamily: "monospace" }}>08:59:15</td>
+                        </tr>
+                        <tr style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                          <td style={{ padding: "12px 14px", fontWeight: 600, color: "#ffffff" }}>Priya Talekar</td>
+                          <td style={{ padding: "12px 14px", color: "#94a3b8" }}>Priya Talekar</td>
+                          <td style={{ padding: "12px 14px", fontWeight: 700, color: "#ffffff" }}>52</td>
+                          <td style={{ padding: "12px 14px", color: "#34d399", fontWeight: 700 }}>26</td>
+                          <td style={{ padding: "12px 14px", color: "#fb7185", fontWeight: 700 }}>26</td>
+                          <td style={{ padding: "12px 14px", color: "#94a3b8", fontFamily: "monospace" }}>08:55:14</td>
+                        </tr>
+                      </>
+                    ) : (
+                      <tr>
+                        <td colSpan={6} style={{ padding: "28px", textAlign: "center", color: "#94a3b8", fontSize: "12px" }}>
+                          No calling agent activity recorded for this portfolio.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -743,81 +1083,126 @@ export default function HomePortfolioView({
 
         {/* ── 3. FIELD TAB CONTENT ── */}
         {detailTab === "field" && (
-          <div className="space-y-6">
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             
             {/* Overall Field Summary */}
-            <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-              <h4 className="text-sm font-bold text-foreground">Overall Field Summary</h4>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                <div className="p-3 rounded-lg bg-muted/40">
-                  <span className="text-muted-foreground">Total Accounts</span>
-                  <div className="text-lg font-bold text-foreground mt-0.5">0</div>
-                  <div className="text-[10px] text-muted-foreground">Unsubscribed: 0 • 0 Resolution</div>
+            <div
+              style={{
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "16px",
+                padding: "20px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px"
+              }}
+            >
+              <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Overall Field Summary</h4>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px", fontSize: "12px" }}>
+                <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                  <span style={{ color: "#94a3b8" }}>Total Accounts</span>
+                  <div style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", marginTop: "4px" }}>0</div>
+                  <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "4px" }}>Unsubscribed: 0 • 0 Resolution</div>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/40">
-                  <span className="text-muted-foreground">Field Outstanding</span>
-                  <div className="text-lg font-bold text-foreground mt-0.5">₹0</div>
-                  <div className="text-[10px] text-muted-foreground">Unsubscribed: ₹0 • 0 Engagement</div>
+                <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                  <span style={{ color: "#94a3b8" }}>Field Outstanding</span>
+                  <div style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", marginTop: "4px" }}>₹0</div>
+                  <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "4px" }}>Unsubscribed: ₹0 • 0 Engagement</div>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/40">
-                  <span className="text-muted-foreground">Collectable</span>
-                  <div className="text-lg font-bold text-foreground mt-0.5">₹0</div>
-                  <div className="text-[10px] text-muted-foreground">Collected: ₹0</div>
+                <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                  <span style={{ color: "#94a3b8" }}>Collectable</span>
+                  <div style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", marginTop: "4px" }}>₹0</div>
+                  <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "4px" }}>Collected: ₹0</div>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/40">
-                  <span className="text-muted-foreground">Collections %</span>
-                  <div className="text-lg font-bold text-foreground mt-0.5">0.00%</div>
-                  <div className="text-[10px] text-muted-foreground">Target: ₹0</div>
+                <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                  <span style={{ color: "#94a3b8" }}>Collections %</span>
+                  <div style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", marginTop: "4px" }}>0.00%</div>
+                  <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "4px" }}>Target: ₹0</div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-2">
-                <div className="p-2.5 rounded bg-muted/30">Assigned Vs Unassigned: <strong>0 Total Accounts</strong></div>
-                <div className="p-2.5 rounded bg-muted/30">Visited Vs Non Visited: <strong>0 Total Accounts</strong></div>
-                <div className="p-2.5 rounded bg-muted/30">Total Visits: <strong>0</strong></div>
-                <div className="p-2.5 rounded bg-muted/30">Unique Visits: <strong>0</strong></div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "10px", fontSize: "11px", paddingTop: "8px" }}>
+                <div style={{ padding: "10px 14px", borderRadius: "8px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.04)", color: "#94a3b8" }}>
+                  Assigned Vs Unassigned: <strong style={{ color: "#ffffff" }}>0 Total Accounts</strong>
+                </div>
+                <div style={{ padding: "10px 14px", borderRadius: "8px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.04)", color: "#94a3b8" }}>
+                  Visited Vs Non Visited: <strong style={{ color: "#ffffff" }}>0 Total Accounts</strong>
+                </div>
+                <div style={{ padding: "10px 14px", borderRadius: "8px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.04)", color: "#94a3b8" }}>
+                  Total Visits: <strong style={{ color: "#ffffff" }}>0</strong>
+                </div>
+                <div style={{ padding: "10px 14px", borderRadius: "8px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.04)", color: "#94a3b8" }}>
+                  Unique Visits: <strong style={{ color: "#ffffff" }}>0</strong>
+                </div>
               </div>
             </div>
 
             {/* Agent Wise Reports Table */}
-            <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <h4 className="text-sm font-bold text-foreground">Agent Wise Report</h4>
-                  <p className="text-xs text-muted-foreground">Field agent allocation, visits, DRR and collection ratios</p>
-                </div>
-                <div className="flex items-center gap-2">
+            <div
+              style={{
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "16px",
+                padding: "20px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px"
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+                <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Agent Wise Report</h4>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <input
                     type="text"
                     placeholder="Search account number..."
-                    className="px-3 py-1.5 rounded-lg bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "8px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      fontSize: "12px",
+                      color: "#ffffff",
+                      outline: "none"
+                    }}
                   />
-                  <select className="px-3 py-1.5 rounded-lg bg-muted border border-border text-xs text-foreground focus:outline-none">
-                    <option>Sort By: Agent Name</option>
-                    <option>Sort By: Collection%</option>
+                  <select
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "8px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      fontSize: "12px",
+                      color: "#ffffff",
+                      outline: "none"
+                    }}
+                  >
+                    <option style={{ backgroundColor: "#041030", color: "#ffffff" }}>Sort By: Agent Name</option>
+                    <option style={{ backgroundColor: "#041030", color: "#ffffff" }}>Sort By: Collection%</option>
                   </select>
                 </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs whitespace-nowrap">
-                  <thead className="bg-muted text-muted-foreground font-semibold">
-                    <tr>
-                      <th className="p-2.5">Agent Name</th>
-                      <th className="p-2.5">Yucollect ID</th>
-                      <th className="p-2.5">Amount Allocated</th>
-                      <th className="p-2.5">Amount Collected</th>
-                      <th className="p-2.5">Collection%</th>
-                      <th className="p-2.5">Allocation Count</th>
-                      <th className="p-2.5">Total Visits</th>
-                      <th className="p-2.5">Unique Visits</th>
-                      <th className="p-2.5">DRR (Visit/Day)</th>
-                      <th className="p-2.5">Intensity</th>
-                      <th className="p-2.5">Dispositions Form Distance</th>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", textAlign: "left", fontSize: "12px", borderCollapse: "collapse", whiteSpace: "nowrap" }}>
+                  <thead>
+                    <tr style={{ backgroundColor: "#020921", color: "#94a3b8", fontSize: "11px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                      <th style={{ padding: "10px 12px" }}>Agent Name</th>
+                      <th style={{ padding: "10px 12px" }}>Yucollect ID</th>
+                      <th style={{ padding: "10px 12px" }}>Amount Allocated</th>
+                      <th style={{ padding: "10px 12px" }}>Amount Collected</th>
+                      <th style={{ padding: "10px 12px" }}>Collection%</th>
+                      <th style={{ padding: "10px 12px" }}>Allocation Count</th>
+                      <th style={{ padding: "10px 12px" }}>Total Visits</th>
+                      <th style={{ padding: "10px 12px" }}>Unique Visits</th>
+                      <th style={{ padding: "10px 12px" }}>DRR (Visit/Day)</th>
+                      <th style={{ padding: "10px 12px" }}>Intensity</th>
+                      <th style={{ padding: "10px 12px" }}>Dispositions Form Distance</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody>
                     <tr>
-                      <td colSpan="11" className="p-6 text-center text-muted-foreground">
+                      <td colSpan={11} style={{ padding: "28px", textAlign: "center", color: "#94a3b8" }}>
                         No field recovery records allocated for this portfolio.
                       </td>
                     </tr>
@@ -827,37 +1212,66 @@ export default function HomePortfolioView({
             </div>
 
             {/* Day Wise Visit Report */}
-            <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <h4 className="text-sm font-bold text-foreground">Day Wise Visit Report</h4>
-                <div className="flex items-center gap-2">
+            <div
+              style={{
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "16px",
+                padding: "20px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px"
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+                <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Day Wise Visit Report</h4>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <input
                     type="text"
                     placeholder="Search by Agent name..."
-                    className="px-3 py-1.5 rounded-lg bg-muted border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "8px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      fontSize: "12px",
+                      color: "#ffffff",
+                      outline: "none"
+                    }}
                   />
-                  <select className="px-3 py-1.5 rounded-lg bg-muted border border-border text-xs text-foreground focus:outline-none">
-                    <option>Sort By: Date</option>
+                  <select
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "8px",
+                      backgroundColor: "#020921",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      fontSize: "12px",
+                      color: "#ffffff",
+                      outline: "none"
+                    }}
+                  >
+                    <option style={{ backgroundColor: "#041030", color: "#ffffff" }}>Sort By: Date</option>
                   </select>
                 </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs whitespace-nowrap">
-                  <thead className="bg-muted text-muted-foreground font-semibold">
-                    <tr>
-                      <th className="p-2.5">Agent Name</th>
-                      <th className="p-2.5">YuCollect ID</th>
-                      <th className="p-2.5">Disposition</th>
-                      <th className="p-2.5">Sub Disposition</th>
-                      <th className="p-2.5">Disposition Date</th>
-                      <th className="p-2.5">Disposition Time</th>
-                      <th className="p-2.5">Distance from address</th>
-                      <th className="p-2.5">Borrower Address</th>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", textAlign: "left", fontSize: "12px", borderCollapse: "collapse", whiteSpace: "nowrap" }}>
+                  <thead>
+                    <tr style={{ backgroundColor: "#020921", color: "#94a3b8", fontSize: "11px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                      <th style={{ padding: "10px 12px" }}>Agent Name</th>
+                      <th style={{ padding: "10px 12px" }}>YuCollect ID</th>
+                      <th style={{ padding: "10px 12px" }}>Disposition</th>
+                      <th style={{ padding: "10px 12px" }}>Sub Disposition</th>
+                      <th style={{ padding: "10px 12px" }}>Disposition Date</th>
+                      <th style={{ padding: "10px 12px" }}>Disposition Time</th>
+                      <th style={{ padding: "10px 12px" }}>Distance from address</th>
+                      <th style={{ padding: "10px 12px" }}>Borrower Address</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody>
                     <tr>
-                      <td colSpan="8" className="p-6 text-center text-muted-foreground">
+                      <td colSpan={8} style={{ padding: "28px", textAlign: "center", color: "#94a3b8" }}>
                         No visit activity logged for today.
                       </td>
                     </tr>
@@ -867,21 +1281,32 @@ export default function HomePortfolioView({
             </div>
 
             {/* Bottom 2 Field Tables: Agents with Visit% <70 & Agents with Collection% <20 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-5 rounded-2xl bg-card border border-border space-y-3">
-                <h4 className="text-sm font-bold text-foreground">Agents with Visit% &lt; 70</h4>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-muted text-muted-foreground">
-                      <tr>
-                        <th className="p-2">Agent Name</th>
-                        <th className="p-2">Yucollect ID</th>
-                        <th className="p-2">Visit %</th>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "16px" }}>
+              <div
+                style={{
+                  backgroundColor: "#041030",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: "16px",
+                  padding: "20px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px"
+                }}
+              >
+                <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Agents with Visit% &lt; 70</h4>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", textAlign: "left", fontSize: "12px", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ backgroundColor: "#020921", color: "#94a3b8", fontSize: "11px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                        <th style={{ padding: "8px 10px" }}>Agent Name</th>
+                        <th style={{ padding: "8px 10px" }}>Yucollect ID</th>
+                        <th style={{ padding: "8px 10px" }}>Visit %</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td colSpan="3" className="p-4 text-center text-muted-foreground">
+                        <td colSpan={3} style={{ padding: "20px", textAlign: "center", color: "#94a3b8" }}>
                           No underperforming field agents recorded.
                         </td>
                       </tr>
@@ -890,20 +1315,31 @@ export default function HomePortfolioView({
                 </div>
               </div>
 
-              <div className="p-5 rounded-2xl bg-card border border-border space-y-3">
-                <h4 className="text-sm font-bold text-foreground">Agents with Collection% &lt; 20</h4>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-muted text-muted-foreground">
-                      <tr>
-                        <th className="p-2">Agent Name</th>
-                        <th className="p-2">Yucollect ID</th>
-                        <th className="p-2">Collection%</th>
+              <div
+                style={{
+                  backgroundColor: "#041030",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: "16px",
+                  padding: "20px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px"
+                }}
+              >
+                <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Agents with Collection% &lt; 20</h4>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", textAlign: "left", fontSize: "12px", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ backgroundColor: "#020921", color: "#94a3b8", fontSize: "11px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                        <th style={{ padding: "8px 10px" }}>Agent Name</th>
+                        <th style={{ padding: "8px 10px" }}>Yucollect ID</th>
+                        <th style={{ padding: "8px 10px" }}>Collection%</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td colSpan="3" className="p-4 text-center text-muted-foreground">
+                        <td colSpan={3} style={{ padding: "20px", textAlign: "center", color: "#94a3b8" }}>
                           No low collection agents recorded.
                         </td>
                       </tr>
@@ -918,126 +1354,155 @@ export default function HomePortfolioView({
 
         {/* ── 4. DIGITAL TAB CONTENT ── */}
         {detailTab === "digital" && (
-          <div className="space-y-6">
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             
             {/* Overall Digital Summary */}
-            <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-              <h4 className="text-sm font-bold text-foreground">Overall Digital Summary</h4>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                <div className="p-3 rounded-lg bg-muted/40">
-                  <span className="text-muted-foreground">Total Accounts</span>
-                  <div className="text-lg font-bold text-foreground mt-0.5">0</div>
-                  <div className="text-[10px] text-muted-foreground">Unsubscribed: 0 • 0 Engagement</div>
+            <div
+              style={{
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "16px",
+                padding: "20px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px"
+              }}
+            >
+              <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Overall Digital Summary</h4>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px", fontSize: "12px" }}>
+                <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                  <span style={{ color: "#94a3b8" }}>Total Accounts</span>
+                  <div style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", marginTop: "4px" }}>0</div>
+                  <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "4px" }}>Unsubscribed: 0 • 0 Engagement</div>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/40">
-                  <span className="text-muted-foreground">Outstanding</span>
-                  <div className="text-lg font-bold text-foreground mt-0.5">₹0</div>
-                  <div className="text-[10px] text-muted-foreground">Unsubscribed: ₹0 • 0 Engagement</div>
+                <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                  <span style={{ color: "#94a3b8" }}>Outstanding</span>
+                  <div style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", marginTop: "4px" }}>₹0</div>
+                  <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "4px" }}>Unsubscribed: ₹0 • 0 Engagement</div>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/40">
-                  <span className="text-muted-foreground">Collectable</span>
-                  <div className="text-lg font-bold text-foreground mt-0.5">₹0</div>
+                <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                  <span style={{ color: "#94a3b8" }}>Collectable</span>
+                  <div style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", marginTop: "4px" }}>₹0</div>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/40">
-                  <span className="text-muted-foreground">Collected</span>
-                  <div className="text-lg font-bold text-foreground mt-0.5">₹0</div>
+                <div style={{ padding: "14px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.04)" }}>
+                  <span style={{ color: "#94a3b8" }}>Collected</span>
+                  <div style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", marginTop: "4px" }}>₹0</div>
                 </div>
               </div>
             </div>
 
             {/* Digital Engagement Summary (SMS, IVR, BOT) */}
-            <div className="p-5 rounded-2xl bg-card border border-border space-y-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <h4 className="text-sm font-bold text-foreground">Digital Engagement Summary</h4>
-                <div className="flex items-center gap-1.5 p-1 bg-muted rounded-lg">
-                  <button
-                    onClick={() => setDigitalSubTab("sms")}
-                    className={`px-3 py-1 rounded text-xs font-bold transition-all ${
-                      digitalSubTab === "sms" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-                    }`}
-                  >
-                    SMS
-                  </button>
-                  <button
-                    onClick={() => setDigitalSubTab("ivr")}
-                    className={`px-3 py-1 rounded text-xs font-bold transition-all ${
-                      digitalSubTab === "ivr" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-                    }`}
-                  >
-                    IVR
-                  </button>
-                  <button
-                    onClick={() => setDigitalSubTab("bot")}
-                    className={`px-3 py-1 rounded text-xs font-bold transition-all ${
-                      digitalSubTab === "bot" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-                    }`}
-                  >
-                    BOT
-                  </button>
+            <div
+              style={{
+                backgroundColor: "#041030",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "16px",
+                padding: "20px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
+                <h4 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Digital Engagement Summary</h4>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px", backgroundColor: "#020921", borderRadius: "10px", border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                  {["sms", "ivr", "bot"].map((sub) => (
+                    <button
+                      key={sub}
+                      onClick={() => setDigitalSubTab(sub)}
+                      style={{
+                        padding: "4px 12px",
+                        borderRadius: "6px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        backgroundColor: digitalSubTab === sub ? "#1d4ed8" : "transparent",
+                        color: digitalSubTab === sub ? "#ffffff" : "#94a3b8",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      {sub}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               {/* Choose Plan & Metrics */}
-              <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <span className="text-xs font-bold text-foreground">Choose Plan: 7 day high intensity</span>
-                  <div className="text-xs text-muted-foreground">Start Date: <strong>2026-11-18</strong> | End Date: <strong>2026-11-25</strong></div>
+              <div
+                style={{
+                  padding: "16px",
+                  borderRadius: "12px",
+                  backgroundColor: "#020921",
+                  border: "1px solid rgba(255, 255, 255, 0.06)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: 700, color: "#ffffff" }}>Choose Plan: 7 day high intensity</span>
+                  <div style={{ fontSize: "11px", color: "#94a3b8" }}>Start Date: <strong style={{ color: "#ffffff" }}>2026-11-18</strong> | End Date: <strong style={{ color: "#ffffff" }}>2026-11-25</strong></div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2 text-xs">
-                  <div className="p-2 rounded bg-card border border-border text-center">
-                    <span className="text-[10px] text-muted-foreground">Contacted</span>
-                    <div className="font-bold text-foreground mt-0.5">N/A</div>
-                  </div>
-                  <div className="p-2 rounded bg-card border border-border text-center">
-                    <span className="text-[10px] text-muted-foreground">Total Attempts</span>
-                    <div className="font-bold text-foreground mt-0.5">N/A</div>
-                  </div>
-                  <div className="p-2 rounded bg-card border border-border text-center">
-                    <span className="text-[10px] text-muted-foreground">Total Intensity</span>
-                    <div className="font-bold text-foreground mt-0.5">N/A</div>
-                  </div>
-                  <div className="p-2 rounded bg-card border border-border text-center">
-                    <span className="text-[10px] text-muted-foreground">Avg Intensity</span>
-                    <div className="font-bold text-foreground mt-0.5">N/A</div>
-                  </div>
-                  <div className="p-2 rounded bg-card border border-border text-center">
-                    <span className="text-[10px] text-muted-foreground">Total Accounts</span>
-                    <div className="font-bold text-foreground mt-0.5">N/A</div>
-                  </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: "10px", fontSize: "12px", paddingTop: "6px" }}>
+                  {[
+                    { label: "Contacted", val: "N/A" },
+                    { label: "Total Attempts", val: "N/A" },
+                    { label: "Total Intensity", val: "N/A" },
+                    { label: "Avg Intensity", val: "N/A" },
+                    { label: "Total Accounts", val: "N/A" }
+                  ].map((m, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        padding: "10px",
+                        borderRadius: "8px",
+                        backgroundColor: "#041030",
+                        border: "1px solid rgba(255, 255, 255, 0.06)",
+                        textAlign: "center"
+                      }}
+                    >
+                      <span style={{ fontSize: "10px", color: "#94a3b8" }}>{m.label}</span>
+                      <div style={{ fontWeight: 700, color: "#ffffff", marginTop: "2px" }}>{m.val}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               {/* Dispositions */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                <div className="p-3 rounded-xl bg-muted/30 border border-border">
-                  <span className="font-bold text-emerald-500">Positive Pool</span>
-                  <div className="grid grid-cols-4 gap-2 mt-2 text-center">
-                    <div>Paid: 0.0% (₹0)</div>
-                    <div>PTP: 0.0% (₹0)</div>
-                    <div>Callback: 0.0% (₹0)</div>
-                    <div>Settlement: 0.0% (₹0)</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px", fontSize: "12px" }}>
+                <div style={{ padding: "14px", borderRadius: "12px", backgroundColor: "rgba(16, 185, 129, 0.04)", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+                  <span style={{ fontWeight: 700, color: "#34d399", textTransform: "uppercase", fontSize: "11px" }}>Positive Pool</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px", marginTop: "8px", textAlign: "center" }}>
+                    <div><span style={{ color: "#94a3b8", fontSize: "10px" }}>Paid</span><div style={{ fontWeight: 700, color: "#ffffff" }}>0.0%</div><span style={{ fontSize: "10px", color: "#94a3b8" }}>(₹0)</span></div>
+                    <div><span style={{ color: "#94a3b8", fontSize: "10px" }}>PTP</span><div style={{ fontWeight: 700, color: "#ffffff" }}>0.0%</div><span style={{ fontSize: "10px", color: "#94a3b8" }}>(₹0)</span></div>
+                    <div><span style={{ color: "#94a3b8", fontSize: "10px" }}>Callback</span><div style={{ fontWeight: 700, color: "#ffffff" }}>0.0%</div><span style={{ fontSize: "10px", color: "#94a3b8" }}>(₹0)</span></div>
+                    <div><span style={{ color: "#94a3b8", fontSize: "10px" }}>Settlement</span><div style={{ fontWeight: 700, color: "#ffffff" }}>0.0%</div><span style={{ fontSize: "10px", color: "#94a3b8" }}>(₹0)</span></div>
                   </div>
                 </div>
-                <div className="p-3 rounded-xl bg-muted/30 border border-border">
-                  <span className="font-bold text-amber-500">Difficult Pool</span>
-                  <div className="grid grid-cols-3 gap-2 mt-2 text-center">
-                    <div>Dispute: 0.0% (₹0)</div>
-                    <div>NC: 0.0% (₹0)</div>
-                    <div>RTP: 0.0% (₹0)</div>
+                <div style={{ padding: "14px", borderRadius: "12px", backgroundColor: "rgba(245, 158, 11, 0.04)", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
+                  <span style={{ fontWeight: 700, color: "#f59e0b", textTransform: "uppercase", fontSize: "11px" }}>Difficult Pool</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px", marginTop: "8px", textAlign: "center" }}>
+                    <div><span style={{ color: "#94a3b8", fontSize: "10px" }}>Dispute</span><div style={{ fontWeight: 700, color: "#ffffff" }}>0.0%</div><span style={{ fontSize: "10px", color: "#94a3b8" }}>(₹0)</span></div>
+                    <div><span style={{ color: "#94a3b8", fontSize: "10px" }}>NC</span><div style={{ fontWeight: 700, color: "#ffffff" }}>0.0%</div><span style={{ fontSize: "10px", color: "#94a3b8" }}>(₹0)</span></div>
+                    <div><span style={{ color: "#94a3b8", fontSize: "10px" }}>RTP</span><div style={{ fontWeight: 700, color: "#ffffff" }}>0.0%</div><span style={{ fontSize: "10px", color: "#94a3b8" }}>(₹0)</span></div>
                   </div>
                 </div>
               </div>
 
               {/* Engagement Stats */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-lg bg-card border border-border flex justify-between">
-                  <span className="text-muted-foreground">Engagement by Accounts</span>
-                  <span className="font-bold text-foreground">0</span>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "12px", fontSize: "12px" }}>
+                <div style={{ padding: "12px 16px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.04)", display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "#94a3b8" }}>Engagement by Accounts</span>
+                  <span style={{ fontWeight: 700, color: "#ffffff" }}>0</span>
                 </div>
-                <div className="p-3 rounded-lg bg-card border border-border flex justify-between">
-                  <span className="text-muted-foreground">Engagement by Outstanding</span>
-                  <span className="font-bold text-foreground">₹0</span>
+                <div style={{ padding: "12px 16px", borderRadius: "10px", backgroundColor: "#020921", border: "1px solid rgba(255, 255, 255, 0.04)", display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "#94a3b8" }}>Engagement by Outstanding</span>
+                  <span style={{ fontWeight: 700, color: "#ffffff" }}>₹0</span>
                 </div>
               </div>
             </div>
