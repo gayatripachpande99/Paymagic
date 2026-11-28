@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Headphones,
   PhoneCall,
@@ -15,8 +15,20 @@ import {
   LogOut,
   Radio,
   Wifi,
-  WifiOff
+  WifiOff,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  RefreshCw,
+  ShieldCheck,
+  AlertTriangle
 } from "lucide-react";
+import {
+  verifyHeadsetHardware,
+  quickCheckAudioDevices,
+  subscribeToAudioDeviceChanges
+} from "../../services/headsetDetector";
 
 export const BREAK_OPTIONS = [
   { id: "lunch", name: "Lunch Break", icon: "🥪" },
@@ -37,12 +49,19 @@ export default function AgentPresenceDialerWidget({
   setIsHeadsetConnected,
   user,
   isOpen = false,
-  setIsOpen
+  setIsOpen,
+  onPresenceChange
 }) {
   const [showThreeDotsMenu, setShowThreeDotsMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showBreakSelector, setShowBreakSelector] = useState(false);
   const [headsetAlert, setHeadsetAlert] = useState("");
+  const [isCheckingHeadset, setIsCheckingHeadset] = useState(false);
+  const [detectedAudioDevice, setDetectedAudioDevice] = useState(null);
+  const [headsetHardwareDetails, setHeadsetHardwareDetails] = useState({
+    hasMic: false,
+    hasSound: false
+  });
 
   // Break timer effect
   useEffect(() => {
@@ -62,40 +81,109 @@ export default function AgentPresenceDialerWidget({
     const handleBeforeUnload = () => {
       setPresenceStatus("OFFLINE");
       setActiveBreakType(null);
+      if (typeof onPresenceChange === "function") {
+        onPresenceChange("OFFLINE");
+      }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [setPresenceStatus, setActiveBreakType]);
+  }, [setPresenceStatus, setActiveBreakType, onPresenceChange]);
 
-  // Listen for hardware audio/headset device changes if supported
-  useEffect(() => {
-    if (typeof navigator !== "undefined" && navigator?.mediaDevices?.addEventListener) {
-      const handleDeviceChange = async () => {
-        try {
-          const devices = await navigator.mediaDevices.enumerateDevices();
-          const hasAudioInput = devices.some(
-            (d) =>
-              d.kind === "audioinput" &&
-              (d.label.toLowerCase().includes("headset") ||
-                d.label.toLowerCase().includes("headphone") ||
-                d.label.toLowerCase().includes("bluetooth") ||
-                d.label.toLowerCase().includes("usb") ||
-                (d.deviceId && d.deviceId !== "default"))
-          );
-          if (hasAudioInput && !isHeadsetConnected) {
-            setIsHeadsetConnected(true);
-            setHeadsetAlert("");
+  // Automated hardware port verification function
+  const runHeadsetVerification = useCallback(
+    async (showPromptOnError = true) => {
+      setIsCheckingHeadset(true);
+      try {
+        const result = await verifyHeadsetHardware();
+        if (result.connected) {
+          setIsHeadsetConnected(true);
+          setDetectedAudioDevice(result.deviceName || "Headset (Mic & Sound Connected)");
+          setHeadsetHardwareDetails({
+            hasMic: result.hasMic,
+            hasSound: result.hasSound
+          });
+          setHeadsetAlert("");
+          return true;
+        } else {
+          setIsHeadsetConnected(false);
+          setDetectedAudioDevice(null);
+          setHeadsetHardwareDetails({
+            hasMic: result.hasMic || false,
+            hasSound: result.hasSound || false
+          });
+          if (showPromptOnError) {
+            setHeadsetAlert(
+              result.message ||
+                "No headset detected on port. Headphone with microphone must be connected."
+            );
           }
-        } catch {
-          // ignore error if browser permissions not granted
+          return false;
         }
-      };
-      navigator.mediaDevices.addEventListener("devicechange", handleDeviceChange);
-      return () => {
-        navigator.mediaDevices.removeEventListener("devicechange", handleDeviceChange);
-      };
+      } catch (err) {
+        setIsHeadsetConnected(false);
+        setDetectedAudioDevice(null);
+        if (showPromptOnError) {
+          setHeadsetAlert(err?.message || "Failed to verify audio hardware on this device.");
+        }
+        return false;
+      } finally {
+        setIsCheckingHeadset(false);
+      }
+    },
+    [setIsHeadsetConnected]
+  );
+
+  // Automatic non-intrusive port check on initial load
+  useEffect(() => {
+    quickCheckAudioDevices().then((res) => {
+      setHeadsetHardwareDetails({
+        hasMic: res.hasMic,
+        hasSound: res.hasSound
+      });
+      if (!res.hasMic) {
+        setIsHeadsetConnected(false);
+      }
+    });
+  }, [setIsHeadsetConnected]);
+
+  // When dialer widget opens, automatically run hardware verification
+  useEffect(() => {
+    if (isOpen) {
+      runHeadsetVerification(false);
     }
-  }, [isHeadsetConnected, setIsHeadsetConnected]);
+  }, [isOpen, runHeadsetVerification]);
+
+  // Listen for hardware audio/headset device changes (plugging or unplugging 3.5mm jack or USB headset)
+  useEffect(() => {
+    const unsubscribe = subscribeToAudioDeviceChanges((res) => {
+      if (res.connected) {
+        setIsHeadsetConnected(true);
+        setDetectedAudioDevice(res.deviceName || "Headset (Mic & Sound Connected)");
+        setHeadsetHardwareDetails({
+          hasMic: res.hasMic,
+          hasSound: res.hasSound
+        });
+        setHeadsetAlert("");
+      } else {
+        setIsHeadsetConnected(false);
+        setDetectedAudioDevice(null);
+        setHeadsetHardwareDetails({
+          hasMic: res.hasMic || false,
+          hasSound: res.hasSound || false
+        });
+        // If headset is disconnected while ONLINE, automatically change to OFFLINE
+        if (presenceStatus === "ONLINE") {
+          setPresenceStatus("OFFLINE");
+          setIsOpen(true);
+          setHeadsetAlert("Headset was disconnected from port. Status changed to Offline.");
+          if (typeof onPresenceChange === "function") {
+            onPresenceChange("OFFLINE");
+          }
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, [presenceStatus, setPresenceStatus, setIsHeadsetConnected, setIsOpen, onPresenceChange]);
 
   // Format seconds to HH:MM:SS
   const formatTimer = (totalSeconds = 0) => {
@@ -105,28 +193,18 @@ export default function AgentPresenceDialerWidget({
     return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   };
 
-  // Toggle headset connection status
-  const handleToggleHeadset = () => {
-    const nextState = !isHeadsetConnected;
-    setIsHeadsetConnected(nextState);
-    if (!nextState) {
-      if (presenceStatus === "ONLINE") {
-        setPresenceStatus("OFFLINE");
-      }
-      setHeadsetAlert("Headset of headphone must be connected to go online.");
-    } else {
-      setHeadsetAlert("");
-    }
-  };
-
-  // Turn Online handler (analyses headset connection every time)
-  const handleConnectToOnline = () => {
-    if (!isHeadsetConnected) {
-      setHeadsetAlert("Headset of headphone must be connected to go online.");
+  // Turn Online handler (automatically analyses headset port connection every time)
+  const handleConnectToOnline = async () => {
+    setIsCheckingHeadset(true);
+    const isVerified = await runHeadsetVerification(true);
+    if (!isVerified) {
       return;
     }
     setHeadsetAlert("");
     setPresenceStatus("ONLINE");
+    if (typeof onPresenceChange === "function") {
+      onPresenceChange("ONLINE");
+    }
     setActiveBreakType(null);
     setShowThreeDotsMenu(false);
     setShowBreakSelector(false);
@@ -135,6 +213,9 @@ export default function AgentPresenceDialerWidget({
   // Turn Offline handler
   const handleTurnOffline = () => {
     setPresenceStatus("OFFLINE");
+    if (typeof onPresenceChange === "function") {
+      onPresenceChange("OFFLINE");
+    }
     setActiveBreakType(null);
     setShowThreeDotsMenu(false);
     setShowBreakSelector(false);
@@ -144,19 +225,26 @@ export default function AgentPresenceDialerWidget({
   const handleStartBreak = (breakName) => {
     setActiveBreakType(breakName);
     setPresenceStatus("BREAK");
+    if (typeof onPresenceChange === "function") {
+      onPresenceChange("BREAK");
+    }
     setBreakSeconds(0);
     setShowThreeDotsMenu(false);
     setShowBreakSelector(false);
   };
 
-  // Turn off break time and go online (analyses headset connection)
-  const handleEndBreakToGoOnline = () => {
-    if (!isHeadsetConnected) {
-      setHeadsetAlert("Headset of headphone must be connected to go online.");
+  // Turn off break time and go online (automatically analyses headset port connection)
+  const handleEndBreakToGoOnline = async () => {
+    setIsCheckingHeadset(true);
+    const isVerified = await runHeadsetVerification(true);
+    if (!isVerified) {
       return;
     }
     setHeadsetAlert("");
     setPresenceStatus("ONLINE");
+    if (typeof onPresenceChange === "function") {
+      onPresenceChange("ONLINE");
+    }
     setActiveBreakType(null);
     setBreakSeconds(0);
     setShowThreeDotsMenu(false);
@@ -165,6 +253,9 @@ export default function AgentPresenceDialerWidget({
   // Turn off break time and go offline
   const handleEndBreakToGoOffline = () => {
     setPresenceStatus("OFFLINE");
+    if (typeof onPresenceChange === "function") {
+      onPresenceChange("OFFLINE");
+    }
     setActiveBreakType(null);
     setBreakSeconds(0);
     setShowThreeDotsMenu(false);
@@ -497,13 +588,17 @@ export default function AgentPresenceDialerWidget({
                   <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#ef4444" }} />
                 </div>
 
-                {/* Headset / Headphone Requirement */}
+                {/* Automatic Headset & Audio Port Hardware Verification Card */}
                 <div
                   style={{
                     padding: "12px",
                     borderRadius: "10px",
                     backgroundColor: "#020921",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    border: `1px solid ${
+                      isHeadsetConnected
+                        ? "rgba(34, 197, 94, 0.3)"
+                        : "rgba(255, 255, 255, 0.08)"
+                    }`,
                     display: "flex",
                     flexDirection: "column",
                     gap: "8px"
@@ -511,30 +606,116 @@ export default function AgentPresenceDialerWidget({
                 >
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <Headphones style={{ width: "16px", height: "16px", color: isHeadsetConnected ? "#34d399" : "#94a3b8" }} />
+                      <Headphones
+                        style={{
+                          width: "16px",
+                          height: "16px",
+                          color: isHeadsetConnected ? "#34d399" : "#94a3b8"
+                        }}
+                      />
                       <span style={{ fontSize: "12px", fontWeight: 600, color: "#ffffff" }}>
                         Headset Connection
                       </span>
                     </div>
+
+                    {/* Automatic Port Hardware Verification Button */}
                     <button
-                      onClick={handleToggleHeadset}
+                      onClick={() => runHeadsetVerification(true)}
+                      disabled={isCheckingHeadset}
+                      title="Automatically verify physical/virtual audio ports on this device"
                       style={{
                         padding: "4px 8px",
                         borderRadius: "6px",
                         fontSize: "11px",
                         fontWeight: 700,
-                        backgroundColor: isHeadsetConnected ? "rgba(16, 185, 129, 0.2)" : "rgba(255, 255, 255, 0.08)",
+                        backgroundColor: isHeadsetConnected
+                          ? "rgba(16, 185, 129, 0.2)"
+                          : "rgba(255, 255, 255, 0.08)",
                         color: isHeadsetConnected ? "#34d399" : "#cbd5e1",
-                        border: `1px solid ${isHeadsetConnected ? "rgba(16, 185, 129, 0.4)" : "rgba(255, 255, 255, 0.15)"}`,
-                        cursor: "pointer"
+                        border: `1px solid ${
+                          isHeadsetConnected
+                            ? "rgba(16, 185, 129, 0.4)"
+                            : "rgba(255, 255, 255, 0.15)"
+                        }`,
+                        cursor: isCheckingHeadset ? "wait" : "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "5px"
                       }}
                     >
-                      {isHeadsetConnected ? "Connected ✓" : "Connect Headset"}
+                      <RefreshCw
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          animation: isCheckingHeadset ? "spin 1s linear infinite" : "none"
+                        }}
+                      />
+                      <span>
+                        {isCheckingHeadset
+                          ? "Checking Port..."
+                          : isHeadsetConnected
+                          ? "Port Verified ✓"
+                          : "Auto-Check Port"}
+                      </span>
                     </button>
                   </div>
-                  <div style={{ fontSize: "11px", color: isHeadsetConnected ? "#34d399" : "#94a3b8" }}>
+
+                  {/* Port Hardware Details: Mic & Sound Status */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "6px 10px",
+                      borderRadius: "6px",
+                      backgroundColor: "rgba(255, 255, 255, 0.03)",
+                      fontSize: "10px"
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                      {headsetHardwareDetails.hasMic ? (
+                        <Mic style={{ width: "12px", height: "12px", color: "#34d399" }} />
+                      ) : (
+                        <MicOff style={{ width: "12px", height: "12px", color: "#f87171" }} />
+                      )}
+                      <span
+                        style={{
+                          fontWeight: 600,
+                          color: headsetHardwareDetails.hasMic ? "#34d399" : "#94a3b8"
+                        }}
+                      >
+                        Mic {headsetHardwareDetails.hasMic ? "Detected" : "Not Found"}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                      {headsetHardwareDetails.hasSound ? (
+                        <Volume2 style={{ width: "12px", height: "12px", color: "#34d399" }} />
+                      ) : (
+                        <VolumeX style={{ width: "12px", height: "12px", color: "#f87171" }} />
+                      )}
+                      <span
+                        style={{
+                          fontWeight: 600,
+                          color: headsetHardwareDetails.hasSound ? "#34d399" : "#94a3b8"
+                        }}
+                      >
+                        Sound {headsetHardwareDetails.hasSound ? "Detected" : "Not Found"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      lineHeight: "1.4",
+                      color: isHeadsetConnected ? "#34d399" : "#94a3b8"
+                    }}
+                  >
                     {isHeadsetConnected
-                      ? "Headphone joined and active."
+                      ? detectedAudioDevice
+                        ? `Connected: ${detectedAudioDevice}`
+                        : "Headphone and microphone joined and active on device port."
                       : "Headset of headphone must be connected to go online."}
                   </div>
                 </div>
@@ -561,21 +742,33 @@ export default function AgentPresenceDialerWidget({
                 {/* Connect to Online Button */}
                 <button
                   onClick={handleConnectToOnline}
+                  disabled={isCheckingHeadset}
                   style={{
                     width: "100%",
                     padding: "10px",
                     borderRadius: "10px",
-                    backgroundColor: "#16a34a",
+                    backgroundColor: isCheckingHeadset ? "#475569" : "#16a34a",
                     border: "none",
                     color: "#ffffff",
                     fontWeight: 700,
                     fontSize: "12px",
-                    cursor: "pointer",
-                    boxShadow: "0 2px 8px rgba(22, 163, 74, 0.3)",
-                    transition: "all 0.15s ease"
+                    cursor: isCheckingHeadset ? "wait" : "pointer",
+                    boxShadow: isCheckingHeadset ? "none" : "0 2px 8px rgba(22, 163, 74, 0.3)",
+                    transition: "all 0.15s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px"
                   }}
                 >
-                  Connect to Online
+                  {isCheckingHeadset ? (
+                    <>
+                      <RefreshCw style={{ width: "13px", height: "13px", animation: "spin 1s linear infinite" }} />
+                      <span>Verifying Audio Ports...</span>
+                    </>
+                  ) : (
+                    <span>Connect to Online</span>
+                  )}
                 </button>
               </div>
             )}

@@ -34,6 +34,7 @@ import {
 import api from "../services/api";
 import ThemeToggle from "./ThemeToggle";
 import AgentPresenceDialerWidget from "./common/AgentPresenceDialerWidget";
+import { verifyHeadsetHardware } from "../services/headsetDetector";
 
 export const EMPLOYEE_TAB_ROUTES = {
   queue: "/employee/dashboard",
@@ -554,12 +555,16 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           {/* Online / Offline Presence Icon Button (Icon Only, No Text: Red when offline, Green when online) */}
           <button
-            onClick={() => {
+            onClick={async () => {
               if (presenceStatus === "OFFLINE") {
-                if (!isHeadsetConnected) {
+                // Automatically verify headset port connection before turning online
+                const check = await verifyHeadsetHardware();
+                if (!check.connected) {
+                  setIsHeadsetConnected(false);
                   setIsDialerWidgetOpen(true);
                   return;
                 }
+                setIsHeadsetConnected(true);
                 setPresenceStatus("ONLINE");
                 handlePresenceChange("ONLINE");
               } else {
@@ -2202,6 +2207,7 @@ export default function EmployeePortalShell({ user, onLogout, onBackToHome, them
         user={user}
         isOpen={isDialerWidgetOpen}
         setIsOpen={setIsDialerWidgetOpen}
+        onPresenceChange={handlePresenceChange}
       />
     </div>
   );

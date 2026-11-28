@@ -8,6 +8,7 @@ import AllocationView from "./admin/AllocationView";
 import AgentDirectoryView from "./admin/AgentDirectoryView";
 import MoreViews from "./admin/MoreViews";
 import AgentPresenceDialerWidget from "./common/AgentPresenceDialerWidget";
+import { verifyHeadsetHardware } from "../services/headsetDetector";
 import {
   Layers,
   PhoneCall,
@@ -86,15 +87,23 @@ export default function AdminPortalShell({
     setPresenceStatus(status);
     setPresenceOnline(status === "ONLINE");
   };
-  const togglePresenceOnline = (val) => {
-    if (val && !isHeadsetConnected) {
-      // Must not turn online if headset is not connected
-      setIsDialerWidgetOpen(true);
-      return;
+  const togglePresenceOnline = async (val) => {
+    if (val) {
+      // Automatically verify headset port connection before turning online
+      const check = await verifyHeadsetHardware();
+      if (!check.connected) {
+        setIsHeadsetConnected(false);
+        setIsDialerWidgetOpen(true);
+        return;
+      }
+      setIsHeadsetConnected(true);
+      setPresenceOnline(true);
+      setPresenceStatus("ONLINE");
+    } else {
+      setPresenceOnline(false);
+      setPresenceStatus("OFFLINE");
+      setActiveBreakType(null);
     }
-    setPresenceOnline(val);
-    setPresenceStatus(val ? "ONLINE" : "OFFLINE");
-    if (!val) setActiveBreakType(null);
   };
 
   // Institutional Allocator State (Single selection with strict isolation)
@@ -324,6 +333,7 @@ export default function AdminPortalShell({
         user={user}
         isOpen={isDialerWidgetOpen}
         setIsOpen={setIsDialerWidgetOpen}
+        onPresenceChange={updatePresenceStatus}
       />
     </div>
   );
