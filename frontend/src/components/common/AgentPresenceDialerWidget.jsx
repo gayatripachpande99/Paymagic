@@ -118,10 +118,7 @@ export default function AgentPresenceDialerWidget({
             isBuiltinOnly: Boolean(result.isBuiltinOnly)
           });
           if (showPromptOnError) {
-            setHeadsetAlert(
-              result.message ||
-                "Device internal microphone & sound are not allowed. An external headset is required."
-            );
+            setHeadsetAlert("Headset not connected");
           }
           return false;
         }
@@ -193,9 +190,7 @@ export default function AgentPresenceDialerWidget({
         if (presenceStatus === "ONLINE") {
           setPresenceStatus("OFFLINE");
           setIsOpen(true);
-          setHeadsetAlert(
-            res.message || "External headset was disconnected from port. Status changed to Offline."
-          );
+          setHeadsetAlert("Headset not connected");
           if (typeof onPresenceChange === "function") {
             onPresenceChange("OFFLINE");
           }
@@ -608,166 +603,54 @@ export default function AgentPresenceDialerWidget({
                   <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#ef4444" }} />
                 </div>
 
-                {/* Automatic Headset & Audio Port Hardware Verification Card */}
+                {/* Headset Connection */}
                 <div
                   style={{
-                    padding: "12px",
+                    padding: "12px 14px",
                     borderRadius: "10px",
                     backgroundColor: "#020921",
                     border: `1px solid ${
                       isHeadsetConnected
                         ? "rgba(34, 197, 94, 0.3)"
-                        : "rgba(255, 255, 255, 0.08)"
+                        : "rgba(239, 68, 68, 0.25)"
                     }`,
                     display: "flex",
-                    flexDirection: "column",
-                    gap: "8px"
+                    alignItems: "center",
+                    justifyContent: "space-between"
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <Headphones
-                        style={{
-                          width: "16px",
-                          height: "16px",
-                          color: isHeadsetConnected ? "#34d399" : "#94a3b8"
-                        }}
-                      />
-                      <span style={{ fontSize: "12px", fontWeight: 600, color: "#ffffff" }}>
-                        Headset Connection
-                      </span>
-                    </div>
-
-                    {/* Automatic Port Hardware Verification Button */}
-                    <button
-                      onClick={() => runHeadsetVerification(true)}
-                      disabled={isCheckingHeadset}
-                      title="Automatically verify physical/virtual audio ports on this device"
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <Headphones
                       style={{
-                        padding: "4px 8px",
-                        borderRadius: "6px",
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        backgroundColor: isHeadsetConnected
-                          ? "rgba(16, 185, 129, 0.2)"
-                          : "rgba(255, 255, 255, 0.08)",
-                        color: isHeadsetConnected ? "#34d399" : "#cbd5e1",
-                        border: `1px solid ${
-                          isHeadsetConnected
-                            ? "rgba(16, 185, 129, 0.4)"
-                            : "rgba(255, 255, 255, 0.15)"
-                        }`,
-                        cursor: isCheckingHeadset ? "wait" : "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "5px"
+                        width: "18px",
+                        height: "18px",
+                        color: isHeadsetConnected ? "#34d399" : "#f87171"
                       }}
-                    >
-                      <RefreshCw
-                        style={{
-                          width: "12px",
-                          height: "12px",
-                          animation: isCheckingHeadset ? "spin 1s linear infinite" : "none"
-                        }}
-                      />
-                      <span>
-                        {isCheckingHeadset
-                          ? "Checking Port..."
-                          : isHeadsetConnected
-                          ? "Port Verified ✓"
-                          : "Auto-Check Port"}
-                      </span>
-                    </button>
+                    />
+                    <span style={{ fontSize: "12px", fontWeight: 600, color: "#ffffff" }}>
+                      Headset Connection
+                    </span>
                   </div>
 
-                  {/* Port Hardware Details: Mic & Sound Status */}
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "6px 10px",
-                      borderRadius: "6px",
-                      backgroundColor: "rgba(255, 255, 255, 0.03)",
-                      fontSize: "10px"
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      {headsetHardwareDetails.hasMic ? (
-                        <Mic style={{ width: "12px", height: "12px", color: headsetHardwareDetails.isExternalHeadset ? "#34d399" : "#fbbf24" }} />
-                      ) : (
-                        <MicOff style={{ width: "12px", height: "12px", color: "#f87171" }} />
-                      )}
-                      <span
-                        style={{
-                          fontWeight: 600,
-                          color: headsetHardwareDetails.isExternalHeadset
-                            ? "#34d399"
-                            : headsetHardwareDetails.hasMic
-                            ? "#fbbf24"
-                            : "#94a3b8"
-                        }}
-                      >
-                        {headsetHardwareDetails.isExternalHeadset
-                          ? "External Mic ✓"
-                          : headsetHardwareDetails.hasMic
-                          ? "Device Mic (Blocked)"
-                          : "Mic Missing"}
-                      </span>
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                      {headsetHardwareDetails.hasSound ? (
-                        <Volume2 style={{ width: "12px", height: "12px", color: headsetHardwareDetails.isExternalHeadset ? "#34d399" : "#cbd5e1" }} />
-                      ) : (
-                        <VolumeX style={{ width: "12px", height: "12px", color: "#f87171" }} />
-                      )}
-                      <span
-                        style={{
-                          fontWeight: 600,
-                          color: headsetHardwareDetails.isExternalHeadset
-                            ? "#34d399"
-                            : "#94a3b8"
-                        }}
-                      >
-                        {headsetHardwareDetails.isExternalHeadset ? "Headset Sound ✓" : "Sound Output"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Warning if device mic is detected without external headset */}
-                  {headsetHardwareDetails.isBuiltinOnly && (
-                    <div
-                      style={{
-                        padding: "6px 8px",
-                        borderRadius: "6px",
-                        backgroundColor: "rgba(245, 158, 11, 0.12)",
-                        border: "1px solid rgba(245, 158, 11, 0.3)",
-                        color: "#fbbf24",
-                        fontSize: "10px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px"
-                      }}
-                    >
-                      <AlertTriangle style={{ width: "13px", height: "13px", flexShrink: 0 }} />
-                      <span>Device internal mic/sound is not allowed. External headset is required.</span>
-                    </div>
-                  )}
-
-                  <div
+                  <span
                     style={{
                       fontSize: "11px",
-                      lineHeight: "1.4",
-                      color: isHeadsetConnected ? "#34d399" : "#94a3b8"
+                      fontWeight: 700,
+                      color: isHeadsetConnected ? "#34d399" : "#f87171",
+                      backgroundColor: isHeadsetConnected
+                        ? "rgba(34, 197, 94, 0.15)"
+                        : "rgba(239, 68, 68, 0.15)",
+                      padding: "4px 10px",
+                      borderRadius: "6px",
+                      border: `1px solid ${
+                        isHeadsetConnected
+                          ? "rgba(34, 197, 94, 0.3)"
+                          : "rgba(239, 68, 68, 0.3)"
+                      }`
                     }}
                   >
-                    {isHeadsetConnected
-                      ? detectedAudioDevice
-                        ? `External Headset Verified: ${detectedAudioDevice}`
-                        : "External headset joined and active on device port."
-                      : "External headset (USB, 3.5mm Jack, or Bluetooth) must be connected to go online."}
-                  </div>
+                    {isHeadsetConnected ? "Connected" : "Not Connected"}
+                  </span>
                 </div>
 
                 {headsetAlert && (

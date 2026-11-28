@@ -241,12 +241,12 @@ export async function verifyHeadsetHardware() {
         audioInputsCount: audioInputs.length,
         audioOutputsCount: audioOutputs.length,
         reason: "BUILTIN_NOT_ALLOWED",
-        message: "Device internal microphone & sound are not allowed. An external headset (USB, 3.5mm Jack, or Bluetooth) is required to go online."
+        message: "Headset Not Connected"
       };
     }
 
     // External headset successfully detected and verified!
-    const verifiedDeviceName = externalName || micLabel || "External Headset (USB / 3.5mm / Bluetooth)";
+    const verifiedDeviceName = externalName || micLabel || "External Headset";
 
     return {
       connected: true,
@@ -257,7 +257,7 @@ export async function verifyHeadsetHardware() {
       deviceName: verifiedDeviceName,
       audioInputsCount: audioInputs.length,
       audioOutputsCount: audioOutputs.length,
-      message: `Verified: External headset (${verifiedDeviceName}) connected to port.`
+      message: "Headset Connected"
     };
   } catch (err) {
     return {
