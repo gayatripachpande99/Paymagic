@@ -263,6 +263,7 @@ export default function AdminPortalShell({
                   selectedPortfolioId={selectedPortfolioId}
                   setSelectedPortfolioId={setSelectedPortfolioId}
                   onNavigateToCallMonitoring={() => setHomeSidebarTab("call_monitoring")}
+                  onNavigateToAllocation={() => setTopNav("allocation")}
                   allocators={allocators}
                   setAllocators={setAllocators}
                   selectedAllocatorId={selectedAllocatorId}

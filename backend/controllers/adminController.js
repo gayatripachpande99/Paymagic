@@ -951,6 +951,34 @@ export const unsubscribeAccountsFromAllocation = async (req, res) => {
 };
 
 /**
+ * Assign Allocation to an Allocator
+ */
+export const assignAllocationToAllocator = async (req, res) => {
+  try {
+    const { allocationId, allocatorId } = req.body;
+    if (!allocationId || !allocatorId) {
+      return res.status(400).json({ success: false, message: "allocationId and allocatorId are required." });
+    }
+    const alloc = (memoryStore.allocations || []).find(a => a.id === allocationId);
+    if (!alloc) {
+      return res.status(404).json({ success: false, message: "Allocation not found." });
+    }
+    const allocator = (memoryStore.allocators || []).find(a => a.id === allocatorId) || { id: allocatorId, name: allocatorId };
+    alloc.allocator_id = allocatorId;
+    alloc.allocatorId = allocatorId;
+    alloc.allocator_name = allocator.name;
+
+    return res.status(200).json({
+      success: true,
+      message: `Allocation '${alloc.name}' assigned to '${allocator.name}'.`,
+      data: alloc
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+/**
  * Manage Campaign Members (Architecture Section 7 - Invariant 2)
  */
 export const getCampaignMembers = async (req, res) => {

@@ -180,6 +180,7 @@ export default function HomePortfolioView({
   selectedPortfolioId,
   setSelectedPortfolioId,
   onNavigateToCallMonitoring,
+  onNavigateToAllocation,
   allocators: propAllocators,
   setAllocators: propSetAllocators,
   selectedAllocatorId: propSelectedAllocatorId,
@@ -194,14 +195,25 @@ export default function HomePortfolioView({
   const [localPortfolios, setLocalPortfolios] = useState(INITIAL_PORTFOLIOS);
   const [localShowCreateModal, setLocalShowCreateModal] = useState(false);
   const [backendOverview, setBackendOverview] = useState(null);
+  const [selectedAssignAllocId, setSelectedAssignAllocId] = useState("");
+
+  const allocators = propAllocators || localAllocators;
+  const setAllocators = propSetAllocators || setLocalAllocators;
+  const selectedAllocatorId = propSelectedAllocatorId || localSelectedAllocatorId;
+  const setSelectedAllocatorId = propSetSelectedAllocatorId || setLocalSelectedAllocatorId;
+  const portfolios = propPortfolios || localPortfolios;
+  const setPortfolios = propSetPortfolios || setLocalPortfolios;
+  const showCreateModal = propShowCreateModal !== undefined ? propShowCreateModal : localShowCreateModal;
+  const setShowCreateModal = propSetShowCreateModal || setLocalShowCreateModal;
 
   useEffect(() => {
     let isMounted = true;
     const fetchBackendData = async () => {
       try {
-        const [overviewRes, hierarchyRes] = await Promise.allSettled([
+        const [overviewRes, hierarchyRes, allocRes] = await Promise.allSettled([
           api.get("/admin/overview"),
-          api.get("/admin/hierarchy")
+          api.get("/admin/hierarchy"),
+          api.get("/admin/allocations")
         ]);
 
         if (isMounted) {
@@ -211,7 +223,7 @@ export default function HomePortfolioView({
           if (hierarchyRes.status === "fulfilled" && hierarchyRes.value?.data) {
             const h = hierarchyRes.value.data;
             if (h.allocators && h.allocators.length > 0) {
-              setLocalAllocators(h.allocators.map(a => ({
+              setAllocators(h.allocators.map(a => ({
                 id: a.id || `alloc_${a.code?.toLowerCase()}`,
                 name: a.name || a.allocator_name,
                 code: a.code || "ALLOC",
@@ -222,6 +234,33 @@ export default function HomePortfolioView({
               })));
             }
           }
+          if (allocRes.status === "fulfilled" && Array.isArray(allocRes.value?.data) && allocRes.value.data.length > 0) {
+            const liveAllocPortfolios = allocRes.value.data.map(a => ({
+              id: a.id,
+              allocatorId: a.allocatorId || "alloc_bajaj",
+              allocatorName: a.uploader || a.allocatorName || "Institutional Bank",
+              name: a.name,
+              company: "PayMagic PVT LTD",
+              badge: (a.name || "B").charAt(0).toUpperCase(),
+              badgeColor: a.allocatorId === "alloc_punewala" ? "bg-amber-600" : a.allocatorId === "alloc_hdfc" ? "bg-indigo-600" : "bg-blue-600",
+              channel: "Call",
+              statusText: a.allocStatus || "Ends in 30 days",
+              isExpired: a.allocStatus === "Closed",
+              accounts: a.caseCounts || a.accounts || 15,
+              collectedPct: a.collectionPct || "0.00%",
+              outstanding: a.sumOfOutstanding || "₹0.00",
+              collectedAmount: `₹0 / ${a.sumOfOutstanding || "₹0.00"}`,
+              collectable: a.collectable || a.sumOfOutstanding || "₹0.00",
+              product: a.product || "Personal Loan",
+              bucket: a.bucket || "Writeoff",
+              date: a.createdOn ? a.createdOn.slice(0, 10) : new Date().toISOString().slice(0, 10)
+            }));
+            setPortfolios(prev => {
+              const existingIds = new Set(prev.map(p => p.id));
+              const newItems = liveAllocPortfolios.filter(l => !existingIds.has(l.id));
+              return [...newItems, ...prev];
+            });
+          }
         }
       } catch (err) {
         // Fallback maintained
@@ -230,15 +269,6 @@ export default function HomePortfolioView({
     fetchBackendData();
     return () => { isMounted = false; };
   }, []);
-
-  const allocators = propAllocators || localAllocators;
-  const setAllocators = propSetAllocators || setLocalAllocators;
-  const selectedAllocatorId = propSelectedAllocatorId || localSelectedAllocatorId;
-  const setSelectedAllocatorId = propSetSelectedAllocatorId || setLocalSelectedAllocatorId;
-  const portfolios = propPortfolios || localPortfolios;
-  const setPortfolios = propSetPortfolios || setLocalPortfolios;
-  const showCreateModal = propShowCreateModal !== undefined ? propShowCreateModal : localShowCreateModal;
-  const setShowCreateModal = propSetShowCreateModal || setLocalShowCreateModal;
 
   // Create Allocator Form State
   const [createForm, setCreateForm] = useState({
@@ -253,9 +283,55 @@ export default function HomePortfolioView({
   const [digitalSubTab, setDigitalSubTab] = useState("sms"); // sms, ivr, bot
   const [fieldSearch, setFieldSearch] = useState("");
 
+  const allAvailableAllocations = React.useMemo(() => {
+    const map = new Map();
+    portfolios.forEach(p => {
+      if (!map.has(p.id)) map.set(p.id, p);
+    });
+    INITIAL_PORTFOLIOS.forEach(p => {
+      if (!map.has(p.id)) map.set(p.id, p);
+    });
+    return Array.from(map.values());
+  }, [portfolios]);
+
   const activePortfolio = portfolios.find((p) => p.id === selectedPortfolioId) || PORTFOLIOS.find((p) => p.id === selectedPortfolioId);
-  const selectedAllocator = allocators.find((a) => a.id === selectedAllocatorId) || allocators[0];
-  const filteredPortfolios = portfolios.filter((p) => p.allocatorId === selectedAllocatorId);
+  const selectedAllocator = allocators.find((a) => a.id === selectedAllocatorId) || (selectedAllocatorId === "all" ? { name: "All Allocations" } : allocators[0]);
+  const filteredPortfolios = selectedAllocatorId === "all"
+    ? portfolios
+    : portfolios.filter((p) => p.allocatorId === selectedAllocatorId);
+
+  const handleAssignAllocation = async (allocationId) => {
+    if (!allocationId) return;
+    const targetAlloc = allAvailableAllocations.find(a => a.id === allocationId) || portfolios.find(p => p.id === allocationId);
+    if (!targetAlloc) return;
+
+    try {
+      await api.post("/admin/allocations/assign", {
+        allocationId: targetAlloc.id,
+        allocatorId: selectedAllocatorId !== "all" ? selectedAllocatorId : targetAlloc.allocatorId
+      });
+    } catch (e) {
+      console.error("Assign allocation error:", e);
+    }
+
+    const currentAlloc = allocators.find(a => a.id === selectedAllocatorId) || { name: "Unity", id: selectedAllocatorId };
+    const updatedTarget = {
+      ...targetAlloc,
+      id: targetAlloc.id.includes(selectedAllocatorId) ? targetAlloc.id : `${targetAlloc.id}_${selectedAllocatorId}`,
+      allocatorId: selectedAllocatorId !== "all" ? selectedAllocatorId : targetAlloc.allocatorId,
+      allocatorName: currentAlloc.name
+    };
+
+    setPortfolios(prev => {
+      const exists = prev.some(p => p.id === updatedTarget.id || (p.name === updatedTarget.name && p.allocatorId === updatedTarget.allocatorId));
+      if (exists) {
+        return prev.map(p => (p.id === updatedTarget.id || (p.name === updatedTarget.name && p.allocatorId === updatedTarget.allocatorId)) ? updatedTarget : p);
+      }
+      return [updatedTarget, ...prev];
+    });
+
+    setSelectedAssignAllocId("");
+  };
 
   const handleCreateAllocator = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
@@ -1065,23 +1141,72 @@ export default function HomePortfolioView({
           flexWrap: "wrap"
         }}
       >
-        <div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
           <h2 style={{ fontSize: "20px", fontWeight: 700, color: "#ffffff", display: "flex", alignItems: "center", gap: "10px", margin: 0 }}>
             <span>All Portfolios</span>
-            <span
-              style={{
-                fontSize: "12px",
-                padding: "3px 10px",
-                borderRadius: "9999px",
-                backgroundColor: "rgba(37, 99, 235, 0.2)",
-                color: "#60a5fa",
-                border: "1px solid rgba(37, 99, 235, 0.4)",
-                fontWeight: 600
-              }}
-            >
-              {selectedAllocator?.name || "Bajaj Finserve"}
-            </span>
           </h2>
+
+          {/* Quick Allocator Selector */}
+          <select
+            value={selectedAllocatorId}
+            onChange={(e) => setSelectedAllocatorId(e.target.value)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "9999px",
+              backgroundColor: "rgba(37, 99, 235, 0.15)",
+              color: "#60a5fa",
+              border: "1px solid rgba(37, 99, 235, 0.4)",
+              fontSize: "12px",
+              fontWeight: 600,
+              cursor: "pointer",
+              outline: "none"
+            }}
+          >
+            <option value="all" style={{ backgroundColor: "#041030", color: "#ffffff" }}>
+              All Allocators ({portfolios.length})
+            </option>
+            {allocators.map((alloc) => {
+              const count = portfolios.filter(p => p.allocatorId === alloc.id).length;
+              return (
+                <option key={alloc.id} value={alloc.id} style={{ backgroundColor: "#041030", color: "#ffffff" }}>
+                  {alloc.name} ({count})
+                </option>
+              );
+            })}
+          </select>
+
+          {/* Quick Allocation Selection Dropdown */}
+          <select
+            value={selectedAssignAllocId}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSelectedAssignAllocId(val);
+              if (val) {
+                handleAssignAllocation(val);
+              }
+            }}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "9999px",
+              backgroundColor: "rgba(255, 255, 255, 0.06)",
+              color: "#cbd5e1",
+              border: "1px solid rgba(255, 255, 255, 0.15)",
+              fontSize: "12px",
+              fontWeight: 500,
+              cursor: "pointer",
+              outline: "none",
+              maxWidth: "260px"
+            }}
+          >
+            <option value="" style={{ backgroundColor: "#041030", color: "#94a3b8" }}>
+              Select Allocation...
+            </option>
+            {allAvailableAllocations.map((alloc) => (
+              <option key={alloc.id} value={alloc.id} style={{ backgroundColor: "#041030", color: "#ffffff" }}>
+                {alloc.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Create Allocator Action Button */}
@@ -1301,7 +1426,7 @@ export default function HomePortfolioView({
       ) : (
         <div
           style={{
-            padding: "48px 24px",
+            padding: "40px 24px",
             borderRadius: "16px",
             backgroundColor: "#041030",
             border: "1px dashed rgba(255, 255, 255, 0.15)",
@@ -1309,7 +1434,7 @@ export default function HomePortfolioView({
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: "12px"
+            gap: "14px"
           }}
         >
           <div
@@ -1326,12 +1451,123 @@ export default function HomePortfolioView({
           >
             <Landmark style={{ width: "24px", height: "24px" }} />
           </div>
+
           <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", margin: 0 }}>
-            No Allocations for {selectedAllocator.name}
+            No Allocations for {selectedAllocator?.name || "this allocator"}
           </h3>
-          <p style={{ fontSize: "12px", color: "#94a3b8", maxWidth: "420px", margin: 0 }}>
-            There are currently no recovery portfolios uploaded for this assigned bank. Go to the Allocation tab to upload an allocation file.
-          </p>
+
+          <div
+            style={{
+              marginTop: "8px",
+              width: "100%",
+              maxWidth: "460px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+              alignItems: "center"
+            }}
+          >
+            <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "6px", textAlign: "left" }}>
+              <label style={{ fontSize: "12px", fontWeight: 700, color: "#cbd5e1" }}>
+                Select Existing Allocation
+              </label>
+              <select
+                value={selectedAssignAllocId}
+                onChange={(e) => {
+                  const allocId = e.target.value;
+                  setSelectedAssignAllocId(allocId);
+                  if (allocId) {
+                    handleAssignAllocation(allocId);
+                  }
+                }}
+                style={{
+                  width: "100%",
+                  padding: "10px 14px",
+                  borderRadius: "10px",
+                  backgroundColor: "rgba(255, 255, 255, 0.06)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  color: "#ffffff",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  outline: "none",
+                  cursor: "pointer"
+                }}
+              >
+                <option value="" style={{ backgroundColor: "#041030", color: "#94a3b8" }}>
+                  -- Select Allocation to View / Assign --
+                </option>
+                {allAvailableAllocations.map((alloc) => (
+                  <option key={alloc.id} value={alloc.id} style={{ backgroundColor: "#041030", color: "#ffffff" }}>
+                    {alloc.name} ({alloc.accounts} accounts • {alloc.outstanding})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%", justifyContent: "center", flexWrap: "wrap", marginTop: "4px" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedAssignAllocId) {
+                    handleAssignAllocation(selectedAssignAllocId);
+                  }
+                }}
+                disabled={!selectedAssignAllocId}
+                style={{
+                  padding: "9px 20px",
+                  borderRadius: "10px",
+                  backgroundColor: selectedAssignAllocId ? "#1d4ed8" : "rgba(255, 255, 255, 0.1)",
+                  color: selectedAssignAllocId ? "#ffffff" : "#64748b",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  border: "none",
+                  cursor: selectedAssignAllocId ? "pointer" : "not-allowed",
+                  boxShadow: selectedAssignAllocId ? "0 2px 6px rgba(29, 78, 216, 0.4)" : "none",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                Assign &amp; Show Allocation
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedAllocatorId("all")}
+                style={{
+                  padding: "9px 16px",
+                  borderRadius: "10px",
+                  backgroundColor: "rgba(255, 255, 255, 0.06)",
+                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                  color: "#cbd5e1",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                Show All System Allocations
+              </button>
+
+              {onNavigateToAllocation && (
+                <button
+                  type="button"
+                  onClick={onNavigateToAllocation}
+                  style={{
+                    padding: "9px 16px",
+                    borderRadius: "10px",
+                    backgroundColor: "rgba(255, 255, 255, 0.06)",
+                    border: "1px solid rgba(255, 255, 255, 0.12)",
+                    color: "#cbd5e1",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "all 0.15s ease"
+                  }}
+                >
+                  Upload New File
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
